@@ -1,0 +1,2426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>krystal_dagger group orders</title>
+<meta name="description" content="Check your ATEEZ group order claims, balance, and shipping, and see the latest comeback drops.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%B4%E2%80%8D%E2%98%A0%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  /* light */
+  --bg:#f1f5f9; --panel:#ffffff; --panel-2:#e8eff6; --line:#d2deea;
+  --text:#12222f; --muted:#556b80;
+  --gold:#8f5a05; --gold-bg:#fbedc9;
+  --sea:#0b746a;  --sea-bg:#d6f2ee;
+  --coral:#b13a2a; --coral-bg:#fde2dc;
+  --btn:#12222f; --btn-ink:#ffffff; --focus:#1b64c4;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+  background:var(--bg);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1520; --panel:#122030; --panel-2:#172a3d; --line:#243a50;
+    --text:#e7eef6; --muted:#90a6bc;
+    --gold:#f0bb55; --gold-bg:#3b2d0f;
+    --sea:#66d8ca;  --sea-bg:#11373a;
+    --coral:#ff9887; --coral-bg:#45231f;
+    --btn:#f0bb55; --btn-ink:#201703; --focus:#86b8ff;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1520; --panel:#122030; --panel-2:#172a3d; --line:#243a50;
+  --text:#e7eef6; --muted:#90a6bc;
+  --gold:#f0bb55; --gold-bg:#3b2d0f;
+  --sea:#66d8ca;  --sea-bg:#11373a;
+  --coral:#ff9887; --coral-bg:#45231f;
+  --btn:#f0bb55; --btn-ink:#201703; --focus:#86b8ff;
+  color-scheme:dark;
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.55 var(--body);-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--display);margin:0}
+h1{font-weight:700;font-size:clamp(28px,4.4vw,40px);line-height:1.08;letter-spacing:-.02em}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.muted{color:var(--muted)} .small{font-size:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* header */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1080px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;font:700 18px/1 var(--display);text-decoration:none;letter-spacing:-.01em}
+.brand-mark{font-size:26px}
+.brand small{display:block;font:500 12px/1.2 var(--body);color:var(--muted);margin-top:4px;letter-spacing:0}
+nav{display:flex;gap:4px;margin-left:auto}
+nav a{padding:8px 14px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:600;font-size:15px;white-space:nowrap}
+nav a:hover{color:var(--text)}
+nav a[aria-current="page"]{color:var(--text);background:var(--panel-2)}
+.icon-btn{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:16px}
+@media(max-width:640px){
+  .bar-in{flex-wrap:wrap;gap:8px 12px}
+  .brand small{display:none}
+  .icon-btn{margin-left:auto}
+  nav{order:3;width:100%;margin:0;overflow-x:auto}
+  nav a{padding:8px 10px;font-size:14.5px}
+}
+.demo{background:var(--gold-bg);color:var(--gold);padding:9px 20px;font-size:14px;text-align:center}
+.page{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
+.head{margin:6px 0 24px}
+.sub{color:var(--muted);margin:10px 0 0;max-width:62ch}
+.foot{max-width:1080px;margin:0 auto;padding:0 20px 44px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* controls */
+input,select,textarea{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:42px}
+textarea{min-height:130px;resize:vertical;line-height:1.5}
+.btn{font:600 15px/1 var(--body);background:var(--btn);color:var(--btn-ink);border:1px solid transparent;border-radius:10px;padding:12px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px}
+.btn.ghost{background:transparent;color:var(--text);border-color:var(--line)}
+.btn.danger{background:transparent;color:var(--coral);border-color:var(--coral)}
+.btn.small{padding:7px 12px;min-height:34px;font-size:14px}
+.btn:hover{filter:brightness(1.08)}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:8px}
+@media(max-width:760px){.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}}
+
+/* pills, chips */
+.pill{display:inline-block;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.pill.gold{background:var(--gold-bg);color:var(--gold)}
+.pill.sea{background:var(--sea-bg);color:var(--sea)}
+.pill.coral{background:var(--coral-bg);color:var(--coral)}
+a.pl{text-decoration:none}
+.chip{display:inline-block;font:600 12px/1 var(--body);padding:5px 7px;border-radius:6px;background:var(--panel-2);margin:0 4px 4px 0}
+.chip.x{text-decoration:line-through;color:var(--muted);opacity:.75}
+.tag{font-weight:600;font-size:12.5px;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:0 6px}
+.new{margin-left:6px;font-size:11.5px;font-weight:700;color:var(--gold);background:var(--gold-bg);border-radius:6px;padding:1px 6px}
+
+/* drops list */
+.dlist{border-top:1px solid var(--line)}
+.drop{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:16px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line)}
+.drop-date{font-weight:600;font-size:14px;color:var(--muted);white-space:nowrap}
+.drop h3{font-weight:600;font-size:17px;line-height:1.3}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:5px 0 0;color:var(--muted);font-size:14px}
+.drop-r{display:flex;align-items:center;gap:12px}
+@media(max-width:640px){.drop{grid-template-columns:1fr;gap:6px}}
+.empty{padding:32px 0;text-align:center;color:var(--muted)}
+
+/* order cards */
+.sect{margin:0 0 34px}
+.sect h2{font-size:20px;font-weight:600;letter-spacing:-.01em}
+.sect .sub{margin:4px 0 14px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.gocard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.gohead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.gocard h3{font-weight:600;font-size:18px;line-height:1.25;display:flex;gap:10px;align-items:center}
+.em{font-size:26px;line-height:1}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.steps span{height:6px;border-radius:3px;background:var(--panel-2)}
+.steps .done{background:var(--sea)} .steps .now{background:var(--gold)}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:14px}
+.facts dt{color:var(--muted)} .facts dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:3px 8px}
+details.fold{margin-top:10px} details.fold>summary{cursor:pointer;font:600 20px/1.2 var(--display);padding:6px 0;margin-bottom:12px}
+.list{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.box{display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 20px;border-top:1px solid var(--line)}
+.box:first-child{border-top:0}
+.box b{font:600 16px var(--display)}
+.box .emos{font-size:20px;letter-spacing:2px;word-break:break-word}
+.box small{display:block;color:var(--muted);font-size:13px}
+@media(max-width:640px){.box{grid-template-columns:1fr auto}.box .emos{grid-column:1/-1}}
+
+/* joiner dashboard */
+.me-head{display:flex;align-items:center;gap:18px;margin:4px 0 22px;flex-wrap:wrap}
+.sticker{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:38px;background:var(--panel);border:2px solid var(--gold);box-shadow:0 0 0 6px var(--panel-2);flex:none}
+.me-head .signout{margin-left:auto}
+.ledger{display:grid;grid-template-columns:repeat(4,1fr);background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:14px}
+.ledger>div{padding:20px 22px;border-left:1px solid var(--line);min-width:0}
+.ledger>div:first-child{border-left:0}
+.ledger .k{color:var(--muted);font-size:14px;font-weight:500}
+.ledger .v{font:700 clamp(24px,3vw,32px)/1.15 var(--display);font-variant-numeric:tabular-nums;margin-top:6px;letter-spacing:-.01em}
+.ledger .s{color:var(--muted);font-size:13px;margin-top:6px}
+.owed .v{color:var(--coral)} .clear .v{color:var(--sea)} .credit .v{color:var(--gold)}
+.track{height:6px;border-radius:3px;background:var(--panel-2);margin-top:12px;overflow:hidden}
+.fill{height:100%;background:var(--sea)}
+@media(max-width:820px){
+  .ledger{grid-template-columns:1fr 1fr}
+  .ledger>div:nth-child(3){border-left:0}
+  .ledger>div:nth-child(n+3){border-top:1px solid var(--line)}
+}
+.two{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-bottom:14px}
+.two .panel{margin-bottom:0}
+.panel>h2{font-size:16px;font-weight:600;color:var(--muted);margin:0 0 14px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{border-radius:12px;padding:16px 10px;text-align:center;background:var(--panel-2)}
+.tile b{display:block;font:700 30px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.tile span{font-size:13px;color:var(--muted)}
+.tile.filled{background:var(--sea-bg)} .tile.filled b{color:var(--sea)}
+.tile.dropped{background:var(--coral-bg)} .tile.dropped b{color:var(--coral)}
+.kv{display:grid;grid-template-columns:1fr auto auto;gap:14px;padding:9px 0;border-top:1px solid var(--line);align-items:baseline}
+.kv:first-of-type{border-top:0;padding-top:0}
+.kv .n{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.kv .p{font-weight:600;font-variant-numeric:tabular-nums;min-width:82px;text-align:right}
+.future{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}
+.future:first-of-type{border-top:0}
+.pay{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--coral-bg);border-radius:18px;padding:18px 22px;margin-bottom:14px}
+.pay>div{flex:1;min-width:220px} .pay strong{font:700 20px var(--display);color:var(--coral)}
+.pay p{margin:4px 0 0;color:var(--text);font-size:14.5px}
+h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
+.orow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) 96px minmax(0,1.3fr) minmax(0,1.4fr);gap:14px;padding:14px 20px;border-top:1px solid var(--line);align-items:center}
+.orow:first-child{border-top:0}
+.orow.hd{color:var(--muted);font-size:13px;font-weight:600;background:var(--panel-2)}
+.orow .r{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.orow .nm{font-weight:600}
+.prow2{display:grid;grid-template-columns:90px minmax(0,1fr) 110px 100px;gap:14px;padding:12px 20px;border-top:1px solid var(--line);align-items:center}
+.prow2:first-child{border-top:0}
+.prow2 .r{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+@media(max-width:820px){
+  .orow{grid-template-columns:1fr 1fr;row-gap:10px}
+  .orow.hd{display:none}
+  .orow .nm{grid-column:1/-1}
+  .orow .r{text-align:left}
+  .orow>div[data-l]::before{content:attr(data-l);display:block;color:var(--muted);font-size:12px;font-weight:500}
+  .prow2{grid-template-columns:1fr auto}
+  .prow2>:nth-child(2){grid-column:1/-1;order:3}
+}
+.signin{max-width:420px;margin:24px auto 0}
+.signin .panel{padding:26px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label{font-size:13.5px;font-weight:600;color:var(--muted)}
+.field small{color:var(--muted);font-size:12.5px}
+.check{display:flex;gap:8px;align-items:center;font-size:14.5px}
+.check input{width:auto;min-height:0}
+.stack{display:grid;gap:14px}
+.err{color:var(--coral);font-weight:600;font-size:14.5px;min-height:1.4em;margin:0}
+
+/* host tools */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;margin:0 0 18px;border-bottom:1px solid var(--line);align-items:center}
+.tabs button{font:600 14.5px/1 var(--body);border:1px solid var(--line);background:transparent;color:var(--text);border-radius:999px;padding:9px 14px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--btn);color:var(--btn-ink);border-color:transparent}
+.tabs .btn{margin-left:auto;flex:none}
+.split{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:22px}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+.split>.panel{margin-bottom:0}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.formacts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.arow{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
+.arow:first-child{border-top:0}
+.arow small{display:block;color:var(--muted);font-size:13.5px}
+.arow strong{font-weight:600}
+.acts{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.pad{padding:18px}
+.prow{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto minmax(0,1fr);gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
+.prow:first-child{border-top:0}
+@media(max-width:820px){.prow{grid-template-columns:1fr 1fr}.prow>:first-child{grid-column:1/-1}}
+.cap{white-space:pre-wrap;font:16px/1.7 var(--body);background:var(--panel-2);border-radius:12px;padding:16px;margin:0;overflow-x:auto}
+table.pv{width:100%;border-collapse:collapse;font-size:14.5px}
+table.pv th,table.pv td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+table.pv th{color:var(--muted);font-weight:600;font-size:13px;border-top:0}
+.issues{margin:10px 0 0;padding-left:18px;color:var(--coral);font-size:14.5px}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--text);padding:22px;max-width:420px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(5,10,16,.6)}
+dialog h3{font-size:19px;margin-bottom:12px}
+.dlg-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--btn);color:var(--btn-ink);padding:12px 18px;border-radius:12px;font-weight:600;z-index:50;max-width:calc(100% - 32px);box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.toast.bad{background:var(--coral);color:#fff}
+
+/* photocard thumbnails and viewer */
+.pc{display:block;position:relative;flex:none;padding:0;border:0;border-radius:6px;overflow:hidden;background:var(--panel-2);aspect-ratio:55/85;cursor:zoom-in;box-shadow:0 0 0 1px var(--line)}
+.pc img{display:block;width:100%;height:100%;object-fit:cover}
+.pc .n{position:absolute;right:3px;bottom:3px;min-width:18px;text-align:center;background:rgba(9,17,26,.8);color:#fff;font:700 11px/1 var(--body);padding:3px 5px;border-radius:999px}
+.pc .more{position:absolute;inset:0;display:grid;place-items:center;background:rgba(9,17,26,.62);color:#fff;font:700 17px var(--display)}
+.pc-ph{display:grid;place-items:center;flex:none;aspect-ratio:55/85;border-radius:6px;background:var(--panel-2);box-shadow:0 0 0 1px var(--line);font-size:22px}
+.drop-main{display:flex;gap:14px;align-items:center;min-width:0}
+.drop-main>div{min-width:0}
+.drop-main .pc,.drop-main .pc-sp{width:46px;flex:none}
+@media(max-width:640px){.drop-main .pc-sp{display:none}}
+.pcs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.dt{color:var(--text);font-weight:600}
+dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
+.lb-in{padding:14px;display:grid;gap:10px}
+.lb-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lb-img{display:block;width:100%;max-height:min(68vh,720px);object-fit:contain;border-radius:10px;background:var(--panel-2)}
+.lb-cap{margin:0;font-weight:600;text-align:center;min-height:1.5em}
+.lb-nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+/* calendar */
+.k-deadline{--k:var(--coral);--kb:var(--coral-bg)}
+.k-announce{--k:var(--gold);--kb:var(--gold-bg)}
+.k-event{--k:var(--sea);--kb:var(--sea-bg)}
+.calbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-bottom:12px}
+.calnav{display:flex;align-items:center;gap:8px}
+.calnav h2{font-size:22px;font-weight:700;letter-spacing:-.01em;min-width:9.5ch;text-align:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font:600 14.5px/1 var(--body);border:0;background:transparent;color:var(--text);padding:10px 16px;cursor:pointer;min-height:40px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.kchip{display:inline-flex;align-items:center;gap:7px;font:600 13.5px/1 var(--body);border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:8px 12px;cursor:pointer}
+.kchip i{width:10px;height:10px;background:var(--k);border-radius:50%;flex:none}
+.kchip.k-deadline i{border-radius:2px}
+.kchip.k-event i{transform:rotate(45deg);border-radius:1px}
+.kchip[aria-pressed="true"]{background:var(--kb);color:var(--k);border-color:var(--k)}
+.kchip[aria-pressed="false"] i{opacity:.4}
+.month{border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.wk.hd>div{padding:9px 6px;text-align:center;font-size:13px;font-weight:600;color:var(--muted);background:var(--panel-2)}
+.day{display:flex;flex-direction:column;align-items:stretch;gap:3px;min-height:108px;padding:6px;border:0;border-top:1px solid var(--line);border-left:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;text-align:left;cursor:pointer;min-width:0}
+.day:nth-child(7n+1){border-left:0}
+.day.out{background:var(--bg);color:var(--muted)}
+.day.sel{box-shadow:inset 0 0 0 2px var(--gold)}
+.dn{font-size:13.5px;font-weight:600;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;font-variant-numeric:tabular-nums}
+.day.today .dn{background:var(--btn);color:var(--btn-ink)}
+.ep{display:block;font-size:12px;line-height:1.3;padding:2px 6px;border-radius:5px;border-left:3px solid var(--k);background:var(--kb);color:var(--k);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep.past{opacity:.6}
+.epm{font-size:12px;color:var(--muted);padding-left:4px}
+.dots{display:none;gap:4px;flex-wrap:wrap;justify-content:center}
+.dots i{width:8px;height:8px;background:var(--k);border-radius:50%}
+.dots i.k-deadline{border-radius:2px}
+.dots i.k-event{transform:rotate(45deg);border-radius:1px}
+@media(max-width:700px){
+  .day{min-height:58px;align-items:center;padding:4px 2px;gap:4px}
+  .ep,.epm{display:none}
+  .dots{display:flex}
+}
+.evs{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.evd{margin:0;padding:10px 20px;background:var(--panel-2);font:600 14.5px/1.3 var(--body);display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line)}
+.evd:first-child{border-top:0}
+.evd span{color:var(--muted);font-weight:500}
+.ev{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 20px;border-top:1px solid var(--line)}
+.evd+.ev,.evs>.ev:first-child{border-top:0}
+.ev.past{opacity:.62}
+.ev h3{font-weight:600;font-size:16px;line-height:1.3}
+.ev .pc,.ev .pc-ph{width:46px}
+.ev-r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
+@media(max-width:640px){.ev{grid-template-columns:46px minmax(0,1fr);padding:14px 16px}.ev-r{grid-column:2;flex-direction:row;align-items:center;gap:12px;text-align:left}}
+.daypanel{margin-top:14px}
+.daypanel h2{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;text-transform:none}
+.daypanel .evs{border:0;border-radius:0;background:transparent;margin:0 -22px -20px}
+
+/* host tools: picture picker */
+.imgs{display:flex;flex-wrap:wrap;gap:10px}
+.imgt{margin:0;width:96px;display:grid;gap:6px;align-content:start}
+.imgt img{display:block;width:96px;aspect-ratio:55/85;object-fit:cover;border-radius:6px;background:var(--panel-2)}
+.imgt figcaption{display:grid;gap:4px}
+.imgt .btn{padding:5px 8px;min-height:30px;font-size:12.5px}
+.imgt .pill{text-align:center}
+.imgadd{margin-top:4px}
+.imgadd:focus-within label{outline:2px solid var(--focus);outline-offset:2px}
+.imgadd label{cursor:pointer}
+.ok{color:var(--sea);font-weight:600;font-size:14px}
+.mini{width:32px;aspect-ratio:55/85;object-fit:cover;border-radius:4px;background:var(--panel-2);flex:none}
+.arow-l{display:flex;gap:12px;align-items:center;min-width:0}
+
+/* sets: availability grid, rules, claiming */
+.gocard.wide{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:20px 30px;align-items:start}
+.gc-l,.gc-r{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media(max-width:860px){.gocard.wide{grid-template-columns:minmax(0,1fr)}}
+.sh{font:600 15px/1.3 var(--display);margin:0 0 8px}
+.gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table.av{border-collapse:collapse;width:100%}
+table.av th,table.av td{padding:3px 4px;text-align:center;font-variant-numeric:tabular-nums;min-width:36px;height:36px}
+table.av thead th{font-size:12px;color:var(--muted);font-weight:600;background:var(--panel-2);height:auto;padding:7px 4px}
+table.av tbody th{text-align:left;font-size:14px;font-weight:600;padding-left:10px;background:var(--panel-2);min-width:52px}
+table.av td{font-size:19px;line-height:1;border-top:1px solid var(--line)}
+table.av .wl1{border-left:2px dashed var(--muted)}
+table.av td.mine{box-shadow:inset 0 0 0 2px var(--gold);border-radius:6px}
+table.av tfoot td{font-size:12px;font-weight:600;color:var(--muted);height:auto;padding:6px 4px;border-top:1px solid var(--line)}
+table.av tfoot th{height:auto;font-size:12px;color:var(--muted);padding:6px 4px 6px 10px;text-align:left;font-weight:600;background:var(--panel-2)}
+table.av tfoot .k-in{color:var(--sea)} table.av tfoot .k-risk{color:var(--coral)}
+table.av tr.ot8row td{text-align:left;padding:4px 10px;font-size:19px;letter-spacing:4px;border-top:2px solid var(--line);height:auto}
+table.av tr.ot8row th{border-top:2px solid var(--line)}
+table.av tr.ot8row td .muted{letter-spacing:0}
+.ot8e{display:inline-block;padding:0 2px;border-radius:6px}
+.ot8e.mine{box-shadow:inset 0 0 0 2px var(--gold)}
+.mchips:has(.q){display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+.mchip.q{cursor:default;min-width:0;padding:8px 6px 10px;justify-content:space-between}
+.mchip.q.on{border-color:var(--sea);box-shadow:inset 0 0 0 1px var(--sea)}
+.mchip.q small{text-align:center}
+.qty{display:flex;align-items:center;gap:4px;margin-top:4px}
+.qty .qb{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:inherit;font-size:18px;line-height:1;cursor:pointer;padding:0}
+.qty .qb:hover{border-color:var(--sea)}
+.mchip.q .qty input{position:static;inset:auto;opacity:1;cursor:text;width:38px;height:30px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:inherit;font:inherit;-moz-appearance:textfield;padding:0}
+.mchip.q .qty input::-webkit-outer-spin-button,.mchip.q .qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+@media (max-width:520px){table.av th,table.av td{min-width:30px;height:32px;padding:2px 2px}table.av td{font-size:17px}table.av tbody th{min-width:40px;padding-left:6px}}
+ul.setnotes,ul.rules{margin:10px 0 0;padding-left:18px;font-size:14px;color:var(--muted)}
+ul.rules{color:var(--text);margin-top:0} ul.rules li,ul.setnotes li{margin:5px 0}
+.sumline{display:flex;flex-wrap:wrap;gap:8px}
+.panel-mini{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;background:var(--panel-2)}
+.mchips{display:flex;flex-wrap:wrap;gap:8px}
+.mchip{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:66px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--panel)}
+.mchip input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0;width:100%;height:100%}
+.mchip:has(input:checked){background:var(--btn);color:var(--btn-ink);border-color:transparent}
+.mchip:has(input:disabled){opacity:.5;cursor:not-allowed}
+.mchip:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}
+.mchip small{font-size:11.5px;opacity:.85}
+.mine-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.mine-row:first-of-type{border-top:0}
+.chip.wait{border:1px dashed var(--muted);background:transparent}
+.chip.risk{color:var(--coral);background:var(--coral-bg)}
+.chip small{font-weight:500;margin-left:4px;opacity:.85}
+.bar-sm{height:8px;border-radius:4px;background:var(--panel-2);overflow:hidden;margin:8px 0}
+table.pv td .chip{margin-bottom:2px}
+.em2{font-size:22px;vertical-align:-2px}
+details.mini-fold{border-top:1px solid var(--line);padding-top:12px}
+details.mini-fold>summary,details.setdet>summary{cursor:pointer;font:600 14.5px/1.3 var(--body)}
+details.mini-fold[open]>summary{margin-bottom:14px}
+table.av td.wl,table.av th.wl{background:var(--panel-2)}
+table.av td.wl{opacity:.85}
+table.av tfoot td{white-space:nowrap}
+.mine-row .chip{margin:0 6px 0 0}
+.gc-r h4.sh{margin:0 0 8px}
+.gc-r .panel-mini .field label{font-size:13px}
+.cbpanel .mine-row .pill{margin-left:8px}
+.metric{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.metric b{font:700 34px/1 var(--display);font-variant-numeric:tabular-nums}
+.tot td{font-weight:700;border-top:2px solid var(--line)}
+table.pv td.r,table.pv th.r{text-align:right;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div id="demo-slot"></div>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#/drops"><span class="brand-mark" aria-hidden="true">🏴‍☠️</span><span>krystal_dagger<small>ATEEZ group orders</small></span></a>
+    <nav aria-label="Main">
+      <a href="#/drops" data-r="drops">Drops</a>
+      <a href="#/calendar" data-r="calendar">Calendar</a>
+      <a href="#/orders" data-r="orders">Order status</a>
+      <a href="#/me" data-r="me">My account</a>
+    </nav>
+    <button class="icon-btn" id="theme" type="button" aria-label="Switch light or dark theme"><span aria-hidden="true">🌗</span></button>
+  </div>
+</header>
+
+<main id="app" class="page" tabindex="-1"><noscript>This site needs JavaScript turned on.</noscript></main>
+
+<footer class="foot">
+  <span>Prices are in USD. Questions? DM <span id="ig-handle"></span> on Instagram.</span>
+  <a href="#/admin" data-r="admin">Host login</a>
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
+<script>
+(() => {
+'use strict';
+
+/* =====================================================================
+   1. SETTINGS: paste your Supabase details here (see README.md)
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: 'https://dtnzlihhlfdxzcrsxgfn.supabase.co',        // e.g. https://abcdxyz.supabase.co
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0bnpsaWhobGZkeHpjcnN4Z2ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMTYzNzAsImV4cCI6MjEwNTU5MjM3MH0.TOD2Bx92M5AQLl1O6GzU3oRxg3tQ4pROFN40iLPQXfA',   // the "anon" / "publishable" key, NOT the service_role key
+  INSTAGRAM: 'krystal_dagger',
+  PAYPAL: 'https://paypal.me/krystaldagger',
+  VENMO: 'https://venmo.com/u/kdagley14',
+};
+const DEMO = !(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY);
+
+/* =====================================================================
+   2. Constants
+   ===================================================================== */
+const MEMBERS = ['HJ','SH','YH','YS','SN','MG','WY','JH'];
+const ALBUM_TYPES = ['Photobook','Digipack (Member)','Digipack (Unit)','POCA','Other'];
+const STATUSES = [['open','Claims open'],['ordered','Ordered'],['at_kaddy','At kaddy'],['in_transit','On the way to host'],['on_hand','On hand'],['completed','Shipped to joiners'],['cancelled','Cancelled']];
+const STATUS_LABEL = Object.fromEntries(STATUSES);
+const FLOW = ['open','ordered','at_kaddy','in_transit','on_hand','completed'];
+const SHIP_STATUSES = [['pending','Not packed yet'],['packed','Packed'],['shipping_paid','Shipping paid'],['shipped','On the way'],['delivered','Arrived']];
+const SHIP_LABEL = Object.fromEntries(SHIP_STATUSES);
+const DROP_STATUSES = [['announced','Announced'],['planned','GO planned'],['go_open','Claims open'],['skipped','Not hosting']];
+const DROP_FILTER = {go_open:'Claims open',go_running:'Order running',planned:'GO planned',announced:'Announced',skipped:'Not hosting'};
+const SHIPPING_TYPES = ['US Stamped','US Tracked','WW Tracked','w/ Other GO','In Person','Local Pickup'];
+const IMG_BUCKET = 'drop-images', MAX_IMGS = 12;
+const SET_MODES = [['none','No set rules (claims are never waitlisted or dropped)'],['drop','Drop sets that are not filled enough'],['split','Split the cost of unclaimed members'],['sort','Sort: order exactly the number of claims']];
+const SET_MODE_SHORT = {none:'No set rules', drop:'Drop short sets', split:'Split unclaimed members', sort:'Sorted order'};
+const EVT_NAME = {FC:'Fancall', FS:'Fansign', LD:'Lucky draw'};
+const EVT_SHORT = {FC:'Call', FS:'Sign', LD:'Draw'};
+const KIND_ORDER = ['deadline', 'announce', 'event'];
+const KINDS = {deadline:{label:'Order deadlines', pill:'coral'}, announce:{label:'Winner announcements', pill:'gold'}, event:{label:'Fancall and fansign dates', pill:'sea'}};
+
+/* =====================================================================
+   3. Small helpers
+   ===================================================================== */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => Number(v) || 0;
+const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+const sum = (arr, f) => r2(arr.reduce((a, x) => a + num(f(x)), 0));
+const money = n => (num(n) < 0 ? '-' : '') + '$' + Math.abs(num(n)).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtDate = d => d ? new Date(String(d).slice(0,10) + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
+const pad2 = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const today = () => ymd(new Date());
+const parseD = s => new Date(String(s).slice(0,10) + 'T00:00:00');
+const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return ymd(d); };
+const daysFromNow = s => Math.round((parseD(s) - parseD(today())) / 864e5);
+const isoDaysAgo = n => addDays(today(), -n);
+const fmtLong = d => d ? parseD(d).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}) : '';
+const fmtFull = d => d ? parseD(d).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'}) : '';
+const whenChip = d => { const n = daysFromNow(d); return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday' : n > 1 ? `in ${n} days` : `${-n} days ago`; };
+const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now();
+const normHandle = h => String(h || '').trim().replace(/^@/, '').toLowerCase();
+const isUnitGO = g => g && g.album_type === 'Digipack (Unit)';
+const byNewest = (a, b) => (b.created_at || '').localeCompare(a.created_at || '');
+const mkStore = area => ({
+  get(k){ try { return window[area].getItem(k); } catch { return null; } },
+  set(k, v){ try { window[area].setItem(k, v); } catch {} },
+  del(k){ try { window[area].removeItem(k); } catch {} },
+});
+const session = mkStore('sessionStorage'), prefs = mkStore('localStorage');
+
+let toastTimer;
+function toast(msg, bad) {
+  const t = $('#toast');
+  t.innerHTML = `<div class="toast${bad ? ' bad' : ''}">${esc(msg)}</div>`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.innerHTML = ''; }, bad ? 6000 : 2600);
+}
+
+function ask({title, html = '', ok = 'Save', danger = false}) {
+  return new Promise(resolve => {
+    const d = document.createElement('dialog');
+    d.innerHTML = `<form><h3>${esc(title)}</h3>${html}<div class="dlg-actions"><button type="button" class="btn ghost" data-x>Cancel</button><button class="btn${danger ? ' danger' : ''}">${esc(ok)}</button></div></form>`;
+    document.body.append(d);
+    const form = $('form', d);
+    const done = v => { try { d.close(); } catch {} d.remove(); resolve(v); };
+    form.addEventListener('submit', e => { e.preventDefault(); done(Object.fromEntries(new FormData(form))); });
+    $('[data-x]', d).addEventListener('click', () => done(null));
+    d.addEventListener('cancel', e => { e.preventDefault(); done(null); });
+    d.showModal();
+    const first = $('input,select,textarea', d); if (first) first.focus();
+  });
+}
+
+/* =====================================================================
+   3b. Set rules engine: seats, waitlists, going-through, split cost
+   ===================================================================== */
+/* ENGINE START */
+const UNIT_ROWS = ['HJ/SH','YH/MG','YS/WY','SN/JH'];
+// Who is first in a member's line: GOM, then fixed claimers, then soft claimers, then the extra claims of fixed and
+// soft claimers, then everyone else. Inside a group: your list order, then claim time. A spot that was dropped and
+// added again has no list position, so it goes to the end of its group.
+const RANK = {gom:0, fixed:1, soft:2, extra:3, joiner:4, host:4};
+const claimCmp = (a, b) => (RANK[a.source || 'joiner'] ?? 4) - (RANK[b.source || 'joiner'] ?? 4)
+  || (a.roster_pos ?? 1e9) - (b.roster_pos ?? 1e9)
+  || String(a.created_at || '').localeCompare(String(b.created_at || ''))
+  || String(a.id || '').localeCompare(String(b.id || ''));
+const rowsOf = go => go && go.album_type === 'Digipack (Unit)' ? UNIT_ROWS : MEMBERS;
+const hasSets = go => !!go && !!go.set_mode && go.set_mode !== 'none';
+const ceilCent = x => Math.ceil(x * 100 - 1e-9) / 100;
+
+// Every member has one line of claims, in priority order. Spot n in a line = set n.
+// A set goes through when enough members have a claim in it. Sets fill in order, so the sets going through are
+// always 1..N, and the waitlist is everything after N. OT8 claims are not part of the grid: they are always ordered.
+function analyze(go, claims, cb) {
+  const R = rowsOf(go), mode = go.set_mode, unit = R === UNIT_ROWS;
+  const min = Math.min(R.length, Math.max(1, num(go.min_members) || R.length));
+  const closed = go.status !== 'open' || !!(go.deadline && today() > String(go.deadline).slice(0, 10));
+  const gated = mode === 'drop' || mode === 'split';
+  const live = claims.filter(c => c.status !== 'dropped').sort(claimCmp);
+  const ot8 = live.filter(c => c.member_code === 'OT8');
+  const rowSeats = {}, seats = [];
+  R.forEach(r => { rowSeats[r] = live.filter(c => c.member_code === r).map((claim, i) => ({claim, row:r, pos:i + 1})); seats.push(...rowSeats[r]); });
+  const longest = Math.max(0, ...R.map(r => rowSeats[r].length));
+  const countAt = n => R.filter(r => rowSeats[r].length >= n).length;
+  let N = 0; if (gated) { while (N < longest && countAt(N + 1) >= min) N++; } else N = longest;
+  const total = Math.max(1, longest, gated ? N + 1 : 0);      // a waitlist column is always shown after the sets going through
+  const sets = [];
+  for (let n = 1; n <= total; n++) {
+    const cells = {}; R.forEach(r => { cells[r] = rowSeats[r][n - 1] || null; });
+    const missing = R.filter(r => !cells[r]), count = R.length - missing.length;
+    const status = n <= N ? (count === R.length ? 'full' : 'go') : !count ? 'empty' : closed ? 'dropped' : 'wait';
+    // split: unclaimed members' cost is shared by the claims in the set (rounded up to the cent)
+    const extra = mode === 'split' && n <= N && missing.length ? ceilCent(missing.length * num(go.price_per_pc) / count) : 0;
+    sets.push({n, cells, count, missing, status, extra, need: n > N ? Math.max(0, min - count) : 0});
+  }
+  const STATE = {full:'in', go:'in', dropped:'dropped', wait:'wait'};
+  seats.forEach(st => { const set = sets[st.pos - 1]; st.set = set; st.state = STATE[set.status]; st.extra = set.extra; });
+  const going = sets.filter(x => x.status === 'full' || x.status === 'go');
+  const rowCount = {}, toOrder = {}, next = {};
+  R.forEach(r => {
+    rowCount[r] = rowSeats[r].length;
+    toOrder[r] = (mode === 'sort' ? rowSeats[r].length : N) + ot8.length;
+    next[r] = rowSeats[r].length + 1;
+  });
+  const waitSet = sets.find(x => x.n > N && x.count);
+  return {go, cb, mode, R, N, min, closed, gated, sets, seats, ot8, rowCount, toOrder, next, claimed: seats.length + ot8.length,
+    going: going.length,
+    items: R.reduce((a, r) => a + toOrder[r], 0),
+    unclaimed: mode === 'sort' ? 0 : going.reduce((a, x) => a + x.missing.length, 0),
+    waitlisted: seats.filter(x => x.state === 'wait').length,
+    dropped: seats.filter(x => x.state === 'dropped').length,
+    waitSets: sets.filter(x => x.status === 'wait').length,
+    nextNeed: waitSet && !closed ? {n:waitSet.n, need:waitSet.need} : null};
+}
+
+// What one claim means: where it landed, whether it is charged, and how much. OT8 is always charged.
+function claimInfo(go, claim, an) {
+  const price = num(claim.price), none = {amount:0, base:0, extra:0, pendingBase:0, seats:[], inCount:0, total:1};
+  if (claim.status === 'dropped') return {...none, state:'dropped'};
+  const full = {state:'in', amount:price, base:price, extra:0, pendingBase:0, seats:[], inCount:1, total:1};
+  if (claim.member_code === 'OT8') return {...full, ot8:true};
+  if (!hasSets(go) || !an) return full;
+  const st = an.seats.find(s => s.claim.id === claim.id);
+  if (!st) return full;
+  if (st.state === 'in') return {...full, amount:r2(price + st.extra), extra:st.extra, seats:[st]};
+  return {...none, state:st.state, pendingBase: st.state === 'wait' ? price : 0, seats:[st]};
+}
+
+const seatLabel = (st, an) => st.pos > an.N ? `Waitlist #${st.pos - an.N}` : `Set ${st.pos}`;
+function placeText(info, an) {
+  if (info.ot8) return 'Ordered no matter what';
+  if (!an || !info.seats.length) return info.state === 'dropped' ? 'Dropped' : '';
+  const st = info.seats[0], L = seatLabel(st, an);
+  return st.state === 'in' ? `${L}, going through` : st.state === 'wait' ? `${L}, not ordered unless its set fills up` : `${L}, not ordered`;
+}
+function setNote(x, an) {
+  const W = an.R === UNIT_ROWS ? 'units' : 'members', of = `${x.count} of ${an.R.length} ${W}`;
+  if (x.status === 'full') return `Set ${x.n}: full, going through`;
+  if (x.status === 'go') return an.mode === 'sort' ? `Set ${x.n}: ${of} claimed` : x.extra
+    ? `Set ${x.n}: ${of} claimed, going through. ${x.missing.join(', ')} unclaimed, so each claim pays +${money(x.extra)}`
+    : `Set ${x.n}: ${of} claimed, going through. ${x.missing.join(', ')} unclaimed`;
+  if (x.status === 'wait') return `Waitlist (set ${x.n}): ${of} claimed. Needs ${x.need} more to be ordered`;
+  if (x.status === 'dropped') return `Set ${x.n}: ${of} claimed. Not enough, so it is not ordered`;
+  return '';
+}
+function rulesList(go, cb) {
+  const R = rowsOf(go), W = R === UNIT_ROWS ? 'units' : 'members', w1 = R === UNIT_ROWS ? 'unit' : 'member';
+  const min = Math.min(R.length, num(go.min_members) || R.length), out = [];
+  const gate = `A set goes through when at least ${min} of ${R.length} ${W} are claimed in it. Sets fill in order, and the waitlist starts right after the last set that goes through.`;
+  if (go.set_mode === 'drop') out.push(`${gate} A waitlisted claim is not charged unless enough people claim to bring its set up to ${min} by the deadline. If a set goes through with a ${w1} unclaimed, that ${w1} is not charged to joiners.`);
+  if (go.set_mode === 'split') out.push(`${gate} If a set goes through with some ${W} unclaimed, their cost is split evenly across the claims in that set, and the unclaimed ${W} are raffled off to that set's joiners. A waitlisted claim is not charged unless its set fills enough to go through.`);
+  if (go.set_mode === 'sort') out.push(`I order exactly the number of claims instead of full sets, so nothing is waitlisted. You may not get the ${w1} you claimed.`);
+  if (hasSets(go)) out.push(`You can claim the same ${w1} more than once. OT8 claims are not part of the sets. They sit in their own row and are always ordered, and you can claim more than one.`);
+  out.push(cb && go.roster_required
+    ? `Each ${w1} has one line, and spots go in this order: GOM, fixed claimers, soft claimers, then everyone else by claim time. A fixed or soft claimer who drops a spot and adds the same ${w1} back goes to the end of their group. Their other claims come after all fixed and soft claimers, ahead of everyone else.`
+    : `Spots in each ${w1}'s line go in claim order.`);
+  if (cb && go.roster_required) out.push(`Fixed claimers keep their fixed ${W} unless they switch to OT8 or I drop them, and can add or drop other ${W} any time. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`);
+  if (go.deadline) out.push(`Claim deadline: ${fmtDate(go.deadline)}${go.deadline_time ? ', ' + go.deadline_time : ''}.`);
+  return out;
+}
+
+// Comeback list: which claims should exist on a comeback order (fixed first, then soft, in caption order)
+function rosterDesired(go, roster) {
+  const unit = rowsOf(go) === UNIT_ROWS, by = new Map();
+  roster.slice().sort((a, b) => (a.tier === b.tier ? 0 : a.tier === 'fixed' ? -1 : 1) || a.position - b.position).forEach(r => {
+    const code = unit ? UNIT_ROWS.find(u => u.split('/').includes(r.member_code)) : r.member_code;
+    const k = r.joiner_id + '|' + code;
+    if (code && !by.has(k)) by.set(k, {joiner_id:r.joiner_id, member_code:code, source:r.tier, roster_pos:r.position});
+  });
+  return [...by.values()];
+}
+
+// Where a claim added right now would land in line. Used by the site to preview a claim before it is made.
+function claimSourceFor(go, o) {
+  if (o.isHost) return 'gom';
+  if (!(go.comeback_id && go.roster_required) || !o.onList) return 'joiner';
+  if (o.code !== 'OT8' && o.spots.length && !o.haveStanding) return o.spots.some(s => s.tier === 'fixed') ? 'fixed' : 'soft';
+  return 'extra';
+}
+
+// Works out what has to change so every claim on a comeback order sits in the right group:
+//  - each fixed/soft spot on the list has one live claim, at its list position (added if missing, unless the joiner
+//    dropped it on purpose or has an OT8)
+//  - a joiner's other claims are "extra" if they are on the list, otherwise ordinary
+//  - the host's claims are always GOM
+//  - a spot that was dropped and added again keeps having no list position, so it stays at the end of its group
+function planSync(go, roster, claims, hostId, addMissing = true) {
+  const want = rosterDesired(go, roster), wantBy = new Map(want.map(d => [d.joiner_id + '|' + d.member_code, d]));
+  const onList = new Set(roster.map(r => r.joiner_id));
+  const stand = c => c.source === 'fixed' || c.source === 'soft' || (c.source === 'gom' && c.roster_pos != null);
+  const byCreated = (a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || String(a.id || '').localeCompare(String(b.id || ''));
+  const fixes = new Map(), add = [];
+  const setTo = (c, source, pos) => { if (c.source !== source || (c.roster_pos ?? null) !== pos) fixes.set(c.id, {id:c.id, source, roster_pos:pos}); };
+  const byJ = new Map(); claims.forEach(c => { if (!byJ.has(c.joiner_id)) byJ.set(c.joiner_id, []); byJ.get(c.joiner_id).push(c); });
+  const hasOt8 = jid => (byJ.get(jid) || []).some(c => c.status !== 'dropped' && c.member_code === 'OT8');
+  want.forEach(d => {
+    const cs = (byJ.get(d.joiner_id) || []).filter(c => c.member_code === d.member_code);
+    if (addMissing && !hasOt8(d.joiner_id) && !cs.some(c => stand(c) || c.status !== 'dropped'))
+      add.push({joiner_id:d.joiner_id, member_code:d.member_code, source:d.joiner_id === hostId ? 'gom' : d.source, roster_pos:d.roster_pos});
+  });
+  byJ.forEach((mine, jid) => {
+    const host = jid === hostId, rest = host ? 'gom' : onList.has(jid) ? 'extra' : 'joiner';
+    new Set(mine.filter(c => c.member_code !== 'OT8').map(c => c.member_code)).forEach(code => {
+      const d = wantBy.get(jid + '|' + code), cs = mine.filter(c => c.member_code === code), act = cs.filter(c => c.status !== 'dropped').sort(byCreated);
+      let keep = null;
+      if (d && act.length) {
+        keep = act.find(stand) || act[0];
+        const pos = stand(keep) ? (keep.roster_pos == null ? null : d.roster_pos) : (cs.some(stand) ? null : d.roster_pos);
+        setTo(keep, host ? 'gom' : d.source, pos);
+      }
+      act.filter(c => c !== keep).forEach(c => setTo(c, rest, null));
+    });
+    mine.filter(c => c.status !== 'dropped' && c.member_code === 'OT8').forEach(c => setTo(c, rest, null));
+  });
+  return {add, fix:[...fixes.values()]};
+}
+
+// Reads your Instagram list: "Fixed claim:", "Soft claim:", member rows like "HJ: 💎💚 |", and the emoji key
+const GRAPHEMES = (() => {
+  try { const seg = new Intl.Segmenter(undefined, {granularity:'grapheme'}); return t => [...seg.segment(t)].map(x => x.segment).filter(x => x.trim()); }
+  catch { return t => t.match(/\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})*(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})*)*|\S/gu) || []; }
+})();
+const normEmoji = e => String(e).replace(/\uFE0F/g, '');
+function parseRoster(text, hostHandle) {
+  const tiers = {fixed:{}, soft:{}}, key = new Map(), issues = []; let tier = null;
+  String(text || '').split(/\r?\n/).forEach((raw, i) => {
+    const line = raw.trim(); if (!line) return;
+    if (/^fixed\s+claim/i.test(line)) { tier = 'fixed'; return; }
+    if (/^soft\s+claim/i.test(line)) { tier = 'soft'; return; }
+    const m = line.match(/^(HJ|SH|YH|YS|SN|MG|WY|JH)\s*:\s*(.*)$/i);
+    if (m) {
+      if (!tier) { issues.push(`Line ${i + 1}: this member row comes before "Fixed claim:" or "Soft claim:"`); return; }
+      const bar = m[2].indexOf('|');
+      tiers[tier][m[1].toUpperCase()] = {main: GRAPHEMES(bar < 0 ? m[2] : m[2].slice(0, bar)), wait: bar < 0 ? [] : GRAPHEMES(m[2].slice(bar + 1))};
+      return;
+    }
+    const first = GRAPHEMES(line)[0], rest = first ? line.slice(first.length).trim() : '';
+    if (first && !/^[A-Za-z0-9\[(@]/.test(first) && rest) {
+      const h = rest.match(/@([A-Za-z0-9._]+)/);
+      if (h) key.set(normEmoji(first), {emoji:first, handle:h[1].toLowerCase()});
+      else if (/^GOM\b/i.test(rest) && hostHandle) key.set(normEmoji(first), {emoji:first, handle:normHandle(hostHandle), gom:true});
+      else issues.push(`Line ${i + 1}: could not find a handle in "${line}"`);
+      return;
+    }
+    issues.push(`Line ${i + 1}: could not read "${line}"`);
+  });
+  const entries = [], slots = {fixed:0, soft:0}, unknown = new Set();
+  ['fixed', 'soft'].forEach(t => Object.entries(tiers[t]).forEach(([mem, row]) => {
+    let pos = 0; slots[t] = Math.max(slots[t], row.main.length);
+    [['main', false], ['wait', true]].forEach(([k, wl]) => row[k].forEach(tok => {
+      if (normEmoji(tok) === '✅') return;
+      pos++;
+      const kk = key.get(normEmoji(tok));
+      if (!kk) { unknown.add(tok); return; }
+      entries.push({tier:t, member_code:mem, position:pos, waitlist:wl, emoji:kk.emoji, handle:kk.handle});
+    }));
+  }));
+  return {entries, slots, key, unknown:[...unknown], issues};
+}
+// Did this joiner really get into the order? 'joined' = at least one claim is going through (or waiting on more members)
+function joinState(go, an, mine) {
+  const f = mine.filter(c => c.status === 'filled');
+  if (!f.length) return mine.length ? 'dropped' : 'none';
+  const st = f.map(c => claimInfo(go, c, an).state);
+  if (st.some(s => s === 'in' || s === 'pending' || s === 'mixed')) return 'joined';
+  return st.every(s => s === 'wait') ? 'wait' : 'dropped';
+}
+// Turns saved comeback claimers back into your Instagram list format
+function rosterToText(cb, roster, emojis, joiners, hostHandle) {
+  const emo = new Map(emojis.map(e => [e.joiner_id, e.emoji])), jn = new Map(joiners.map(j => [j.id, j]));
+  const line = (tier, m) => {
+    const es = roster.filter(r => r.tier === tier && r.member_code === m).sort((a, b) => a.position - b.position);
+    const main = es.filter(r => !r.waitlist).map(r => emo.get(r.joiner_id) || '❔'), cap = num(tier === 'fixed' ? cb.fixed_slots : cb.soft_slots);
+    while (main.length < cap) main.push('✅');
+    const wl = es.filter(r => r.waitlist).map(r => emo.get(r.joiner_id) || '❔');
+    return `${m}: ${main.join('')} |${wl.length ? ' ' + wl.join('') : tier === 'soft' ? ' ✅' : ''}`;
+  };
+  const seen = [];
+  roster.slice().sort((a, b) => (a.tier === b.tier ? 0 : a.tier === 'fixed' ? -1 : 1) || MEMBERS.indexOf(a.member_code) - MEMBERS.indexOf(b.member_code) || a.position - b.position)
+    .forEach(r => { if (!seen.includes(r.joiner_id)) seen.push(r.joiner_id); });
+  const key = seen.filter(id => jn.has(id)).map(id => { const j = jn.get(id), e = emo.get(id) || '❔'; return normHandle(j.name) === normHandle(hostHandle) ? `${e} GOM` : `${e} @${j.name}`; });
+  return ['Fixed claim:', ...MEMBERS.map(m => line('fixed', m)), '', 'Soft claim:', ...MEMBERS.map(m => line('soft', m)), '', ...key].join('\n');
+}
+/* ENGINE END */
+
+/* =====================================================================
+   4. DEMO data + API  (used when Supabase is not configured)
+   ===================================================================== */
+function seedDemo() {
+  const D = {drops:[], group_orders:[], shipments:[], joiners:[], joiner_accounts:[], claims:[], participants:[], charges:[], payments:[], comebacks:[], comeback_roster:[], comeback_emojis:[]};
+  let seed = 11; const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  const pick = arr => arr[Math.floor(rnd() * arr.length)];
+
+  [[1,'Kfriday','delivered','2026-08-06','2026-08-10','2026-08-14'],
+   [3,'Kfriday','delivered','2026-09-06','2026-09-07','2026-09-09'],
+   [5,'Kfriday','packed','2026-09-10',null,null],
+   [6,'Kfriday','pending',null,null,null]]
+  .forEach(([number,kaddy,status,paid_on,shipped_on,delivered_on]) =>
+    D.shipments.push({id:'s'+number, number, kaddy, status, paid_on, shipped_on, delivered_on, tracking:null}));
+
+  const go = (key,name,emoji,album,price,ot8,status,ship) => {
+    const g = {id:'g-'+key, name, emoji, platform:'instagram', kaddy:'Kfriday', album_type:album, price_per_pc:price, ot8_price:ot8,
+      status, shipment_id: ship ? 's'+ship : null, post_url:null, public_note:null,
+      set_mode:'none', sets_open:null, min_members:null, waitlist_on:true, claims_on_site:false, comeback_id:null, roster_required:true,
+      created_at:`2026-07-${String(10 + D.group_orders.length).padStart(2,'0')}T12:00:00Z`};
+    D.group_orders.push(g); return g;
+  };
+  const fromm  = go('fromm','GHP5 Fromm 2.0 (Unit FC)','👃','Digipack (Unit)',7,26,'completed',1);
+  const mini   = go('mini','Mini Fanmeet Broadcast','🍒','Other',38,null,'completed',1);
+  const jjmuze = go('jj','JJMuze Caolan (FC)','🎁','Photobook',12,96,'completed',1);
+  const book   = go('book','Seonghwa Before Sleep Book','📘','Other',37,null,'on_hand',3);
+  const mk4    = go('mk4','Makestar 4.0','🐹','POCA',6,45,'on_hand',5);
+  const sw     = go('sw','Soundwave 5.0 FC','🍉','Digipack (Member)',14,112,'ordered');
+  const mk7    = go('mk7','Makestar 7.0 FS','🥕','POCA',8,64,'ordered');
+  const music  = go('music','Musicart Caolan (FC)','🎵','Photobook',12.5,null,'at_kaddy',6);
+  const mex    = go('mex','Makestar Mexico','🐱','POCA',28,null,'ordered');
+  const kong   = go('kong','Whosfan Kongsoonteez LD','🐶','Photobook',14,null,'open');
+  const wm     = go('wm','Withmuu Squish Kitten Bread POB','🍞','Other',5,null,'open');
+  const th     = go('th','K-Playground Teez-Heart POB','💖','Photobook',9,72,'open');
+
+  const off = n => addDays(today(), n);
+  const DL = {fromm:[-70,'11:59 PM EST'], mini:[-76,null], jj:[-72,'11:59 PM EST'], book:[-31,null], mk4:[-36,'11:59 PM EST'], sw:[-14,'11:59 PM EST'],
+    mk7:[-9,'11:59 PM EST'], music:[-40,null], mex:[-21,'11:59 PM EST'], kong:[4,'11:59 PM EST'], wm:[9,'8:00 PM EST'], th:[2,'11:59 PM EST']};
+  D.group_orders.forEach(g => { const d = DL[g.id.replace('g-', '')]; if (d) { g.deadline = off(d[0]); g.deadline_time = d[1]; } });
+
+  // set rules and the comeback
+  Object.assign(kong, {set_mode:'split', min_members:6, claims_on_site:true});
+  Object.assign(th,   {set_mode:'drop',  min_members:7, claims_on_site:true});
+  Object.assign(wm,   {set_mode:'sort',  claims_on_site:true});
+  D.comebacks.push({id:'cb1', name:'Next ATEEZ comeback', soft_min_orders:6, fixed_slots:2, soft_slots:5, created_at:'2026-08-01T00:00:00Z'});
+  [kong, th, sw, mk7, mex, music].forEach(g => { g.comeback_id = 'cb1'; });
+  [sw, mk7, mex, music].forEach(g => { g.roster_required = false; });
+
+  const link = { 'Nose Dingdong':fromm, 'Agungppang (Baby Butt Bread)':jjmuze, 'Music Art POB':music, 'Marriage is the Only Option':sw, 'Kongsoonteez':kong,
+    'Squish Kitten Bread':wm, 'Teez-Heart':th, 'Sea Friends':mk4 };
+
+  // fancall / fansign / lucky draw dates, relative to today so the demo calendar is always alive
+  const DROP_DATES = {
+    'Ice Cream': {deadline:off(5), deadline_time:'11:59 PM EST', winners_on:off(8), winners_note:'Posted around 8 PM KST', event_on:off(15), event_end_on:off(16), event_note:'Video calls, 7 PM EST slots'},
+    'Strawberry': {deadline:off(11), winners_on:off(16), event_on:off(23), event_note:'Time slots are sent to winners'},
+    'French Fry': {deadline:off(3), deadline_time:'6:00 PM EST', winners_on:off(10), winners_note:'8 PM KST', event_on:off(18), event_note:'9 PM KST'},
+    'Kongsoonteez': {winners_on:off(8), winners_note:'9 PM KST', event_on:off(12), event_note:'Lucky draw video call'},
+    'Nose Dingdong': {winners_on:off(-60), event_on:off(-52), event_end_on:off(-51)},
+    'Music Art POB': {winners_on:off(-30), event_on:off(-22), event_note:'8 PM KST'},
+    'ATEEZOOrista': {deadline:off(14), winners_on:off(21), event_on:off(27), event_end_on:off(29), event_note:'Three shows, one show per night'},
+    'JP Fanclub POB': {deadline:off(12)},
+    'Hair Clip': {winners_on:off(5), event_on:off(6), event_note:'Lucky draw video call'},
+  };
+  // stand-in photocards (colored cards labelled with the member) so the demo shows what uploads look like
+  const demoImages = (pc_kind, i) => {
+    const labels = pc_kind === 'unit' ? ['HJ/SH','YH/MG','YS/WY','SN/JH'] : MEMBERS.slice(0, 3 + (i % 6));
+    return labels.map((label, k) => {
+      const hue = (i * 47 + k * 23) % 360;
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 170'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${hue},72%,74%)'/><stop offset='1' stop-color='hsl(${(hue + 50) % 360},62%,38%)'/></linearGradient></defs><rect width='110' height='170' fill='url(#g)'/><rect x='6' y='6' width='98' height='158' rx='5' fill='none' stroke='white' stroke-opacity='.7' stroke-width='1.5'/><text x='55' y='94' font-family='sans-serif' font-size='${label.length > 2 ? 24 : 32}' font-weight='700' text-anchor='middle' fill='white'>${label}</text><text x='55' y='152' font-family='sans-serif' font-size='9' text-anchor='middle' fill='white' fill-opacity='.85'>sample photocard</text></svg>`;
+      const u = 'data:image/svg+xml,' + encodeURIComponent(svg);
+      return {src:u, thumb:u};
+    });
+  };
+  [['Rimmed Glasses','Dearmymuse','POB','1.0','Digipack (Member)','single','2026-06-01','announced'],
+   ['Unit Cheek-Pinch','Fromm','POB','1.0','Digipack (Unit)','unit','2026-06-01','skipped'],
+   ['Sea Friends','Makestar','POB','1.0','POCA','single','2026-06-01','planned'],
+   ['Marriage is the Only Option','Soundwave','POB','1.0','Photobook','single','2026-06-01','announced'],
+   ['Ice Cream','Soundwave','FC','2.0','Digipack (Member)','single','2026-06-05','announced'],
+   ['Nose Dingdong','Fromm','FC','2.0','Digipack (Unit)','unit','2026-06-07','announced'],
+   ['Strawberry','Makestar','FC','2.0','POCA','single','2026-06-08','planned'],
+   ['French Fry','Ticketlink','FC','2.0','Photobook','single','2026-06-11','announced'],
+   ['Squish Kitten Bread','Withmuu','POB','1.0','Keychain','single','2026-06-15','announced'],
+   ['Headset','Makestar','POB','','CD Player','single','2026-06-22','announced'],
+   ['Agungppang (Baby Butt Bread)','JJ Muze','FC','1.0','Photobook','single','2026-06-24','announced'],
+   ['Hair Clip','Makestar','LD','3.0','POCA','single','2026-06-25','planned'],
+   ['Kongsoonteez','Whosfan','LD','','Photobook','single','2026-07-02','announced'],
+   ['Music Art POB','Music Art','FC','2.0','Photobook','single','2026-07-08','announced'],
+   ['ATEEZOOrista','Apple Music','FS','','Digipack (Member)','single','2026-07-10','announced'],
+   ['Teez-Heart','K-Playground','POB','','Photobook','single',isoDaysAgo(2),'announced'],
+   ['JP Fanclub POB','JP Fanclub','POB','','Photobook','single',isoDaysAgo(5),'planned'],
+  ].forEach(([name,store,drop_type,round,album_type,pc_kind,announced_on,status], i) =>
+    D.drops.push({id:uid(), name, store, drop_type, round, album_type, pc_kind, announced_on, status, group_order_id: link[name]?.id || null, link:null, notes:null,
+      images:demoImages(pc_kind, i), deadline:null, deadline_time:null, winners_on:null, winners_note:null, event_on:null, event_end_on:null, event_note:null,
+      ...(DROP_DATES[name] || {}), created_at:announced_on+'T00:00:00Z'}));
+
+  const people = [['demo_joiner','🐙'],['starlit_atiny','🌟'],['bun.tiny','🐰'],['crewmate_08','🧭'],['seaglass.hwa','🐚'],['pirate_pudding','🍩'],['wooyoung.wave','🌊'],['sanbeam','🔦']];
+  people.forEach(([name,emoji]) => {
+    const id = 'j-' + name; D.joiners.push({id, name, emoji, pin_hash:'demo', notes:null});
+    D.joiner_accounts.push({handle:name, joiner_id:id, platform:'instagram'});
+  });
+  D.joiner_accounts.push({handle:'demo_joiner.alt', joiner_id:'j-demo_joiner', platform:'instagram'});
+
+  let n = 0;
+  const addClaim = (jid, g, code, status = 'filled', priceOverride, source = 'joiner', pos = null) => {
+    const items = code === 'OT8' ? 8 : code.includes('/') ? 2 : (MEMBERS.includes(code) ? 1 : 1);
+    const price = priceOverride ?? (code === 'OT8' ? (g.ot8_price ?? r2(g.price_per_pc * 8)) : g.price_per_pc);
+    D.claims.push({id:uid(), group_order_id:g.id, joiner_id:jid, member_code:code, items, price, status, note:null, source, roster_pos:pos,
+      created_at:new Date(Date.UTC(2026, 6, 10, 12, n++)).toISOString()});
+    if (!D.participants.some(p => p.group_order_id === g.id && p.joiner_id === jid))
+      D.participants.push({group_order_id:g.id, joiner_id:jid, shipping_type: pick(['US Stamped','US Tracked']), shipped: g.status === 'completed', tracking:null, note:null});
+  };
+
+  // comeback claimers: fixed first, then soft (in caption order), then the soft waitlist
+  D.joiners.push({id:'j-krystal_dagger', name:'krystal_dagger', emoji:'💎', pin_hash:null, notes:null, is_host:true});
+  D.joiner_accounts.push({handle:'krystal_dagger', joiner_id:'j-krystal_dagger', platform:'instagram'});
+  const FIX = {HJ:['krystal_dagger','starlit_atiny'], SH:['krystal_dagger','bun.tiny'], YH:['crewmate_08','seaglass.hwa'], YS:['pirate_pudding','sanbeam'],
+    SN:['starlit_atiny','wooyoung.wave'], MG:['bun.tiny','crewmate_08'], WY:['seaglass.hwa','pirate_pudding'], JH:['wooyoung.wave','sanbeam']};
+  const SOFT = {HJ:['bun.tiny','demo_joiner','crewmate_08'], SH:['demo_joiner','seaglass.hwa'], YH:['starlit_atiny','sanbeam'], YS:['bun.tiny','crewmate_08'],
+    SN:['pirate_pudding','wooyoung.wave'], MG:['sanbeam','wooyoung.wave'], WY:['starlit_atiny','pirate_pudding'], JH:['crewmate_08','bun.tiny']};
+  const SOFT_WAIT = {HJ:['wooyoung.wave'], SH:['sanbeam']};
+  const rr = (tier, m, h, position, waitlist) => D.comeback_roster.push({id:uid(), comeback_id:'cb1', tier, member_code:m, position, waitlist, joiner_id:'j-' + h});
+  MEMBERS.forEach(m => {
+    FIX[m].forEach((h, i) => rr('fixed', m, h, i + 1, false));
+    SOFT[m].forEach((h, i) => rr('soft', m, h, i + 1, false));
+    (SOFT_WAIT[m] || []).forEach((h, i) => rr('soft', m, h, SOFT[m].length + i + 1, true));
+  });
+  new Set(D.comeback_roster.map(r => r.joiner_id)).forEach(id => D.comeback_emojis.push({comeback_id:'cb1', joiner_id:id, emoji:D.joiners.find(j => j.id === id).emoji}));
+  [kong, th].forEach(g => rosterDesired(g, D.comeback_roster.filter(r => r.comeback_id === g.comeback_id))
+    .forEach(d => addClaim(d.joiner_id, g, d.member_code, 'filled', undefined, d.joiner_id === 'j-krystal_dagger' ? 'gom' : d.source, d.roster_pos)));
+
+  // the joiner you can sign in as
+  const me = 'j-demo_joiner';
+  addClaim(me, fromm, 'HJ/SH'); addClaim(me, fromm, 'YH/MG');
+  addClaim(me, mini, 'SN'); addClaim(me, mini, 'JH', 'dropped');
+  addClaim(me, jjmuze, 'YS');
+  addClaim(me, book, 'Day and Night');
+  addClaim(me, mk4, 'SH'); addClaim(me, mk4, 'YH');
+  addClaim(me, sw, 'OT8');
+  addClaim(me, music, 'SN'); addClaim(me, music, 'WY');
+  addClaim(me, mex, 'SH');
+  const ch = (go, kind, label, amount, due) => D.charges.push({id:uid(), joiner_id:me, group_order_id:go.id, kind, label, amount, due});
+  ch(fromm,'doms','US Tracked shipping (Fromm 2.0)',4.00,true);
+  ch(mini,'doms','US Stamped shipping (Mini Fanmeet)',2.00,true);
+  ch(jjmuze,'doms','US Stamped shipping (JJMuze)',2.00,true);
+  ch(mk4,'doms','US Stamped shipping (Makestar 4.0)',2.00,false);
+  ch(book,'doms','US Tracked shipping (Before Sleep Book)',6.50,false);
+  D.payments.push({id:uid(), joiner_id:me, group_order_id:null, amount:150, method:'venmo', paid_on:'2026-08-02', note:'Fromm, Mini Fanmeet, Makestar, JJMuze'});
+  D.payments.push({id:uid(), joiner_id:me, group_order_id:null, amount:118, method:'paypal', paid_on:'2026-09-05', note:'Soundwave, Musicart, Before Sleep Book'});
+
+  // everyone else
+  const units = ['HJ/SH','YH/MG','YS/WY','SN/JH'];
+  people.slice(1).forEach(([name]) => {
+    const jid = 'j-' + name;
+    [fromm,mini,jjmuze,mk4,sw,mk7,music,mex,kong,wm,th].filter(() => rnd() > 0.35).forEach(g => {
+      const k = 1 + Math.floor(rnd() * 3);
+      const pool = isUnitGO(g) ? units : MEMBERS;
+      const chosen = new Set(); for (let i = 0; i < k; i++) chosen.add(pick(pool));
+      chosen.forEach(c => addClaim(jid, g, c));
+    });
+  });
+  // put every claim in its priority group (their own spots, extra claims, GOM)
+  [kong, th].forEach(g => planSync(g, D.comeback_roster.filter(r => r.comeback_id === g.comeback_id), D.claims.filter(c => c.group_order_id === g.id), 'j-krystal_dagger', false)
+    .fix.forEach(f => Object.assign(D.claims.find(c => c.id === f.id), f)));
+  return D;
+}
+
+function demoApi() {
+  const db = seedDemo(); let admin = false;
+  const clone = x => JSON.parse(JSON.stringify(x));
+  const statsMap = () => {
+    const m = {};
+    db.claims.forEach(c => {
+      const s = m[c.group_order_id] || (m[c.group_order_id] = {js:new Set(), items:0});
+      s.js.add(c.joiner_id); if (c.status === 'filled') s.items += num(c.items);
+    });
+    return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, {joiners:v.js.size, items:v.items}]));
+  };
+  const seatList = () => db.claims.filter(c => c.status === 'filled').map(c => {
+    const g = db.group_orders.find(x => x.id === c.group_order_id), j = db.joiners.find(x => x.id === c.joiner_id);
+    const ce = g && db.comeback_emojis.find(e => e.joiner_id === c.joiner_id && e.comeback_id === g.comeback_id);
+    return {id:c.id, group_order_id:c.group_order_id, member_code:c.member_code, items:c.items, source:c.source, roster_pos:c.roster_pos, created_at:c.created_at, emoji:(ce && ce.emoji) || (j && j.emoji) || null};
+  });
+  const demoAuth = (handle, pin) => { const a = db.joiner_accounts.find(x => x.handle === normHandle(handle)); return a && pin === '1234' ? a.joiner_id : null; };
+  const isOpen = g => g && g.status === 'open' && !(g.deadline && today() > g.deadline);
+  return {
+    demo: true,
+    async loadPublic() {
+      return clone({drops:db.drops, gos:db.group_orders,
+        shipments: db.shipments.map(({id,number,kaddy,status,paid_on,shipped_on,delivered_on}) => ({id,number,kaddy,status,paid_on,shipped_on,delivered_on})),
+        stats: statsMap(), comebacks: db.comebacks, seats: seatList()});
+    },
+    async login(handle, pin) {
+      const a = db.joiner_accounts.find(x => x.handle === normHandle(handle));
+      const j = a && db.joiners.find(x => x.id === a.joiner_id);
+      if (!j || pin !== '1234') return {error:'invalid'};
+      const strip = ({joiner_id, created_at, ...r}) => r;
+      return clone({joiner:{id:j.id, name:j.name, emoji:j.emoji, is_host:!!j.is_host},
+        handles: db.joiner_accounts.filter(x => x.joiner_id === j.id).map(x => x.handle),
+        claims: db.claims.filter(c => c.joiner_id === j.id).map(strip),
+        charges: db.charges.filter(c => c.joiner_id === j.id).map(strip),
+        payments: db.payments.filter(c => c.joiner_id === j.id).map(strip),
+        participation: db.participants.filter(c => c.joiner_id === j.id).map(({joiner_id, ...r}) => r),
+        roster: db.comeback_roster.filter(r => r.joiner_id === j.id).map(({joiner_id, id, ...r}) => r),
+        emojis: db.comeback_emojis.filter(e => e.joiner_id === j.id).map(({comeback_id, emoji}) => ({comeback_id, emoji}))});
+    },
+    async isAdmin() { return admin; },
+    async adminSignIn(email, pw) { if (pw !== 'demo') throw new Error('In demo mode the host password is "demo".'); admin = true; },
+    async adminSignOut() { admin = false; },
+    async list(t, eq) {
+      let r = db[t]; if (eq) r = r.filter(x => Object.entries(eq).every(([k, v]) => x[k] === v));
+      return clone(r);
+    },
+    async save(t, row) {
+      row = clone(row); const list = db[t];
+      if (t === 'comeback_emojis') {
+        const i = list.findIndex(x => x.comeback_id === row.comeback_id && x.joiner_id === row.joiner_id);
+        if (i >= 0) list[i] = {...list[i], ...row}; else list.push(row); return row;
+      }
+      if (t === 'participants') {
+        const i = list.findIndex(x => x.group_order_id === row.group_order_id && x.joiner_id === row.joiner_id);
+        if (i >= 0) list[i] = {...list[i], ...row}; else list.push(row); return row;
+      }
+      if (t === 'joiner_accounts') {
+        if (list.some(x => x.handle === row.handle)) throw new Error('The handle @' + row.handle + ' already belongs to a joiner.');
+        list.push(row); return row;
+      }
+      if (row.id) { const i = list.findIndex(x => x.id === row.id); if (i >= 0) { list[i] = {...list[i], ...row}; return clone(list[i]); } }
+      row.id = row.id || uid(); row.created_at = row.created_at || new Date().toISOString();
+      if (t === 'joiners') row.pin_hash = row.pin_hash || null;
+      list.push(row);
+      if (t === 'claims' && !db.participants.some(p => p.group_order_id === row.group_order_id && p.joiner_id === row.joiner_id))
+        db.participants.push({group_order_id:row.group_order_id, joiner_id:row.joiner_id, shipping_type:null, shipped:false, tracking:null, note:null});
+      return clone(row);
+    },
+    async saveMany(t, rows) { for (const r of rows) await this.save(t, r); },
+    async remove(t, id) {
+      db[t] = db[t].filter(x => x.id !== id);
+      if (t === 'joiners') ['joiner_accounts','claims','participants','charges','payments'].forEach(k => { db[k] = db[k].filter(x => x.joiner_id !== id); });
+      if (t === 'group_orders') ['claims','participants'].forEach(k => { db[k] = db[k].filter(x => x.group_order_id !== id); });
+      if (t === 'comebacks') { ['comeback_roster','comeback_emojis'].forEach(k => { db[k] = db[k].filter(x => x.comeback_id !== id); }); db.group_orders.forEach(g => { if (g.comeback_id === id) g.comeback_id = null; }); }
+    },
+    async setHandles(jid, handles) {
+      const others = db.joiner_accounts.filter(a => a.joiner_id !== jid);
+      const clash = handles.find(h => others.some(a => a.handle === h));
+      if (clash) throw new Error('The handle @' + clash + ' already belongs to another joiner.');
+      db.joiner_accounts = others.concat(handles.map(h => ({handle:h, joiner_id:jid, platform:'instagram'})));
+    },
+    async setPin(jid, pin) { const j = db.joiners.find(x => x.id === jid); if (j) j.pin_hash = 'demo'; },
+    async uploadImage(full, thumb) {   // demo keeps pictures in memory as data URLs
+      const read = b => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => no(new Error('Could not read that picture.')); r.readAsDataURL(b); });
+      return {src: await read(full), thumb: await read(thumb)};
+    },
+    async removeImages() {},
+    async clearRoster(cbId) { ['comeback_roster','comeback_emojis'].forEach(k => { db[k] = db[k].filter(x => x.comeback_id !== cbId); }); },
+    async joinerClaim(handle, pin, goId, members) {     // same rules as the joiner_claim function in schema.sql
+      const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
+      const g = db.group_orders.find(x => x.id === goId);
+      if (!g || !g.claims_on_site || g.status !== 'open') return {error:'closed'};
+      if (g.deadline && today() > g.deadline) return {error:'deadline'};
+      if (g.price_per_pc == null) return {error:'no_price'};
+      const R = rowsOf(g), codes = (members || []).map(x => String(x).trim().toUpperCase()).filter(Boolean);
+      if (!codes.length) return {error:'nothing'};
+      if (codes.length > 40) return {error:'too_many'};
+      const bad = codes.find(c => c !== 'OT8' && !R.includes(c)); if (bad) return {error:'bad_member', detail:bad};
+      const j = db.joiners.find(x => x.id === jid);
+      const roster = g.comeback_id && g.roster_required ? db.comeback_roster.filter(r => r.comeback_id === g.comeback_id) : [];
+      const onList = roster.some(r => r.joiner_id === jid);
+      let k = 0;
+      codes.forEach(c => {
+        const spots = roster.filter(r => r.joiner_id === jid && c !== 'OT8' && c.split('/').includes(r.member_code));
+        const haveStanding = db.claims.some(x => x.group_order_id === goId && x.joiner_id === jid && x.member_code === c && x.status === 'filled' && ['fixed', 'soft', 'gom'].includes(x.source));
+        db.claims.push({id:uid(), group_order_id:goId, joiner_id:jid, member_code:c, items:c === 'OT8' ? 8 : R === UNIT_ROWS ? 2 : 1,
+          price: c === 'OT8' ? (g.ot8_price ?? r2(g.price_per_pc * R.length)) : g.price_per_pc, status:'filled', note:null,
+          source: claimSourceFor(g, {isHost:!!(j && j.is_host), onList, spots, haveStanding, code:c}), roster_pos:null,
+          created_at:new Date(Date.now() + k++).toISOString()});
+      });
+      if (!db.participants.some(p => p.group_order_id === goId && p.joiner_id === jid)) db.participants.push({group_order_id:goId, joiner_id:jid, shipping_type:null, shipped:false, tracking:null, note:null});
+      return {ok:true, added:codes.length};
+    },
+    async joinerUnclaim(handle, pin, claimId) {
+      const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
+      const c = db.claims.find(x => x.id === claimId && x.joiner_id === jid && x.status === 'filled'); if (!c) return {error:'not_found'};
+      if (!isOpen(db.group_orders.find(x => x.id === c.group_order_id))) return {error:'closed'};
+      // a fixed claim stays unless the joiner has an OT8 on the order
+      if (c.source === 'fixed' && !db.claims.some(x => x.group_order_id === c.group_order_id && x.joiner_id === jid && x.member_code === 'OT8' && x.status === 'filled')) return {error:'fixed'};
+      c.status = 'dropped'; return {ok:true};
+    },
+  };
+}
+
+/* =====================================================================
+   5. SUPABASE API  (used once you add your keys)
+   ===================================================================== */
+function supabaseApi() {
+  if (!window.supabase) throw new Error('Could not load the Supabase library. Check your internet connection.');
+  const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  const ORDER = {joiner_accounts:['handle'], participants:['group_order_id','joiner_id'], go_stats:['group_order_id'], public_shipments:['number'], order_seats:['claim_id'], comeback_emojis:['comeback_id','joiner_id']};
+  const fail = e => {
+    const m = e.message || String(e);
+    if (/schema cache|column .* does not exist/i.test(m)) throw new Error('The database is missing newer columns or tables. In Supabase, run upgrade-photos-calendar.sql (photos and dates) and upgrade-sets-comeback.sql (set rules and the comeback list), then reload this page.');
+    throw new Error(m);
+  };
+
+  async function all(t, eq) {          // reads every row, 1000 at a time
+    const out = [];
+    for (let from = 0; ; from += 1000) {
+      let q = sb.from(t).select('*');
+      if (eq) Object.entries(eq).forEach(([k, v]) => { q = q.eq(k, v); });
+      (ORDER[t] || ['id']).forEach(c => { q = q.order(c); });
+      const {data, error} = await q.range(from, from + 999);
+      if (error) fail(error);
+      out.push(...data);
+      if (data.length < 1000) break;
+    }
+    return out;
+  }
+  return {
+    demo: false,
+    async loadPublic() {
+      const soft = pr => pr.catch(() => []);     // an older database without the sets upgrade still loads
+      const [drops, gos, shipments, st, comebacks, seats] = await Promise.all([all('drops'), all('group_orders'), all('public_shipments'), all('go_stats'), soft(all('comebacks')), soft(all('order_seats'))]);
+      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})),
+        stats: Object.fromEntries(st.map(s => [s.group_order_id, {joiners:s.joiners, items:s.items}]))};
+    },
+    async login(handle, pin) {
+      const {data, error} = await sb.rpc('joiner_dashboard', {p_handle:handle, p_pin:pin});
+      if (error) fail(error); return data;
+    },
+    async isAdmin() {
+      const {data:{session:s}} = await sb.auth.getSession();
+      if (!s) return false;
+      const {data, error} = await sb.rpc('is_admin');
+      return !error && data === true;
+    },
+    async adminSignIn(email, password) { const {error} = await sb.auth.signInWithPassword({email, password}); if (error) fail(error); },
+    async adminSignOut() { await sb.auth.signOut(); },
+    list: (t, eq) => all(t, eq),
+    async save(t, row) {
+      let q;
+      if (t === 'participants') q = sb.from(t).upsert(row, {onConflict:'group_order_id,joiner_id'});
+      else if (t === 'comeback_emojis') q = sb.from(t).upsert(row, {onConflict:'comeback_id,joiner_id'});
+      else if (row.id) { const {id, ...rest} = row; q = sb.from(t).update(rest).eq('id', id); }
+      else q = sb.from(t).insert(row);
+      const {data, error} = await q.select();
+      if (error) fail(error); return data[0];
+    },
+    async saveMany(t, rows) { const {error} = await sb.from(t).insert(rows); if (error) fail(error); },
+    async remove(t, id) { const {error} = await sb.from(t).delete().eq('id', id); if (error) fail(error); },
+    async setHandles(jid, handles) {
+      let r = await sb.from('joiner_accounts').delete().eq('joiner_id', jid); if (r.error) fail(r.error);
+      r = await sb.from('joiner_accounts').insert(handles.map(h => ({handle:h, joiner_id:jid, platform:'instagram'}))); if (r.error) fail(r.error);
+    },
+    async setPin(jid, pin) { const {error} = await sb.rpc('admin_set_pin', {p_joiner_id:jid, p_pin:pin}); if (error) fail(error); },
+    async uploadImage(full, thumb) {
+      const bucket = sb.storage.from(IMG_BUCKET), id = uid(), names = [`${id}.jpg`, `${id}-t.jpg`];
+      const up = async (name, blob) => {
+        const {error} = await bucket.upload(name, blob, {contentType:'image/jpeg', cacheControl:'31536000'});
+        if (error) throw error;
+        return bucket.getPublicUrl(name).data.publicUrl;
+      };
+      try { return {src: await up(names[0], full), thumb: await up(names[1], thumb)}; }
+      catch (e) {
+        await bucket.remove(names).catch(() => {});
+        const m = e.message || String(e);
+        throw new Error(/row-level security|not found|bucket|jwt/i.test(m)
+          ? 'Picture upload is not set up yet, or you are signed out. Run upgrade-photos-calendar.sql in Supabase, then sign in again.' : m);
+      }
+    },
+    async joinerClaim(handle, pin, goId, members) {
+      const {data, error} = await sb.rpc('joiner_claim', {p_handle:handle, p_pin:pin, p_order:goId, p_members:members}); if (error) fail(error); return data;
+    },
+    async joinerUnclaim(handle, pin, claimId) {
+      const {data, error} = await sb.rpc('joiner_unclaim', {p_handle:handle, p_pin:pin, p_claim:claimId}); if (error) fail(error); return data;
+    },
+    async clearRoster(cbId) {
+      for (const t of ['comeback_roster', 'comeback_emojis']) { const {error} = await sb.from(t).delete().eq('comeback_id', cbId); if (error) fail(error); }
+    },
+    async removeImages(list) {
+      const names = list.flatMap(im => [im.src, im.thumb]).map(u => { const m = String(u || '').match(new RegExp('/' + IMG_BUCKET + '/([^?]+)')); return m && decodeURIComponent(m[1]); }).filter(Boolean);
+      if (!names.length) return;
+      const {error} = await sb.storage.from(IMG_BUCKET).remove([...new Set(names)]); if (error) fail(error);
+    },
+  };
+}
+
+let api;
+try { api = DEMO ? demoApi() : supabaseApi(); } catch (e) { api = null; window.__bootError = e; }
+
+/* =====================================================================
+   6. State
+   ===================================================================== */
+const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, loadError:null};
+const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null};
+const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, announce:true, event:true}, past:false};
+const goById = id => S.pub.gos.find(g => g.id === id);
+const seatsOf = id => S.pub.seats.filter(x => x.group_order_id === id);
+const goName = g => g ? `${g.emoji || ''} ${g.name}`.trim() : 'Deleted order';
+async function refreshPublic() { S.pub = await api.loadPublic(); }
+
+/* =====================================================================
+   7. Shared view bits
+   ===================================================================== */
+const head = (title, sub) => `<div class="head"><h1>${esc(title)}</h1>${sub ? `<p class="sub">${sub}</p>` : ''}</div>`;
+const GO_PILL = {open:'gold', ordered:'', at_kaddy:'', in_transit:'', on_hand:'gold', completed:'sea', cancelled:'coral'};
+const goPill = s => `<span class="pill ${GO_PILL[s] || ''}">${esc(STATUS_LABEL[s] || s)}</span>`;
+function stepper(status) {
+  if (status === 'cancelled') return '';
+  const i = FLOW.indexOf(status);
+  return `<div class="steps" role="img" aria-label="Step ${i + 1} of ${FLOW.length}: ${esc(STATUS_LABEL[status])}">${FLOW.map((k, n) => `<span class="${n < i ? 'done' : n === i ? 'now' : ''}"></span>`).join('')}</div>`;
+}
+const chips = (claims) => claims.map(c => `<span class="chip${c.status === 'dropped' ? ' x' : ''}" ${c.status === 'dropped' ? 'title="Dropped"' : ''}>${esc(c.member_code)}</span>`).join('');
+
+/* ---- photocard pictures ---- */
+function galleryItems(key) {
+  const [kind, id] = key.split(':');
+  return S.pub.drops.filter(d => kind === 'drop' ? d.id === id : d.group_order_id === id)
+    .sort((a, b) => (a.announced_on || '').localeCompare(b.announced_on || '') || a.name.localeCompare(b.name))
+    .flatMap(d => (d.images || []).map(im => ({src:im.src, thumb:im.thumb || im.src, cap:[d.name, d.store].filter(Boolean).join(', ')})));
+}
+const pcButton = (key, items, i, inner = '', label = '') =>
+  `<button type="button" class="pc" data-action="lb" data-gal="${esc(key)}" data-i="${i}" aria-label="${esc(label || `View photocard ${i + 1} of ${items.length}, ${items[i].cap}`)}"><img src="${esc(items[i].thumb)}" alt="" loading="lazy" decoding="async">${inner}</button>`;
+const pcCover = (key, items, title) => pcButton(key, items, 0, items.length > 1 ? `<span class="n" aria-hidden="true">${items.length}</span>` : '',
+  `View ${items.length === 1 ? 'the photocard' : items.length + ' photocards'} for ${title}`);
+
+function openLightbox(key, start) {
+  const items = galleryItems(key); if (!items.length) return;
+  let i = Math.min(Math.max(start, 0), items.length - 1);
+  const d = document.createElement('dialog'); d.className = 'lb'; d.setAttribute('aria-label', 'Photocard previews');
+  const many = items.length > 1;
+  d.innerHTML = `<div class="lb-in"><div class="lb-top"><span class="small muted" data-n aria-live="polite"></span><button type="button" class="btn ghost small" data-x>Close</button></div>
+    <img class="lb-img" alt=""><p class="lb-cap"></p>
+    ${many ? '<div class="lb-nav"><button type="button" class="btn ghost" data-p>Previous</button><button type="button" class="btn ghost" data-nx>Next</button></div>' : ''}</div>`;
+  const img = $('.lb-img', d), cap = $('.lb-cap', d), count = $('[data-n]', d);
+  const show = () => {
+    const it = items[i];
+    img.src = it.src; img.alt = `${it.cap}, photocard ${i + 1} of ${items.length}`; cap.textContent = it.cap;
+    count.textContent = many ? `${i + 1} of ${items.length}` : '';
+    if (many) { const nx = new Image(); nx.src = items[(i + 1) % items.length].src; }
+  };
+  const go = step => { i = (i + step + items.length) % items.length; show(); };
+  d.addEventListener('click', e => {
+    if (e.target === d || e.target.closest('[data-x]')) d.close();
+    else if (e.target.closest('[data-p]')) go(-1);
+    else if (e.target.closest('[data-nx]')) go(1);
+  });
+  d.addEventListener('keydown', e => { if (!many) return; if (e.key === 'ArrowLeft') go(-1); else if (e.key === 'ArrowRight') go(1); });
+  let x0 = null;
+  d.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, {passive:true});
+  d.addEventListener('touchend', e => { if (x0 == null || !many) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }, {passive:true});
+  d.addEventListener('close', () => d.remove());
+  document.body.append(d); d.showModal(); show();
+}
+
+/* =====================================================================
+   8. PAGE: Drops
+   ===================================================================== */
+function dropStatus(d) {
+  const g = d.group_order_id && goById(d.group_order_id);
+  if (g) return g.status === 'open' ? 'go_open' : 'go_running';
+  return d.status;
+}
+function effDeadline(d) {
+  const g = d.group_order_id && goById(d.group_order_id);
+  if (g && g.deadline && g.status !== 'cancelled') return {date:g.deadline, time:g.deadline_time};
+  return d.deadline ? {date:d.deadline, time:d.deadline_time} : null;
+}
+function dropRow(d, anyPics) {
+  const g = d.group_order_id && goById(d.group_order_id);
+  const st = dropStatus(d);
+  const pill = g ? `<a class="pl" href="#/orders" title="See this order">${goPill(g.status)}</a>`
+    : `<span class="pill ${{planned:'gold', go_open:'gold'}[st] || ''}">${esc(DROP_FILTER[st] || st)}</span>`;
+  const isNew = d.announced_on && (Date.now() - new Date(d.announced_on + 'T00:00:00')) / 864e5 <= 7;
+  const items = galleryItems('drop:' + d.id);
+  const thumb = items.length ? pcCover('drop:' + d.id, items, d.name) : (anyPics ? '<span class="pc-sp" aria-hidden="true"></span>' : '');
+  const dl = effDeadline(d), T = EVT_NAME[d.drop_type];
+  const dates = [
+    dl ? ['Order by', `${fmtDate(dl.date)}${dl.time ? ', ' + dl.time : ''}`] : null,
+    d.winners_on ? [`${T ? T + ' winners' : 'Winners'}`, fmtDate(d.winners_on)] : null,
+    d.event_on ? [T || 'Event', `${fmtDate(d.event_on)}${d.event_end_on ? ' to ' + fmtDate(d.event_end_on) : ''}`] : null,
+  ].filter(Boolean);
+  return `<article class="drop">
+    <div class="drop-date">${esc(fmtDate(d.announced_on)) || 'TBD'}${isNew ? '<span class="new">New</span>' : ''}</div>
+    <div class="drop-main">${thumb}<div><h3>${esc(d.name)}</h3><p class="meta">
+      ${d.store ? `<span>${esc(d.store)}</span>` : ''}
+      ${d.drop_type ? `<span class="tag">${esc(d.drop_type)}</span>` : ''}
+      ${d.album_type ? `<span>${esc(d.album_type)}</span>` : ''}
+      ${d.pc_kind === 'unit' ? '<span>Unit</span>' : ''}
+      ${d.round ? `<span>Round ${esc(d.round)}</span>` : ''}
+    </p>${dates.length ? `<p class="meta">${dates.map(([k, v]) => `<span>${esc(k)} <span class="dt">${esc(v)}</span></span>`).join('')}</p>` : ''}</div></div>
+    <div class="drop-r">${d.link ? `<a class="small" href="${esc(d.link)}" target="_blank" rel="noopener">Details</a>` : ''}${pill}</div>
+  </article>`;
+}
+function dropList() {
+  const f = S.filters, q = f.q.trim().toLowerCase();
+  const list = S.pub.drops.filter(d =>
+    (!q || `${d.name} ${d.store || ''} ${d.album_type || ''} ${d.drop_type || ''}`.toLowerCase().includes(q)) &&
+    (!f.store || d.store === f.store) && (!f.type || d.drop_type === f.type) && (!f.status || dropStatus(d) === f.status)
+  ).sort((a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0') || a.name.localeCompare(b.name));
+  if (!list.length) return `<div class="empty"><p>No drops match those filters.</p><button class="btn ghost" data-action="clearFilters">Clear filters</button></div>`;
+  const anyPics = S.pub.drops.some(d => (d.images || []).length);
+  return `<div class="dlist">${list.map(d => dropRow(d, anyPics)).join('')}</div>`;
+}
+function pageDrops() {
+  const d = S.pub.drops, f = S.filters;
+  const stores = [...new Set(d.map(x => x.store).filter(Boolean))].sort();
+  const types = [...new Set(d.map(x => x.drop_type).filter(Boolean))];
+  const opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`;
+  const open = d.filter(x => dropStatus(x) === 'go_open').length;
+  return head('Comeback drops', `${d.length} drops tracked so far${open ? `, and ${open} ${open === 1 ? 'order is' : 'orders are'} open for claims` : ''}. Tap a status to see that group order.`) + `
+    <div class="filters">
+      <input type="search" data-filter="q" placeholder="Search sets or stores" value="${esc(f.q)}" aria-label="Search drops">
+      <select data-filter="store" aria-label="Store">${opt('', 'All stores', f.store)}${stores.map(s => opt(s, s, f.store)).join('')}</select>
+      <select data-filter="type" aria-label="Type">${opt('', 'All types', f.type)}${types.map(s => opt(s, s, f.type)).join('')}</select>
+      <select data-filter="status" aria-label="Status">${opt('', 'Any status', f.status)}${Object.entries(DROP_FILTER).map(([k, l]) => opt(k, l, f.status)).join('')}</select>
+    </div>
+    <div id="dropList">${dropList()}</div>`;
+}
+
+/* =====================================================================
+   9. PAGE: Order status
+   ===================================================================== */
+function deadlineChip(g) {
+  if (g.status !== 'open' || !g.deadline) return '';
+  const n = daysFromNow(g.deadline);
+  if (n < 0) return '<span class="pill coral">Deadline passed</span>';
+  return `<span class="pill ${n <= 3 ? 'coral' : ''}">${n === 0 ? 'Last day' : n === 1 ? '1 day left' : n + ' days left'}</span>`;
+}
+function goPhotos(g) {
+  const key = 'go:' + g.id, items = galleryItems(key); if (!items.length) return '';
+  const more = items.length - 4;
+  return `<div class="pcs">${items.slice(0, 4).map((_, i) => pcButton(key, items, i, i === 3 && more > 0 ? `<span class="more">+${more}</span>` : '',
+    i === 3 && more > 0 ? `View all ${items.length} photocards for ${g.name}` : '')).join('')}</div>`;
+}
+/* ---- sets: availability grid, rules, claiming ---- */
+const cbOf = g => (g && g.comeback_id && S.pub.comebacks.find(c => c.id === g.comeback_id)) || null;
+const seatClaims = g => seatsOf(g.id).map(x => ({id:x.id, member_code:x.member_code, source:x.source, roster_pos:x.roster_pos, created_at:x.created_at, emoji:x.emoji, status:'filled'}));
+const anOf = g => hasSets(g) ? analyze(g, seatClaims(g), cbOf(g)) : null;
+const em = e => e || '❔';
+const myIds = () => new Set(S.me ? S.me.claims.map(c => c.id) : []);
+const claimsOpen = g => g.status === 'open' && !(g.deadline && daysFromNow(g.deadline) < 0);
+const wName = an => an.R === UNIT_ROWS ? 'unit' : 'member';
+const cred = () => { try { return JSON.parse(session.get('jo')); } catch { return null; } };
+async function keepScroll(fn) { const y = window.scrollY; await fn(); window.scrollTo(0, y); }
+
+const FOOT = (x, an) => x.status === 'full' ? ['✓', 'k-in', 'Full, going through']
+  : x.status === 'go' ? [x.extra ? '+' + money(x.extra) : '✓', 'k-in', an.mode === 'sort' ? 'Going through' : `Going through${x.extra ? `, +${money(x.extra)} each` : ''}`]
+  : x.status === 'wait' ? ['wait', '', `Waitlist. Needs ${x.need} more to be ordered`]
+  : x.status === 'dropped' ? ['✗', 'k-risk', 'Not ordered, not enough claims'] : ['', '', ''];
+
+function availGrid(an, mine = new Set()) {
+  const {R, N, sets} = an, ncols = sets.length;
+  const cls = n => `${n === N + 1 ? 'wl1 ' : ''}${n > N ? 'wl' : ''}`;
+  const head = `<tr><th scope="col"><span class="sr">Member</span></th>${sets.map(x => { const n = x.n;
+    return `<th scope="col" class="${cls(n)}" title="${n > N ? 'Waitlist ' + (n - N) : 'Set ' + n}">${n > N ? 'W' + (n - N) : n}</th>`; }).join('')}</tr>`;
+  const body = R.map(r => `<tr><th scope="row">${esc(r)}</th>${sets.map(x => {
+    const n = x.n, seat = x.cells[r];
+    return seat
+      ? `<td class="${cls(n)}${mine.has(seat.claim.id) ? ' mine' : ''}" title="${esc(`${em(seat.claim.emoji)} ${r}: ${seatLabel(seat, an)}`)}">${esc(em(seat.claim.emoji))}</td>`
+      : `<td class="${cls(n)}" title="${n > N ? 'Waitlist spot open' : 'Open spot'}">✅</td>`;
+  }).join('')}</tr>`).join('');
+  const ot8 = `<tr class="ot8row"><th scope="row">OT8</th><td colspan="${ncols}">${an.ot8.length
+    ? an.ot8.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="OT8, always ordered">${esc(em(c.emoji))}</span>`).join('')
+    : '<span class="muted small">None yet</span>'}</td></tr>`;
+  const foot = `<tr><th scope="row">Set</th>${sets.map(x => { const [t, k, title] = FOOT(x, an); return `<td class="${cls(x.n)} ${k}" title="${esc(title)}">${esc(t)}</td>`; }).join('')}</tr>`;
+  return `<div class="gridwrap"><table class="av" aria-label="Availability by ${wName(an)} and set"><thead>${head}</thead><tbody>${body}${ot8}</tbody><tfoot>${foot}</tfoot></table></div>
+    <p class="small muted" style="margin:8px 0 0">Each column is a set. ✅ is an open spot.${an.gated ? ' Dashed columns are the waitlist, which starts right after the last set that goes through.' : ''} OT8 claims have their own row and are always ordered.${mine.size ? ' Your claims are outlined.' : ''}</p>`;
+}
+function sumLine(an) {
+  const P = (t, c = '') => `<span class="pill ${c}">${esc(t)}</span>`, n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
+  const out = an.mode === 'sort'
+    ? [P(n(an.items, 'item', 'items') + ' to order', an.items ? 'sea' : '')]
+    : [P(n(an.going, 'set', 'sets') + ' going through', an.going ? 'sea' : ''), P(n(an.items, 'item', 'items') + ' to order')];
+  if (an.ot8.length) out.push(P(`${an.ot8.length} OT8, always ordered`));
+  if (an.unclaimed) out.push(P(`${an.unclaimed} unclaimed`));
+  if (an.waitlisted) out.push(P(`${an.waitlisted} waitlisted`, 'gold'));
+  if (an.nextNeed && an.nextNeed.need) out.push(P(`Set ${an.nextNeed.n} needs ${an.nextNeed.need} more to go through`, 'coral'));
+  return `<div class="sumline">${out.join('')}</div>`;
+}
+function setDetails(an) {
+  const notes = an.sets.filter(x => x.status !== 'empty' && x.status !== 'full').map(x => setNote(x, an)).filter(Boolean);
+  const per = an.R.map(r => `${r} ${an.toOrder[r]}`).join(', ');
+  return `<details class="setdet"><summary>Set details and order counts</summary>${notes.length ? `<ul class="setnotes">${notes.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+    <p class="small muted" style="margin:10px 0 0">To order, per ${wName(an)}${an.ot8.length ? ' (OT8 included)' : ''}: ${esc(per)}.</p></details>`;
+}
+function claimsSoFar(g) {
+  const rows = rowsOf(g), by = {}; rows.forEach(r => { by[r] = []; });
+  const cs = seatClaims(g).sort(claimCmp); cs.forEach(s => { if (by[s.member_code]) by[s.member_code].push(em(s.emoji)); });
+  const ot8 = cs.filter(s => s.member_code === 'OT8').map(s => em(s.emoji));
+  const cell = a => `<td style="text-align:left;letter-spacing:3px;padding:3px 10px">${a.length ? esc(a.join(' ')) : '<span class="muted small" style="letter-spacing:0">None yet</span>'}</td>`;
+  return `<div><h4 class="sh">Claims so far</h4><div class="gridwrap"><table class="av"><tbody>${rows.map(r => `<tr><th scope="row">${esc(r)}</th>${cell(by[r])}</tr>`).join('')}<tr class="ot8row"><th scope="row">OT8</th>${cell(ot8)}</tr></tbody></table></div>
+    <p class="small muted" style="margin:8px 0 0">OT8 claims have their own row and are ordered on top of everything else.</p></div>`;
+}
+const claimError = r => ({
+  invalid:'That handle and PIN don\'t match. Sign in again.', locked:'Too many wrong PINs. Wait 15 minutes and try again.',
+  closed:'Claims are closed for this order.', deadline:'The deadline for this order has passed.', no_price:'This order has no price yet, so claiming is not open.',
+  nothing:'Pick at least one member.', too_many:'That is too many at once. Claim up to 40 at a time.', bad_member:`${r.detail || 'That'} is not a member of this order.`,
+  not_found:'That claim was not found.',
+  fixed:'A fixed claim stays unless you switch to OT8 (claim an OT8 first) or the host drops it. DM ' + '@' + CONFIG.INSTAGRAM + '.',
+}[r.error] || 'Something went wrong. Try again.');
+
+// What the signed-in joiner would get if they claimed right now: used for the "Next: set 3" hints and the live total
+const EMPTY_AN = null;
+function joinerCtx(g) {
+  const me = S.me, cb = cbOf(g), roster = (me.roster || []).filter(r => cb && r.comeback_id === cb.id);
+  const emoji = ((me.emojis || []).find(e => cb && e.comeback_id === cb.id) || {}).emoji || me.joiner.emoji;
+  return {isHost: !!me.joiner.is_host, onList: !!(cb && g.roster_required && roster.length), roster, emoji,
+    mine: me.claims.filter(c => c.group_order_id === g.id && c.status === 'filled')};
+}
+function hypoClaims(g, codes) {
+  const ctx = joinerCtx(g), out = [];
+  codes.forEach((code, i) => {
+    const spots = ctx.roster.filter(r => code !== 'OT8' && code.split('/').includes(r.member_code));
+    const haveStanding = ctx.mine.some(c => c.member_code === code && ['fixed', 'soft', 'gom'].includes(c.source)) || out.some(c => c.member_code === code && ['fixed', 'soft', 'gom'].includes(c.source));
+    out.push({id:'new' + i, member_code:code, roster_pos:null, status:'filled', emoji:ctx.emoji, price:claimPrice(g, code), created_at:new Date(Date.now() + i).toISOString(),
+      source:claimSourceFor(g, {isHost:ctx.isHost, onList:ctx.onList, spots, haveStanding, code})});
+  });
+  return out;
+}
+const hypoAn = (g, hyp) => hasSets(g) ? analyze(g, [...seatClaims(g), ...hyp], cbOf(g)) : null;
+function claimNote(f) {
+  const g = goById(f.dataset.go), note = $('[data-claimnote]', f), codes = [];
+  f.querySelectorAll('input[name="q"]').forEach(i => { const k = Math.max(0, Math.min(10, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) codes.push(i.dataset.code); });
+  if (!codes.length) { note.textContent = 'Use + to pick a member. Pick the same one twice to claim it twice.'; return; }
+  const hyp = hypoClaims(g, codes), infos = hyp.map(c => claimInfo(g, c, hypoAn(g, hyp)));
+  const charged = r2(infos.reduce((a, i) => a + i.amount, 0)), extra = r2(infos.reduce((a, i) => a + i.extra, 0)), waits = infos.filter(i => i.state === 'wait').length;
+  const counts = new Map(); codes.forEach(c => counts.set(c, (counts.get(c) || 0) + 1));
+  const what = [...counts].map(([c, k]) => k > 1 ? `${c} x${k}` : c).join(', ');
+  note.textContent = `${what}: ${money(charged)} if the order closes as it stands${extra ? ` (includes ${money(extra)} split share)` : ''}.${waits ? ` ${waits} would be on the waitlist, not charged unless their set fills up.` : ''}`;
+}
+
+function claimPanel(g, an) {
+  if (!g.claims_on_site) return g.status === 'open' ? `<p class="small muted" style="margin:0">Claim by commenting on the Instagram post. This grid updates as claims are added.</p>` : '';
+  if (!claimsOpen(g)) return '<p class="small muted" style="margin:0">Claims are closed for this order.</p>';
+  if (g.price_per_pc == null) return '<p class="small muted" style="margin:0">Claiming opens once the price is set.</p>';
+  const me = S.me;
+  if (!me) return `<form class="panel-mini" data-form="claimlogin" autocomplete="on"><h4 class="sh" style="margin:0">Sign in to claim</h4>
+    <div class="field"><label for="ch-${g.id}">Instagram handle</label><input id="ch-${g.id}" name="handle" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="@yourhandle" required></div>
+    <div class="field"><label for="cp-${g.id}">PIN</label><input id="cp-${g.id}" name="pin" type="password" autocomplete="current-password" required></div>
+    <p class="err" data-err role="alert"></p><button class="btn">Sign in</button>
+    <p class="small muted" style="margin:0">No PIN yet? DM @${esc(CONFIG.INSTAGRAM)}.${DEMO ? ' Demo: <b>demo_joiner</b>, PIN <b>1234</b>.' : ''}</p></form>`;
+  const R = rowsOf(g), ctx = joinerCtx(g), mineLive = ctx.mine, heldOf = code => mineLive.filter(c => c.member_code === code).length;
+  const qty = (code, price, sub) => `<div class="mchip q"><b>${esc(code)}</b><small>${esc(sub)}</small>
+    <span class="qty"><button type="button" class="qb" data-action="qty" data-d="-1" aria-label="One fewer ${esc(code)}">&minus;</button><input type="number" name="q" value="0" min="0" max="10" inputmode="numeric" data-code="${esc(code)}" data-price="${price}" aria-label="How many ${esc(code)} to claim"><button type="button" class="qb" data-action="qty" data-d="1" aria-label="One more ${esc(code)}">+</button></span></div>`;
+  const next = r => { if (!an) return money(g.price_per_pc); const h = hypoClaims(g, [r]), st = hypoAn(g, h).seats.find(s => s.claim.id === h[0].id); return st.state === 'in' ? `Next: set ${st.pos}` : 'Next: waitlist'; };
+  const chips = R.map(r => qty(r, g.price_per_pc, `${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`)).join('');
+  const ot8Price = claimPrice(g, 'OT8');
+  const ot8 = qty('OT8', ot8Price, `${heldOf('OT8') ? `You have ${heldOf('OT8')}. ` : ''}${money(ot8Price)}, always ordered`);
+  const fixedHere = [...new Set(mineLive.filter(c => c.source === 'fixed').map(c => c.member_code))];
+  const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim' : 'claims'} (${esc(fixedHere.join(', '))}) stay on this order${heldOf('OT8') ? '. You have an OT8, so you can drop them below.' : ` unless you switch to OT8: claim an OT8 and you can drop them. You can add and drop other ${wName(an || {R})}s any time.`}</p>` : '';
+  return `<form class="panel-mini" data-form="claim" data-go="${g.id}"><h4 class="sh" style="margin:0">Claim as ${esc(em(ctx.emoji))} ${esc(me.joiner.name)}</h4>
+    <div class="mchips" role="group" aria-label="Choose how many of each to claim">${chips}${ot8}</div>
+    ${fixedNote}
+    <p class="small muted" style="margin:0" data-claimnote role="status">Use + to pick a member. Pick the same one twice to claim it twice.</p>
+    <p class="err" data-err role="alert"></p>
+    <div class="formacts" style="margin:0"><button class="btn">Claim</button><button type="button" class="btn ghost" data-action="signout">Sign out</button></div></form>`;
+}
+function myClaimsList(g, an, mineLive) {
+  if (!mineLive.length) return '';
+  const canDrop = claimsOpen(g) && g.claims_on_site, hasOt8 = mineLive.some(c => c.member_code === 'OT8'), R = rowsOf(g);
+  const ord = c => { const i = R.indexOf(c.member_code); return i < 0 ? 99 : i; };
+  const rows = mineLive.slice().sort((a, b) => ord(a) - ord(b) || claimCmp(a, b)).map(c => {
+    const info = claimInfo(g, c, an), place = an || c.member_code === 'OT8' ? placeText(info, an) : '';
+    const tag = info.state === 'wait' ? 'wait' : info.state === 'dropped' ? 'risk' : '';
+    const pill = c.source === 'gom' ? ' <span class="pill">GOM</span>' : c.source === 'fixed' ? ' <span class="pill">Fixed claim</span>' : c.source === 'soft' ? ' <span class="pill">Soft claim</span>' : '';
+    const locked = c.source === 'fixed' && !hasOt8;
+    return `<div class="mine-row"><span><span class="chip ${tag}">${esc(c.member_code)}</span> <span class="small">${esc(place)}</span>${pill}</span>
+      <span><b>${info.state === 'wait' ? 'Not charged yet' : info.state === 'dropped' ? '$0.00' : money(info.amount)}</b>${info.extra ? ` <span class="small muted">includes +${money(info.extra)} split</span>` : ''}
+      ${canDrop && !locked ? `<button type="button" class="btn ghost small" style="margin-left:8px" data-action="unclaim" data-id="${c.id}" data-src="${c.source}">Drop</button>` : ''}${canDrop && locked ? '<span class="small muted" style="margin-left:8px">Stays unless you go OT8</span>' : ''}</span></div>`;
+  }).join('');
+  const total = r2(mineLive.reduce((a, c) => a + claimInfo(g, c, an).amount, 0));
+  return `<div><h4 class="sh">Your claims on this order</h4>${rows}<p class="small muted" style="margin:8px 0 0">Going through so far: <b>${money(total)}</b>. Waitlisted claims are not charged unless their set fills up enough to go through.</p></div>`;
+}
+function setsPanel(g, an, ro) {
+  const cb = cbOf(g), parts = [];
+  if (an) {
+    parts.push(`<div><h4 class="sh">Availability</h4>${availGrid(an, myIds())}</div>`, sumLine(an), setDetails(an));
+    parts.push(`<div><h4 class="sh">How this order works</h4><ul class="rules">${rulesList(g, cb).map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>`);
+  } else parts.push(claimsSoFar(g));
+  if (cb && g.roster_required) parts.push(`<p class="small muted" style="margin:0">Part of ${esc(cb.name)}. GOM, fixed and soft claimers are added automatically and go first in each line, in that order.</p>`);
+  const mineLive = S.me ? S.me.claims.filter(c => c.group_order_id === g.id && c.status === 'filled') : [];
+  if (mineLive.length) parts.push(myClaimsList(g, an, mineLive));
+  if (!ro) parts.push(claimPanel(g, an));
+  return parts.join('');
+}
+
+function goCard(g) {
+  const st = S.pub.stats[g.id] || {joiners:0, items:0};
+  const ship = g.shipment_id && S.pub.shipments.find(s => s.id === g.shipment_id);
+  const linked = S.pub.drops.filter(d => d.group_order_id === g.id);
+  const win = linked.find(d => d.winners_on), evt = linked.find(d => d.event_on);
+  const an = anOf(g), wide = g.status === 'open' && (an || g.claims_on_site);
+  const facts = [
+    ['Order deadline', g.deadline ? `${esc(fmtDate(g.deadline) + (g.deadline_time ? ', ' + g.deadline_time : ''))} ${deadlineChip(g)}` : ''],
+    ['Winners announced', win ? esc(fmtDate(win.winners_on) + (win.winners_note ? ', ' + win.winners_note : '')) : ''],
+    [evt ? `${EVT_NAME[evt.drop_type] || 'Event'} date` : '', evt ? esc(fmtDate(evt.event_on) + (evt.event_end_on ? ' to ' + fmtDate(evt.event_end_on) : '') + (evt.event_note ? ', ' + evt.event_note : '')) : ''],
+    ['Price', g.price_per_pc != null ? esc(`${money(g.price_per_pc)} per ${isUnitGO(g) ? 'unit' : 'PC'}${g.ot8_price != null ? `, OT8 ${money(g.ot8_price)}` : ''}`) : ''],
+    ['Rules', hasSets(g) ? esc(SET_MODE_SHORT[g.set_mode] + (g.min_members && g.set_mode !== 'sort' ? `, ${g.min_members} of ${rowsOf(g).length} needed` : '')) : ''],
+    ['Joiners', esc(st.joiners || '')], ['Items claimed', esc(st.items || '')],
+    ['Kaddy box', ship ? esc(`#${ship.number}, ${SHIP_LABEL[ship.status].toLowerCase()}`) : ''],
+  ].filter(x => x[1] !== '');
+  const left = `${goPhotos(g)}
+    <div class="gohead"><h3><span class="em" aria-hidden="true">${esc(g.emoji || '📦')}</span>${esc(g.name)}</h3>${goPill(g.status)}</div>
+    ${stepper(g.status)}
+    <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
+    ${g.public_note ? `<p class="small muted" style="margin:0">${esc(g.public_note)}</p>` : ''}
+    ${g.post_url ? `<a class="small" href="${esc(g.post_url)}" target="_blank" rel="noopener">See the Instagram post</a>` : ''}`;
+  if (wide) return `<article class="gocard wide"><div class="gc-l">${left}</div><div class="gc-r">${setsPanel(g, an)}</div></article>`;
+  const fold = an && g.status !== 'cancelled' ? `<details class="mini-fold"><summary>Sets and availability</summary><div class="stack">${setsPanel(g, an, true)}</div></details>` : '';
+  return `<article class="gocard">${left}${fold}</article>`;
+}
+function pageOrders() {
+  const gos = S.pub.gos.slice().sort(byNewest);
+  const groups = [
+    ['Claims open', 'Comment your claims on the Instagram post to join.', g => g.status === 'open', false],
+    ['In progress', 'Ordered, or on the way to me.', g => ['ordered','at_kaddy','in_transit'].includes(g.status), false],
+    ['On hand', 'Here with me and waiting to be packed and shipped to you.', g => g.status === 'on_hand', false],
+    ['Completed', 'Everything has shipped out.', g => g.status === 'completed', true],
+    ['Cancelled', '', g => g.status === 'cancelled', true],
+  ];
+  const sections = groups.map(([title, sub, fn, fold]) => {
+    const list = gos.filter(fn); if (!list.length) return '';
+    const grid = `<div class="grid">${list.map(goCard).join('')}</div>`;
+    return fold
+      ? `<details class="fold sect"><summary>${title} (${list.length})</summary>${grid}</details>`
+      : `<section class="sect"><h2>${title}</h2><p class="sub">${sub}</p>${grid}</section>`;
+  }).join('');
+  const boxes = S.pub.shipments.slice().sort((a, b) => b.number - a.number).map(s => {
+    const inBox = gos.filter(g => g.shipment_id === s.id);
+    const dates = [['Paid', s.paid_on], ['Shipped', s.shipped_on], ['Arrived', s.delivered_on]].filter(x => x[1]).map(x => `${x[0]} ${fmtDate(x[1])}`).join(', ');
+    return `<div class="box"><b>Box ${s.number}</b><div><span class="emos" aria-label="${esc(inBox.map(g => g.name).join(', '))}">${inBox.map(g => `<span title="${esc(g.name)}">${esc(g.emoji || '📦')}</span>`).join(' ')}</span><small>${esc(s.kaddy || '')}${dates ? (s.kaddy ? ', ' : '') + esc(dates) : ''}</small></div><span class="pill ${s.status === 'delivered' ? 'sea' : ''}">${esc(SHIP_LABEL[s.status])}</span></div>`;
+  }).join('');
+  return head('Order status', 'Where every group order is right now, from claims to shipping.') + (sections || '<div class="empty">No group orders yet.</div>') +
+    (boxes ? `<section class="sect"><h2>Kaddy boxes</h2><p class="sub">Orders travel to me in boxes. Each emoji is a group order inside that box.</p><div class="list">${boxes}</div></section>` : '');
+}
+
+/* =====================================================================
+   9b. PAGE: Calendar
+   ===================================================================== */
+function calEvents() {
+  const ev = [], gById = new Map(S.pub.gos.map(g => [g.id, g])), t = today();
+  const push = e => ev.push({end:null, note:'', sub:'', ...e});
+  S.pub.gos.forEach(g => {
+    if (g.deadline && g.status !== 'cancelled')
+      push({kind:'deadline', date:String(g.deadline).slice(0, 10), title:g.name, emoji:g.emoji, label:'Order deadline', short:'Due', note:g.deadline_time || '', goId:g.id, imgKey:'go:' + g.id});
+  });
+  S.pub.drops.forEach(d => {
+    if (d.status === 'skipped') return;
+    const g = d.group_order_id && gById.get(d.group_order_id);
+    if (g && g.status === 'cancelled') return;
+    const T = EVT_NAME[d.drop_type];
+    const base = {title:d.name, sub:d.store || '', emoji:g && g.emoji, goId:g && g.id, link:d.link, imgKey:'drop:' + d.id};
+    if (d.deadline && !(g && g.deadline)) push({...base, kind:'deadline', date:String(d.deadline).slice(0, 10), label:'Order deadline', short:'Due', note:d.deadline_time || ''});
+    if (d.winners_on) push({...base, kind:'announce', date:String(d.winners_on).slice(0, 10), label:T ? `${T} winners announced` : 'Winners announced', short:'Winners', note:d.winners_note || ''});
+    if (d.event_on) push({...base, kind:'event', date:String(d.event_on).slice(0, 10), end:d.event_end_on ? String(d.event_end_on).slice(0, 10) : null,
+      label:T ? `${T} date` : 'Event date', short:EVT_SHORT[d.drop_type] || 'Event', note:d.event_note || ''});
+  });
+  ev.forEach(e => { e.past = (e.end || e.date) < t; });
+  return ev.sort((a, b) => a.date.localeCompare(b.date) || KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.title.localeCompare(b.title));
+}
+const evWhen = e => { const t = today(); return e.end && e.date <= t && t <= e.end ? 'Happening now' : whenChip(e.date); };
+
+function evRow(e, inDay) {
+  const items = galleryItems(e.imgKey);
+  const tile = items.length ? pcCover(e.imgKey, items, e.title) : `<span class="pc-ph" aria-hidden="true">${esc(e.emoji || '🎫')}</span>`;
+  const link = e.goId ? '<a class="small" href="#/orders">See order</a>' : e.link ? `<a class="small" href="${esc(e.link)}" target="_blank" rel="noopener">Details</a>` : '';
+  return `<div class="ev${e.past ? ' past' : ''}">${tile}
+    <div><h3>${esc(e.title)}</h3><p class="meta"><span class="pill ${KINDS[e.kind].pill}">${esc(e.label)}</span>
+      ${e.sub ? `<span>${esc(e.sub)}</span>` : ''}${e.end ? `<span class="dt">${esc(fmtLong(e.date))} to ${esc(fmtLong(e.end))}</span>` : ''}${e.note ? `<span>${esc(e.note)}</span>` : ''}</p></div>
+    <div class="ev-r">${inDay ? '' : `<span class="small muted">${esc(evWhen(e))}</span>`}${link}</div></div>`;
+}
+
+function monthView(events) {
+  const [Y, M] = CAL.month.split('-').map(Number);
+  const lead = new Date(Y, M - 1, 1).getDay(), total = new Date(Y, M, 0).getDate(), weeks = Math.ceil((lead + total) / 7), t = today();
+  const byDay = new Map();
+  events.forEach(e => {
+    let d = e.date; const last = e.end || e.date;
+    for (let n = 0; d <= last && n < 45; n++, d = addDays(d, 1)) { if (!byDay.has(d)) byDay.set(d, []); byDay.get(d).push(e); }
+  });
+  const cells = [];
+  for (let i = 0; i < weeks * 7; i++) {
+    const dt = new Date(Y, M - 1, 1 - lead + i), key = ymd(dt), list = byDay.get(key) || [];
+    const rest = list.length - 2;
+    cells.push(`<button type="button" class="day${dt.getMonth() !== M - 1 ? ' out' : ''}${key === t ? ' today' : ''}${key === CAL.sel ? ' sel' : ''}" data-action="calSel" data-date="${key}" aria-pressed="${key === CAL.sel}" aria-label="${esc(fmtFull(key))}, ${list.length ? list.length + (list.length === 1 ? ' date' : ' dates') : 'nothing scheduled'}">
+      <span class="dn">${dt.getDate()}</span>
+      ${list.slice(0, 2).map(e => `<span class="ep k-${e.kind}${e.past ? ' past' : ''}"><b>${esc(e.short)}</b> ${esc(e.title)}</span>`).join('')}
+      ${rest > 0 ? `<span class="epm">+${rest} more</span>` : ''}
+      <span class="dots">${list.slice(0, 4).map(e => `<i class="k-${e.kind}"></i>`).join('')}</span></button>`);
+  }
+  const selList = byDay.get(CAL.sel) || [];
+  const next = [...byDay.keys()].filter(k => k > CAL.sel).sort()[0];
+  return `<div class="month"><div class="wk hd" aria-hidden="true">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x => `<div>${x}</div>`).join('')}</div><div class="wk">${cells.join('')}</div></div>
+    <section class="panel daypanel" aria-label="Selected day"><h2>${esc(fmtFull(CAL.sel))}<span class="pill">${esc(whenChip(CAL.sel))}</span></h2>
+      ${selList.length ? `<div class="evs">${selList.map(e => evRow(e, true)).join('')}</div>` : `<p class="muted small" style="margin:0">Nothing scheduled that day.${next ? ` <button type="button" class="btn ghost small" data-action="calSel" data-date="${next}" style="margin-left:6px">Next date: ${esc(fmtLong(next))}</button>` : ''}</p>`}</section>`;
+}
+
+function listView(events) {
+  const t = today();
+  const shown = events.filter(e => CAL.past || (e.end || e.date) >= t);
+  if (!shown.length) return `<div class="empty"><p>${events.length ? 'No upcoming dates.' : 'No dates on the calendar yet.'}</p></div>`;
+  const groups = new Map();
+  shown.forEach(e => { const k = e.end && e.date < t && e.end >= t ? t : e.date; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(e); });
+  return `<div class="evs">${[...groups].map(([d, list]) => `<h3 class="evd">${esc(fmtFull(d))}<span>${esc(whenChip(d))}</span></h3>${list.map(evRow).join('')}`).join('')}</div>`;
+}
+
+function pageCalendar() {
+  const events = calEvents().filter(e => CAL.kinds[e.kind]);
+  const [Y, M] = CAL.month.split('-').map(Number);
+  const monthName = new Date(Y, M - 1, 1).toLocaleDateString('en-US', {month:'long', year:'numeric'});
+  const seg = (v, l) => `<button type="button" data-action="calView" data-view="${v}" aria-pressed="${CAL.view === v}">${l}</button>`;
+  const bar = `<div class="calbar">
+    <div class="seg" role="group" aria-label="Calendar view">${seg('month', 'Month')}${seg('list', 'List')}</div>
+    ${CAL.view === 'month'
+      ? `<div class="calnav"><button type="button" class="icon-btn" data-action="calMove" data-step="-1" aria-label="Previous month">‹</button><h2 aria-live="polite">${esc(monthName)}</h2><button type="button" class="icon-btn" data-action="calMove" data-step="1" aria-label="Next month">›</button><button type="button" class="btn ghost small" data-action="calMove" data-step="today">Today</button></div>`
+      : `<label class="check"><input type="checkbox" data-cal="past" ${CAL.past ? 'checked' : ''}> Show past dates</label>`}
+  </div>
+  <div class="legend" role="group" aria-label="Show or hide kinds of dates">${KIND_ORDER.map(k => `<button type="button" class="kchip k-${k}" data-action="calKind" data-kind="${k}" aria-pressed="${CAL.kinds[k]}"><i></i>${esc(KINDS[k].label)}</button>`).join('')}</div>`;
+  return head('Calendar', 'Order deadlines, fancall and fansign winner announcements, and event dates. Times are noted on each date when known.') + bar + (CAL.view === 'month' ? monthView(events) : listView(events));
+}
+
+/* =====================================================================
+   10. PAGE: My account (joiner dashboard)
+   ===================================================================== */
+async function doLogin(handle, pin, silent) {
+  const d = await api.login(handle, pin);
+  if (d.error) {
+    S.me = null;
+    if (silent) { session.del('jo'); return null; }
+    throw new Error(d.error === 'locked'
+      ? 'Too many wrong PINs. Wait 15 minutes and try again, or DM @' + CONFIG.INSTAGRAM + '.'
+      : 'That handle and PIN don\'t match. No PIN yet? DM @' + CONFIG.INSTAGRAM + ' and a PIN will be set up for you.');
+  }
+  S.me = d; session.set('jo', JSON.stringify({h:handle, p:pin})); return d;
+}
+function loginView() {
+  return `<div class="signin">${head('Check your orders', 'Sign in with your Instagram handle and the PIN Krystal gave you.')}
+    <form class="panel stack" data-form="login" autocomplete="on">
+      <div class="field"><label for="lh">Instagram handle</label><input id="lh" name="handle" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="@yourhandle" required></div>
+      <div class="field"><label for="lp">PIN</label><input id="lp" name="pin" type="password" autocomplete="current-password" inputmode="text" required></div>
+      <p class="err" id="loginErr" role="alert"></p>
+      <button class="btn">Show my orders</button>
+      ${DEMO ? '<p class="small muted" style="margin:0">Demo: use <b>demo_joiner</b> with PIN <b>1234</b>.</p>' : ''}
+    </form></div>`;
+}
+function computeMe(d) {
+  const anC = new Map(), anFor = g => { if (!anC.has(g.id)) anC.set(g.id, anOf(g)); return anC.get(g.id); };
+  const live = d.claims.filter(c => { const g = goById(c.group_order_id); return g && g.status !== 'cancelled'; });
+  const filled = live.filter(c => c.status === 'filled'), dropped = live.filter(c => c.status === 'dropped');
+  const infoOf = new Map(filled.map(c => { const g = goById(c.group_order_id); return [c.id, claimInfo(g, c, anFor(g))]; }));
+  const share = (c, k) => { const i = infoOf.get(c.id); return i.seats.length ? c.items * i.seats.filter(s => s.state === k).length / i.total : (k === 'in' ? c.items : 0); };
+  const liveCharges = d.charges.filter(c => { const g = c.group_order_id && goById(c.group_order_id); return !g || g.status !== 'cancelled'; });
+  const dueCh = liveCharges.filter(c => c.due), futCh = liveCharges.filter(c => !c.due);
+  const claimsCost = sum(filled, c => infoOf.get(c.id).amount), feesDue = sum(dueCh, c => c.amount);
+  const totalDue = r2(claimsCost + feesDue), paid = sum(d.payments, p => p.amount);
+  const active = S.pub.gos.filter(g => g.status !== 'cancelled');
+  const joinedIds = new Set(filled.filter(c => infoOf.get(c.id).state !== 'wait' && infoOf.get(c.id).state !== 'dropped').map(c => c.group_order_id));
+  const joined = active.filter(g => joinedIds.has(g.id)).length;
+  const byAlbum = ALBUM_TYPES.map(t => {
+    const cs = filled.filter(c => goById(c.group_order_id).album_type === t);
+    return {type:t, items:sum(cs, c => share(c, 'in')), cost:sum(cs, c => infoOf.get(c.id).amount)};
+  }).filter(x => x.items > 0 || x.cost > 0);
+  return {live, filled, dropped, dueCh, futCh, claimsCost, feesDue, totalDue, paid, balance:r2(totalDue - paid), infoOf,
+    active:active.length, joined, pct:active.length ? Math.round(joined / active.length * 100) : 0,
+    pendingCost: sum(filled, c => infoOf.get(c.id).pendingBase),
+    itemsFilled: sum(filled, c => share(c, 'in')),
+    itemsWaiting: sum(filled, c => share(c, 'wait') + share(c, 'pending')),
+    itemsDropped: r2(sum(dropped, c => c.items) + sum(filled, c => share(c, 'dropped'))), byAlbum};
+}
+const chipsMe = (cs, infoOf) => cs.map(c => {
+  const i = infoOf.get(c.id);
+  const cls = c.status === 'dropped' ? 'x' : !i ? '' : i.state === 'wait' ? 'wait' : i.state === 'pending' || i.state === 'dropped' ? 'risk' : '';
+  const note = !i ? '' : i.state === 'wait' ? 'waitlist' : i.state === 'pending' ? 'needs more' : i.state === 'dropped' ? 'set dropped' : i.extra ? '+' + money(i.extra) : '';
+  return `<span class="chip ${cls}" ${c.status === 'dropped' ? 'title="Dropped"' : ''}>${esc(c.member_code)}${note ? `<small>${esc(note)}</small>` : ''}</span>`;
+}).join('');
+
+// Comeback panel: which list the joiner is on, and for soft claimers how many drops they have joined
+function comebackPanels(d, m) {
+  const by = new Map(); (d.roster || []).forEach(r => { if (!by.has(r.comeback_id)) by.set(r.comeback_id, []); by.get(r.comeback_id).push(r); });
+  return [...by].map(([cid, rows]) => {
+    const cb = S.pub.comebacks.find(c => c.id === cid); if (!cb) return '';
+    const emoji = (d.emojis.find(e => e.comeback_id === cid) || {}).emoji;
+    const fixed = rows.filter(r => r.tier === 'fixed'), soft = rows.filter(r => r.tier === 'soft' && !r.waitlist), wl = rows.filter(r => r.waitlist);
+    const list = a => [...new Set(a.map(r => r.member_code))].join(', ');
+    const orders = S.pub.gos.filter(g => g.comeback_id === cid && g.status !== 'cancelled').sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+    const stateOf = g => joinState(g, anOf(g), d.claims.filter(c => c.group_order_id === g.id));
+    const rowsHTML = orders.map(g => {
+      const s = stateOf(g), open = claimsOpen(g);
+      const pill = s === 'joined' ? '<span class="pill sea">Joined</span>' : s === 'wait' ? '<span class="pill gold">Waitlisted</span>' : s === 'dropped' ? '<span class="pill coral">Dropped</span>' : `<span class="pill">${open ? 'Not joined yet' : 'Not joined'}</span>`;
+      return `<div class="mine-row"><span>${esc(g.emoji || '📦')} ${esc(g.name)}</span><span>${pill}${s !== 'joined' && s !== 'wait' && open ? ` <a class="small" href="#/orders">Claim</a>` : ''}</span></div>`;
+    }).join('');
+    const isSoft = soft.length > 0, joined = orders.filter(g => stateOf(g) === 'joined').length, min = num(cb.soft_min_orders);
+    const openLeft = orders.filter(g => claimsOpen(g) && stateOf(g) !== 'joined' && stateOf(g) !== 'wait').length;
+    const pct = min ? Math.min(100, Math.round(joined / min * 100)) : 100;
+    const progress = isSoft ? `<div style="margin:14px 0 4px"><div class="metric"><b>${joined} of ${min}</b><span class="muted">drops joined. Soft claimers need at least ${min}.</span></div>
+      <div class="track" role="img" aria-label="${joined} of ${min} drops joined"><div class="fill" style="width:${pct}%"></div></div>
+      <p class="small muted" style="margin:8px 0 0">${joined >= min ? 'You have joined enough drops. Nice.' : `${min - joined} more to go. ${openLeft ? `${openLeft} open ${openLeft === 1 ? 'order' : 'orders'} you have not joined.` : 'No open orders are left to join right now.'}`}</p></div>` : '';
+    return `<section class="panel cbpanel"><h2>${esc(cb.name)}${emoji ? ` <span class="em2" aria-hidden="true">${esc(emoji)}</span>` : ''}</h2>
+      <p style="margin:0">${[fixed.length ? `<b>Fixed claim:</b> ${esc(list(fixed))}` : '', soft.length ? `<b>Soft claim:</b> ${esc(list(soft))}` : '', wl.length ? `<b>Waitlist:</b> ${esc(list(wl))}` : ''].filter(Boolean).join('. ')}.</p>
+      ${!isSoft && fixed.length ? '<p class="small muted" style="margin:6px 0 0">Fixed claimers are added to every order in the comeback automatically.</p>' : ''}
+      ${wl.length ? '<p class="small muted" style="margin:6px 0 0">Waitlisted claims move into a spot when a soft claimer drops.</p>' : ''}
+      ${progress}
+      ${rowsHTML ? `<div style="margin-top:10px">${rowsHTML}</div>` : '<p class="small muted" style="margin:10px 0 0">No orders in this comeback yet.</p>'}</section>`;
+  }).join('');
+}
+function shipCell(g, p) {
+  if (g.status === 'cancelled') return '<span class="muted">Cancelled</span>';
+  if (p && p.shipped) return `<span class="pill sea">Shipped</span><div class="small muted">${esc([p.shipping_type, p.tracking].filter(Boolean).join(', '))}</div>`;
+  if (g.status === 'completed') return '<span class="pill sea">Shipped</span>';
+  if (g.status === 'on_hand') return `<span class="pill gold">Packing soon</span>${p && p.shipping_type ? `<div class="small muted">${esc(p.shipping_type)}</div>` : ''}`;
+  return `<span class="muted small">Not here yet</span>`;
+}
+function meView(d) {
+  const m = computeMe(d), j = d.joiner;
+  const balClass = m.balance > 0.005 ? 'owed' : m.balance < -0.005 ? 'credit' : 'clear';
+  const balSub = m.balance > 0.005 ? 'Left to pay' : m.balance < -0.005 ? 'Credit on your account' : 'Nothing owed';
+  const alts = d.handles.filter(h => h !== normHandle(j.name));
+
+  const orders = [...new Set(d.claims.map(c => c.group_order_id))].map(goById).filter(Boolean)
+    .sort((a, b) => (a.status === 'completed') - (b.status === 'completed') || byNewest(a, b));
+  const orderRows = orders.map(g => {
+    const cs = d.claims.filter(c => c.group_order_id === g.id);
+    const cost = r2(sum(cs.filter(c => c.status === 'filled' && m.infoOf.has(c.id)), c => m.infoOf.get(c.id).amount) + sum(d.charges.filter(c => c.group_order_id === g.id && c.due), c => c.amount));
+    const part = d.participation.find(p => p.group_order_id === g.id);
+    return `<div class="orow">
+      <div class="nm"><span aria-hidden="true">${esc(g.emoji || '📦')}</span> ${esc(g.name)}</div>
+      <div data-l="Your claims">${chipsMe(cs, m.infoOf)}</div>
+      <div class="r" data-l="Cost">${g.status === 'cancelled' ? '<span class="muted">Refund</span>' : money(cost)}</div>
+      <div data-l="Order status">${goPill(g.status)}</div>
+      <div data-l="Shipping">${shipCell(g, part)}</div>
+    </div>`;
+  }).join('');
+
+  const pays = d.payments.slice().sort((a, b) => (b.paid_on || '').localeCompare(a.paid_on || '')).map(p =>
+    `<div class="prow2"><div class="muted small">${esc(fmtDate(p.paid_on))}</div><div>${esc(p.note || (p.amount < 0 ? 'Refund' : 'Payment'))} <span class="muted small">${esc(p.method || '')}</span></div><div class="r">${money(p.amount)}</div><div></div></div>`).join('');
+
+  return `<div class="me-head">
+      <div class="sticker" aria-hidden="true">${esc(j.emoji || '🏴‍☠️')}</div>
+      <div><p class="muted small" style="margin:0">Joiner account</p><h1>${esc(j.name)}</h1>${alts.length ? `<p class="muted small" style="margin:4px 0 0">Also joins as ${alts.map(a => '@' + esc(a)).join(', ')}</p>` : ''}</div>
+      <button class="btn ghost signout" data-action="signout">Sign out</button>
+    </div>
+
+    <section class="ledger" aria-label="Account summary">
+      <div><div class="k">Total due</div><div class="v">${money(m.totalDue)}</div><div class="s">${m.pendingCost > 0.005 ? `Plus ${money(m.pendingCost)} if waiting sets go through` : 'Claims plus fees due now'}</div></div>
+      <div><div class="k">Paid</div><div class="v">${money(m.paid)}</div><div class="s">${d.payments.length} ${d.payments.length === 1 ? 'payment' : 'payments'} recorded</div></div>
+      <div class="${balClass}"><div class="k">Balance</div><div class="v">${money(Math.abs(m.balance))}</div><div class="s">${balSub}</div></div>
+      <div><div class="k">Claim participation</div><div class="v">${m.pct}%</div><div class="track" role="img" aria-label="${m.pct} percent"><div class="fill" style="width:${m.pct}%"></div></div><div class="s">${m.joined} of ${m.active} active orders</div></div>
+    </section>
+
+    ${m.balance > 0.005 ? `<div class="pay"><div><strong>${money(m.balance)} to send</strong><p>Pay by PayPal or Venmo (friends and family), then DM @${esc(CONFIG.INSTAGRAM)} so it can be recorded. This page updates once the host has logged it.</p></div>
+      <a class="btn" href="${esc(CONFIG.PAYPAL)}" target="_blank" rel="noopener">PayPal</a><a class="btn ghost" href="${esc(CONFIG.VENMO)}" target="_blank" rel="noopener">Venmo</a></div>` : ''}
+
+    ${comebackPanels(d, m)}
+
+    <div class="two">
+      <section class="panel"><h2>Claim summary</h2>
+        <div class="tiles">
+          <div class="tile filled"><b>${m.itemsFilled}</b><span>going through</span></div>
+          <div class="tile"><b>${m.itemsWaiting}</b><span>waiting</span></div>
+          <div class="tile dropped"><b>${m.itemsDropped}</b><span>dropped</span></div>
+        </div>
+        <p class="muted small" style="margin:14px 0 0">Only claims going through are charged. Waiting means waitlisted or in a set that needs more members. Items count every PC, so OT8 is 8 and a unit is 2.</p></section>
+      <section class="panel"><h2>Album type totals</h2>
+        ${m.byAlbum.length ? m.byAlbum.map(a => `<div class="kv"><span>${esc(a.type)}</span><span class="n">${a.items} ${a.items === 1 ? 'item' : 'items'}</span><span class="p">${money(a.cost)}</span></div>`).join('') : '<p class="muted small" style="margin:0">No claims yet.</p>'}
+      </section>
+    </div>
+
+    ${m.futCh.length ? `<section class="panel"><h2>Future charges</h2>
+      ${m.futCh.map(c => `<div class="future"><span>${esc(c.label)}</span><span><b>${money(c.amount)}</b> <span class="pill gold">Not due</span></span></div>`).join('')}
+      <p class="muted small" style="margin:10px 0 0">These get added to your balance once the order is on hand and ready to ship.</p></section>` : ''}
+
+    <h2 class="blk">Your orders</h2>
+    ${orders.length ? `<div class="list"><div class="orow hd"><div>Order</div><div>Claims</div><div class="r">Cost</div><div>Status</div><div>Shipping</div></div>${orderRows}</div>` : '<p class="muted">No claims yet. Watch the Drops page for new orders.</p>'}
+
+    ${pays ? `<h2 class="blk">Payments</h2><div class="list">${pays}</div>` : ''}`;
+}
+async function pageMe() {
+  const saved = session.get('jo');
+  if (saved) { try { const c = JSON.parse(saved); await doLogin(c.h, c.p, true); } catch { S.me = null; } }
+  return S.me ? meView(S.me) : loginView();
+}
+
+/* =====================================================================
+   11. PAGE: Host tools
+   ===================================================================== */
+const F = (k, l, t = 'text', o = {}) => ({k, l, t, ...o});
+const opts = list => list.map(o => Array.isArray(o) ? o : [o, o]);
+const CFG = {
+  drops: {table:'drops', need:['drops','group_orders'], title:'Drop', add:'Add drop',
+    fields:[F('name','Set name','text',{req:1,wide:1}), F('store','Store'), F('drop_type','Type','select',{opts:opts(['POB','FC','FS','LD','Higher','Album','Other'])}),
+      F('round','Round'), F('album_type','Album'), F('pc_kind','Single or unit','select',{req:1,opts:[['single','Single'],['unit','Unit']]}),
+      F('announced_on','Announced on','date'), F('status','Status','select',{req:1,opts:DROP_STATUSES}),
+      F('group_order_id','Group order','ref',{ref:'group_orders',wide:1,hint:'Link it once you post the group order. Its photos then show on the order too.'}),
+      F('images','Photocard previews','images',{wide:1}),
+      F('deadline','Order deadline','date',{hint:'The store\'s deadline. Not shown once the linked group order has its own deadline.'}), F('deadline_time','Deadline time','text',{hint:'Optional, like 11:59 PM EST'}),
+      F('winners_on','Winners announced','date'), F('winners_note','Winners time or details','text',{hint:'Optional, like 8 PM KST'}),
+      F('event_on','Fancall or fansign date','date'), F('event_end_on','Last day','date',{hint:'Only if it runs several days.'}),
+      F('event_note','Event time or details','text',{wide:1}),
+      F('link','Link','text',{wide:1}), F('notes','Notes','text',{wide:1})],
+    defaults:{pc_kind:'single', status:'announced', announced_on:today(), images:[]},
+    label:r => r.name, sub:r => [r.store, r.drop_type, fmtDate(r.announced_on), (r.images || []).length ? `${r.images.length} ${r.images.length === 1 ? 'photo' : 'photos'}` : 'no photos yet'].filter(Boolean).join(', '),
+    thumb:r => (r.images && r.images[0] && (r.images[0].thumb || r.images[0].src)) || '',
+    sort:(a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')},
+  group_orders: {table:'group_orders', need:['group_orders','shipments','drops','comebacks'], title:'Group order', add:'Add group order',
+    fields:[F('name','Name','text',{req:1,wide:1}), F('emoji','Set emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}),
+      F('kaddy','Kaddy'), F('album_type','Album type','select',{req:1,opts:opts(ALBUM_TYPES)}),
+      F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair.'}), F('ot8_price','OT8 price','number',{hint:'Leave empty if OT8 is just 8 x the price.'}),
+      F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
+      F('deadline','Order deadline','date',{hint:'Last day to claim. Shows on the order and the calendar.'}), F('deadline_time','Deadline time','text',{hint:'Optional, like 11:59 PM EST'}),
+      F('set_mode','Set rules','select',{req:1,wide:1,opts:SET_MODES,hint:'What happens to sets that are not full. Sets go through in order, and the waitlist starts right after the last set that goes through. Joiners see the rules on the order.'}),
+      F('min_members','Members needed for a set to go through','number',{hint:'Like 7 of 8. Empty means the whole set. Not used for sorted orders.'}),
+      F('claims_on_site','Joiners can claim on this site','bool',{hint:'Needs a price. Joiners sign in with their handle and PIN.'}),
+      F('comeback_id','Comeback','ref',{ref:'comebacks',hint:'Which comeback this order belongs to, if any.'}),
+      F('roster_required','Add fixed and soft claimers automatically','bool',{hint:'Only when a comeback is chosen. GOM goes first, then fixed claimers, then soft claimers, in list order.'}),
+      F('post_url','Instagram post link','text',{wide:1}), F('public_note','Note shown to joiners','text',{wide:1})],
+    defaults:{platform:'instagram', kaddy:'Kfriday', album_type:'Photobook', status:'open', set_mode:'none', claims_on_site:false, roster_required:true},
+    label:r => goName(r), sub:r => `${STATUS_LABEL[r.status]}${r.price_per_pc != null ? ', ' + money(r.price_per_pc) : ''}${r.deadline ? ', deadline ' + fmtDate(r.deadline) : ''}${hasSets(r) ? ', ' + SET_MODE_SHORT[r.set_mode].toLowerCase() : ''}${r.comeback_id ? ', comeback' : ''}${r.claims_on_site ? ', claims on site' : ''}${(() => { const n = A.data.drops.filter(d => d.group_order_id === r.id).reduce((a, d) => a + (d.images || []).length, 0); return n ? `, ${n} ${n === 1 ? 'photo' : 'photos'}` : ', no photos (link a drop that has some)'; })()}`, sort:byNewest},
+  comebacks: {table:'comebacks', need:['comebacks'], title:'Comeback', add:'Add comeback',
+    fields:[F('name','Name','text',{req:1,wide:1}), F('soft_min_orders','Drops soft claimers must join','number',{req:1}),
+      F('fixed_slots','Fixed spots per member','number',{req:1,hint:'Filled in from your list when you save it.'}), F('soft_slots','Soft spots per member','number',{req:1,hint:'Filled in from your list when you save it.'})],
+    defaults:{soft_min_orders:6, fixed_slots:2, soft_slots:5}, label:r => r.name,
+    sub:r => `${r.fixed_slots} fixed and ${r.soft_slots} soft spots per member, soft claimers join ${r.soft_min_orders}+ drops`, sort:byNewest},
+  shipments: {table:'shipments', need:['shipments'], title:'Kaddy box', add:'Add box',
+    fields:[F('number','Box number','number',{req:1}), F('kaddy','Kaddy'), F('status','Status','select',{req:1,opts:SHIP_STATUSES}), F('box_dims','Box size (cm)'),
+      F('weight_kg','Weight (kg)','number'), F('cost_krw','Shipping (KRW)','number'), F('cost_usd','Shipping (USD)','number'),
+      F('declared_value_usd','Declared value (USD)','number'), F('customs_usd','Customs (USD)','number'),
+      F('paid_on','Shipping paid','date'), F('shipped_on','Shipped','date'), F('delivered_on','Arrived','date'), F('tracking','Tracking','text',{wide:1}), F('notes','Notes','text',{wide:1})],
+    defaults:{status:'pending', kaddy:'Kfriday'}, label:r => `Box ${r.number}`, sub:r => `${SHIP_LABEL[r.status]}${r.kaddy ? ', ' + r.kaddy : ''}`, sort:(a, b) => b.number - a.number},
+  joiners: {table:'joiners', need:['joiners','joiner_accounts'], title:'Joiner', add:'Add joiner',
+    fields:[F('name','Main handle','text',{req:1}), F('emoji','Claim emoji'), F('handles','All handles','text',{wide:1,hint:'Comma-separated, no @. Include alts. Any of them can sign in.'}),
+      F('is_host','This is me (GOM)','bool',{hint:'Your claims go first in every line. Only one joiner can be GOM. It is set for you when you save a comeback list.'}), F('notes','Notes (private)','text',{wide:1})],
+    defaults:{}, label:r => `${r.emoji || ''} ${r.name}`.trim(),
+    sub:r => `${handlesOf(r.id).map(h => '@' + h).join(', ')}, ${r.pin_hash ? 'PIN set' : 'no PIN yet'}`, sort:(a, b) => a.name.localeCompare(b.name), pin:true},
+  payments: {table:'payments', need:['payments','joiners','group_orders'], title:'Payment', add:'Record payment',
+    fields:[F('joiner_id','Joiner','ref',{ref:'joiners',req:1,wide:1}), F('amount','Amount','number',{req:1,hint:'Negative for a refund.'}), F('method','Method','select',{opts:opts(['paypal','venmo','wise','cash','other'])}),
+      F('paid_on','Date','date',{req:1}), F('group_order_id','For order (optional)','ref',{ref:'group_orders'}), F('note','Note','text',{wide:1})],
+    defaults:{method:'paypal', paid_on:today()}, label:r => `${joinerLabel(r.joiner_id)}  ${money(r.amount)}`,
+    sub:r => [r.method, fmtDate(r.paid_on), r.note].filter(Boolean).join(', '), sort:(a, b) => (b.paid_on || '').localeCompare(a.paid_on || '') || byNewest(a, b), limit:40},
+  charges: {table:'charges', need:['charges','joiners','group_orders'], title:'Fee', add:'Add fee',
+    fields:[F('joiner_id','Joiner','ref',{ref:'joiners',req:1,wide:1}), F('label','What it is for','text',{req:1,wide:1}), F('amount','Amount','number',{req:1}),
+      F('kind','Kind','select',{req:1,opts:opts(['ems','doms','customs','fee','other'])}), F('group_order_id','For order','ref',{ref:'group_orders'}),
+      F('due','Due now','bool',{hint:'Unticked = shows as a future charge.'})],
+    defaults:{kind:'doms', due:true}, label:r => `${joinerLabel(r.joiner_id)}  ${money(r.amount)}`,
+    sub:r => `${r.label}, ${r.due ? 'due now' : 'not due yet'}`, sort:byNewest, limit:40},
+};
+const ADMIN_TABS = [['drops','Drops'],['group_orders','Group orders'],['comeback','Comeback list'],['claims','Claims and shipping'],['money','Payments and fees'],['joiners','Joiners'],['shipments','Kaddy boxes'],['caption','Caption']];
+
+const OPTIONAL_TABLES = new Set(['comebacks', 'comeback_roster', 'comeback_emojis']);
+async function need(...names) {
+  await Promise.all(names.filter(n => !A.data[n]).map(async n => {
+    try { A.data[n] = await api.list(n); } catch (e) { if (OPTIONAL_TABLES.has(n)) A.data[n] = []; else throw e; }
+  }));
+}
+const invalidate = (...names) => names.forEach(n => { delete A.data[n]; });
+const joinerLabel = id => { const j = (A.data.joiners || []).find(x => x.id === id); return j ? `${j.emoji || ''} ${j.name}`.trim() : 'Unknown joiner'; };
+const handlesOf = id => (A.data.joiner_accounts || []).filter(a => a.joiner_id === id).map(a => a.handle).sort();
+
+function refOptions(ref) {
+  const rows = A.data[ref] || [];
+  if (ref === 'group_orders') return rows.slice().sort(byNewest).map(g => [g.id, goName(g)]);
+  if (ref === 'joiners') return rows.slice().sort((a, b) => a.name.localeCompare(b.name)).map(j => [j.id, `${j.emoji || ''} ${j.name}`.trim()]);
+  if (ref === 'shipments') return rows.slice().sort((a, b) => b.number - a.number).map(s => [s.id, `Box ${s.number}`]);
+  if (ref === 'comebacks') return rows.slice().sort(byNewest).map(c => [c.id, c.name]);
+  return [];
+}
+const imgListHTML = list => list.map((im, i) => `<figure class="imgt"><img src="${esc(im.thumb || im.src)}" alt="Photo ${i + 1}${i === 0 ? ', the cover' : ''}">
+  <figcaption>${i === 0 ? '<span class="pill gold">Cover</span>' : `<button type="button" class="btn ghost small" data-action="imgFirst" data-i="${i}">Set cover</button>`}<button type="button" class="btn danger small" data-action="imgDel" data-i="${i}" aria-label="Remove photo ${i + 1}">Remove</button></figcaption></figure>`).join('');
+const readImgs = w => { try { const v = JSON.parse($('input[type="hidden"]', w).value || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } };
+const writeImgs = (w, list) => { $('input[type="hidden"]', w).value = JSON.stringify(list); $('[data-imglist]', w).innerHTML = imgListHTML(list); };
+
+function fieldHTML(f, val) {
+  const id = 'f-' + f.k, v = val ?? '';
+  const req = f.req ? 'required' : '';
+  let input;
+  if (f.t === 'images') {
+    const list = Array.isArray(val) ? val : [];
+    return `<div class="field wide" data-imgs><label>${esc(f.l)}</label>
+      <input type="hidden" name="${f.k}" value="${esc(JSON.stringify(list))}">
+      <div class="imgs" data-imglist>${imgListHTML(list)}</div>
+      <div class="imgadd"><label class="btn ghost small" for="${id}">Add photos</label><input class="sr" id="${id}" type="file" accept="image/*" multiple data-imgfile></div>
+      <p class="small muted" data-imgmsg role="status" style="margin:0"></p>
+      <small>The first photo is the cover. Photos are resized for you (up to ${MAX_IMGS}). Press the save button below to keep changes.</small></div>`;
+  }
+  if (f.t === 'bool') return `<div class="field ${f.wide ? 'wide' : ''}"><label class="check"><input type="checkbox" name="${f.k}" ${v ? 'checked' : ''}> ${esc(f.l)}</label>${f.hint ? `<small>${esc(f.hint)}</small>` : ''}</div>`;
+  if (f.t === 'select' || f.t === 'ref') {
+    const list = f.t === 'ref' ? refOptions(f.ref) : f.opts;
+    input = `<select id="${id}" name="${f.k}" ${req}>${f.req && f.t === 'select' ? '' : '<option value="">None</option>'}${list.map(([ov, ol]) => `<option value="${esc(ov)}" ${String(ov) === String(v) ? 'selected' : ''}>${esc(ol)}</option>`).join('')}</select>`;
+  } else if (f.t === 'number') input = `<input id="${id}" name="${f.k}" type="number" step="any" value="${esc(v)}" ${req}>`;
+  else if (f.t === 'date') input = `<input id="${id}" name="${f.k}" type="date" value="${esc(String(v).slice(0, 10))}" ${req}>`;
+  else input = `<input id="${id}" name="${f.k}" type="text" value="${esc(v)}" ${req}>`;
+  return `<div class="field ${f.wide ? 'wide' : ''}"><label for="${id}">${esc(f.l)}${f.req ? ' *' : ''}</label>${input}${f.hint ? `<small>${esc(f.hint)}</small>` : ''}</div>`;
+}
+function readForm(cfg, form) {
+  const fd = new FormData(form), out = {};
+  for (const f of cfg.fields) {
+    if (f.t === 'bool') { out[f.k] = fd.has(f.k); continue; }
+    if (f.t === 'images') { try { const v = JSON.parse(fd.get(f.k) || '[]'); out[f.k] = Array.isArray(v) ? v : []; } catch { out[f.k] = []; } continue; }
+    const raw = fd.get(f.k), v = raw == null ? '' : String(raw).trim();
+    out[f.k] = v === '' ? null : f.t === 'number' ? Number(v) : v;
+  }
+  return out;
+}
+
+async function crudTab(key) {
+  const cfg = CFG[key]; await need(...cfg.need);
+  let rows = A.data[cfg.table].slice().sort(cfg.sort);
+  const total = rows.length; if (cfg.limit) rows = rows.slice(0, cfg.limit);
+  const editing = A.edit[key] && A.data[cfg.table].find(r => r.id === A.edit[key]);
+  const vals = editing ? (key === 'joiners' ? {...editing, handles:handlesOf(editing.id).join(', ')} : editing) : (cfg.defaults || {});
+  return `<div class="split">
+    <form class="panel" data-form="crud" data-key="${key}"><h2>${editing ? 'Edit ' + esc(cfg.title.toLowerCase()) : esc(cfg.add)}</h2>
+      <div class="fgrid">${cfg.fields.map(f => fieldHTML(f, vals[f.k])).join('')}</div>
+      <div class="formacts"><button class="btn">${editing ? 'Save changes' : esc(cfg.add)}</button>${editing ? `<button type="button" class="btn ghost" data-action="cancelEdit" data-key="${key}">Cancel</button>` : ''}</div>
+    </form>
+    <div class="list">${rows.length ? rows.map(r => `<div class="arow"><div class="arow-l">${cfg.thumb && cfg.thumb(r) ? `<img class="mini" src="${esc(cfg.thumb(r))}" alt="">` : ''}<div><strong>${esc(cfg.label(r))}</strong><small>${esc(cfg.sub(r))}</small></div></div>
+      <div class="acts">${cfg.pin ? `<button class="btn ghost small" data-action="pin" data-id="${r.id}">Set PIN</button>` : ''}
+      <button class="btn ghost small" data-action="edit" data-key="${key}" data-id="${r.id}">Edit</button>
+      <button class="btn danger small" data-action="del" data-key="${key}" data-id="${r.id}">Delete</button></div></div>`).join('') : '<p class="pad muted">Nothing here yet.</p>'}
+      ${total > rows.length ? `<p class="pad muted small" style="margin:0;border-top:1px solid var(--line)">Showing the latest ${rows.length} of ${total}.</p>` : ''}</div>
+  </div>`;
+}
+
+/* --- photo upload: resize in the browser, then store --- */
+const loadImg = file => new Promise((ok, no) => {
+  const u = URL.createObjectURL(file), im = new Image();
+  im.onload = () => { URL.revokeObjectURL(u); ok(im); };
+  im.onerror = () => { URL.revokeObjectURL(u); no(new Error(`Could not open ${file.name}. Try a JPG or PNG.`)); };
+  im.src = u;
+});
+const toJpeg = (im, max, quality) => new Promise((ok, no) => {
+  const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * k)); c.height = Math.max(1, Math.round(im.naturalHeight * k));
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+  c.toBlob(b => b ? ok(b) : no(new Error('Could not resize that picture.')), 'image/jpeg', quality);
+});
+async function processImage(file) {
+  if (!/^image\//.test(file.type)) throw new Error(`${file.name} is not a picture.`);
+  if (file.size > 40 * 1024 * 1024) throw new Error(`${file.name} is too large (over 40 MB).`);
+  const im = await loadImg(file);
+  return {full: await toJpeg(im, 1200, .85), thumb: await toJpeg(im, 320, .8)};
+}
+async function addPhotos(input) {
+  const w = input.closest('[data-imgs]'), form = input.closest('form'), msg = $('[data-imgmsg]', w), files = [...input.files];
+  input.value = ''; if (!files.length) return;
+  const list = readImgs(w);
+  if (list.length + files.length > MAX_IMGS) { msg.textContent = `A drop can hold up to ${MAX_IMGS} photos.`; throw new Error(`A drop can hold up to ${MAX_IMGS} photos. Remove one first.`); }
+  const saveBtn = $('.formacts .btn', form); saveBtn.disabled = true;
+  let added = 0, firstErr = null;
+  try {
+    for (const f of files) {
+      msg.textContent = `Uploading ${added + (firstErr ? 1 : 0) + 1} of ${files.length}...`;
+      try { const {full, thumb} = await processImage(f); list.push(await api.uploadImage(full, thumb)); writeImgs(w, list); added++; }
+      catch (e) { firstErr = firstErr || e; }
+    }
+  } finally { saveBtn.disabled = false; }
+  msg.textContent = added ? `${added} ${added === 1 ? 'photo' : 'photos'} added. Press the save button to keep ${added === 1 ? 'it' : 'them'}.` : '';
+  if (firstErr) throw firstErr;
+}
+
+function goPicker() {
+  const gos = A.data.group_orders.slice().sort(byNewest);
+  return `<div class="panel"><div class="field"><label for="goPick">Group order</label><select id="goPick" data-pick="go"><option value="">Choose an order</option>${gos.map(g => `<option value="${g.id}" ${g.id === A.goId ? 'selected' : ''}>${esc(goName(g))}</option>`).join('')}</select></div></div>`;
+}
+
+const claimPrice = (go, code) => code === 'OT8' ? (go.ot8_price != null ? num(go.ot8_price) : r2(num(go.price_per_pc) * rowsOf(go).length)) : num(go.price_per_pc);
+const claimItems = (go, code) => code === 'OT8' ? 8 : (code.includes('/') || rowsOf(go) === UNIT_ROWS) ? 2 : 1;
+
+// Adds the comeback's fixed and soft claimers to one order (fixed first, then soft, in your list order).
+// Claims that already exist are kept. A claim someone made themselves is upgraded to their fixed or soft spot.
+// Which joiner is the host (GOM): the one flagged in the database, or the one with your Instagram handle
+function hostId() {
+  const flagged = (A.data.joiners || []).find(j => j.is_host); if (flagged) return flagged.id;
+  const a = (A.data.joiner_accounts || []).find(x => x.handle === normHandle(CONFIG.INSTAGRAM)); return a ? a.joiner_id : null;
+}
+// Makes sure the host is flagged in the database, so claims made on the site know who GOM is
+async function ensureHost() {
+  await need('joiners', 'joiner_accounts');
+  const id = hostId(), j = id && A.data.joiners.find(x => x.id === id);
+  if (j && 'is_host' in j && !j.is_host) { await api.save('joiners', {id, is_host:true}); j.is_host = true; }
+  return id;
+}
+// Puts every claim on a comeback order in the right group in line, and adds anyone on the list who is missing
+async function syncOrder(go, roster, opts = {}) {
+  const host = await ensureHost();
+  roster = roster || await api.list('comeback_roster', {comeback_id:go.comeback_id});
+  const claims = await api.list('claims', {group_order_id:go.id});
+  const plan = planSync(go, roster, claims, host, opts.add !== false);
+  let t = Date.now();
+  const rows = plan.add.map(a => ({group_order_id:go.id, joiner_id:a.joiner_id, member_code:a.member_code, items:claimItems(go, a.member_code), price:claimPrice(go, a.member_code),
+    status:'filled', source:a.source, roster_pos:a.roster_pos, created_at:new Date(t++).toISOString()}));
+  if (rows.length) await api.saveMany('claims', rows);
+  for (const f of plan.fix) await api.save('claims', f);
+  return {added:rows.length, updated:plan.fix.length};
+}
+async function syncComeback(cbId) {
+  await need('group_orders');
+  const roster = await api.list('comeback_roster', {comeback_id:cbId});
+  const orders = A.data.group_orders.filter(g => g.comeback_id === cbId && g.roster_required && g.status === 'open');
+  let added = 0, updated = 0; for (const g of orders) { const r = await syncOrder(g, roster); added += r.added; updated += r.updated; }
+  return {orders:orders.length, added, updated};
+}
+// When the price changes, claims that still carry the old price move to the new one
+async function repriceClaims(oldGo, go) {
+  const claims = await api.list('claims', {group_order_id:go.id}); let n = 0;
+  for (const c of claims) {
+    const was = claimPrice(oldGo, c.member_code), now = claimPrice(go, c.member_code);
+    if (Math.abs(num(c.price) - was) < 0.005 && Math.abs(was - now) >= 0.005) { await api.save('claims', {id:c.id, price:now}); n++; }
+  }
+  return n;
+}
+
+/* --- claim text parsing (\"@handle: HJ, SH, YS/WY\") --- */
+function buildPreview(text, go) {
+  const accounts = new Map(A.data.joiner_accounts.map(a => [a.handle, a.joiner_id]));
+  const rows = new Map(), issues = [];
+  text.split('\n').map(s => s.trim()).filter(Boolean).forEach((line, i) => {
+    const m = line.match(/^@?([A-Za-z0-9._]+)\s*[:\-,]?\s*(.*)$/);
+    if (!m) { issues.push(`Line ${i + 1}: could not read "${line}"`); return; }
+    const handle = normHandle(m[1]), toks = m[2].split(/[\s,]+/).filter(Boolean);
+    if (!toks.length) { issues.push(`Line ${i + 1}: no claims after @${handle}`); return; }
+    const row = rows.get(handle) || {handle, joinerId:accounts.get(handle) || null, claims:[]};
+    toks.forEach(raw => {
+      const code = raw.toUpperCase().replace(/\.$/, ''), parts = code.split('/');
+      const R = rowsOf(go), okCode = code === 'OT8' || (hasSets(go) ? R.includes(code) : (parts.length <= 2 && parts.every(p => MEMBERS.includes(p))));
+      if (!okCode) { issues.push(`Line ${i + 1}: "${raw}" is not OT8 or ${hasSets(go) ? `one of ${R.join(', ')} for this order` : `a member (${MEMBERS.join(', ')}) or a unit like HJ/SH`}`); return; }
+      row.claims.push({code, items:claimItems(go, code), price:claimPrice(go, code)});
+    });
+    rows.set(handle, row);
+  });
+  return {rows:[...rows.values()], issues};
+}
+
+async function claimsTab() {
+  await need('group_orders', 'joiners', 'joiner_accounts', 'comebacks');
+  const picker = goPicker();
+  const go = A.data.group_orders.find(g => g.id === A.goId);
+  if (!go) return picker + '<p class="muted">Pick an order to add claims and update shipping.</p>';
+  const [claims, parts, ce] = await Promise.all([api.list('claims', {group_order_id:go.id}), api.list('participants', {group_order_id:go.id}),
+    go.comeback_id ? api.list('comeback_emojis', {comeback_id:go.comeback_id}).catch(() => []) : []]);
+  const jById = new Map(A.data.joiners.map(j => [j.id, j])), cbA = A.data.comebacks.find(c => c.id === go.comeback_id) || null;
+  const ceMap = new Map(ce.map(e => [e.joiner_id, e.emoji])), emo = jid => ceMap.get(jid) || (jById.get(jid) || {}).emoji || null;
+  const an = hasSets(go) ? analyze(go, claims.map(c => ({...c, emoji:emo(c.joiner_id)})), cbA) : null;
+  const info = c => claimInfo(go, c, an);
+  const pv = A.preview;
+  const newCount = pv ? pv.rows.filter(r => !r.joinerId).length : 0;
+  const claimCount = pv ? pv.rows.reduce((n, r) => n + r.claims.length, 0) : 0;
+  const nameOf = id => (jById.get(id) || {}).name || '';
+  const partRows = parts.slice().sort((a, b) => nameOf(a.joiner_id).localeCompare(nameOf(b.joiner_id))).map(p => {
+    const j = jById.get(p.joiner_id) || {name:'Unknown'};
+    const cs = claims.filter(c => c.joiner_id === p.joiner_id);
+    return `<div class="prow"><div><strong>${esc(`${emo(p.joiner_id) || j.emoji || ''} ${j.name}`.trim())}</strong><div>${chips(cs)}</div></div>
+      <select data-part data-joiner="${p.joiner_id}" data-field="shipping_type" aria-label="Shipping type"><option value="">Shipping type</option>${SHIPPING_TYPES.map(t => `<option ${t === p.shipping_type ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+      <label class="check"><input type="checkbox" data-part data-joiner="${p.joiner_id}" data-field="shipped" ${p.shipped ? 'checked' : ''}> Shipped</label>
+      <input type="text" data-part data-joiner="${p.joiner_id}" data-field="tracking" placeholder="Tracking" value="${esc(p.tracking || '')}" aria-label="Tracking"></div>`;
+  }).join('');
+  const claimRows = claims.slice().sort((a, b) => nameOf(a.joiner_id).localeCompare(nameOf(b.joiner_id)) || (a.created_at || '').localeCompare(b.created_at || '')).map(c => {
+    const i = c.status === 'filled' ? info(c) : null, place = i && an ? placeText(i, an) : '';
+    return `<div class="arow"><div><strong>${esc(`${emo(c.joiner_id) || ''} ${nameOf(c.joiner_id)}`.trim())}</strong><small>${esc(c.member_code)}${place ? ', ' + esc(place) : ''}, ${c.items} ${c.items === 1 ? 'item' : 'items'}, ${i ? (i.state === 'in' ? money(i.amount) : i.state === 'mixed' ? money(i.amount) + ' so far' : 'not charged') : 'dropped'}${{gom:', GOM', fixed:', fixed claim', soft:', soft claim', extra:', extra claim'}[c.source] || ''}</small></div>
+      <div class="acts"><button class="btn ghost small" data-action="toggleClaim" data-id="${c.id}" data-status="${c.status}">${c.status === 'filled' ? 'Mark dropped' : 'Restore'}</button>
+      <button class="btn danger small" data-action="delClaim" data-id="${c.id}">Delete</button></div></div>`;
+  }).join('');
+
+  // what every joiner owes for this order
+  const byJ = new Map(); claims.filter(c => c.status === 'filled').forEach(c => { if (!byJ.has(c.joiner_id)) byJ.set(c.joiner_id, []); byJ.get(c.joiner_id).push(c); });
+  const owe = [...byJ].map(([jid, cs]) => { const is = cs.map(info);
+    return {jid, cs, is, base:sum(is, x => x.base), extra:sum(is, x => x.extra), total:sum(is, x => x.amount), pend:sum(is, x => x.pendingBase), wait:is.filter(x => x.state === 'wait').length}; })
+    .sort((a, b) => nameOf(a.jid).localeCompare(nameOf(b.jid)));
+  const oweTable = owe.length ? `<div style="overflow-x:auto;margin-top:14px"><table class="pv"><thead><tr><th>Joiner</th><th>Claims</th><th class="r">Claims</th><th class="r">Split share</th><th class="r">Owes</th></tr></thead><tbody>
+    ${owe.map(o => `<tr><td>${esc(`${emo(o.jid) || ''} ${nameOf(o.jid)}`.trim())}</td><td>${chipsMe(o.cs, new Map(o.cs.map((c, i) => [c.id, o.is[i]])))}</td><td class="r">${money(o.base)}</td><td class="r">${o.extra ? money(o.extra) : ''}</td><td class="r"><b>${money(o.total)}</b>${o.pend > 0.005 ? `<br><span class="small muted">+${money(o.pend)} if set goes through</span>` : ''}</td></tr>`).join('')}
+    <tr class="tot"><td colspan="2">Total to collect</td><td class="r">${money(sum(owe, o => o.base))}</td><td class="r">${money(sum(owe, o => o.extra))}</td><td class="r">${money(sum(owe, o => o.total))}</td></tr></tbody></table></div>` : '';
+  const setsPanelA = an ? `<section class="panel"><h2>Sets, waitlist and totals</h2>${availGrid(an)}<div style="margin-top:12px">${sumLine(an)}</div>${setDetails(an)}${oweTable}
+      <p class="small muted" style="margin:12px 0 0">${an.closed ? 'This order is closed, so waitlisted claims are not ordered.' : 'The order is still open, so waitlisted claims can still go through if their set fills up.'} Claims already carry their base price. The split share is worked out here from the rules.</p></section>` : (oweTable ? `<section class="panel"><h2>Totals</h2>${oweTable}</section>` : '');
+
+  return picker + `
+    ${go.comeback_id && go.roster_required ? `<section class="panel"><h2>Comeback claimers</h2><p class="small muted" style="margin-top:0">This order is part of ${esc(cbA ? cbA.name : 'a comeback')}. This adds anyone from the list who is missing and puts every claim in the right group in line: GOM, fixed, soft, then a list member's extra claims, then everyone else. A spot someone dropped on purpose (or who switched to OT8) is not added back.</p>
+      <div class="formacts" style="margin:0"><button class="btn" data-action="syncOrder">Add comeback claimers and sort claims</button></div></section>` : ''}
+    ${setsPanelA}
+    <section class="panel"><h2>Add claims</h2>
+      <p class="small muted" style="margin-top:0">One joiner per line, like <b>@handle: HJ, SH, YS/WY</b> or <b>@handle: OT8</b>. Lines are added in the order you paste them. Write a member twice to claim it twice (like <b>@handle: HJ, HJ, OT8, OT8</b>). Claims by you go first in line, then fixed and soft claimers, then everyone else. Prices come from this order: ${go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit pair' : 'PC'}${go.ot8_price != null ? `, OT8 ${money(go.ot8_price)}` : ''}` : '<b>no price set yet</b> (set it in Group orders first)'}.</p>
+      <textarea id="claimText" placeholder="@starlit_atiny: HJ, SH&#10;@bun.tiny: OT8" aria-label="Claims">${esc(A.claimText)}</textarea>
+      <div class="formacts"><button class="btn" data-action="previewClaims">Preview</button></div>
+      ${pv ? `<div style="margin-top:18px">${pv.rows.length ? `<table class="pv"><thead><tr><th>Handle</th><th>Claims</th><th>Total</th><th></th></tr></thead><tbody>${pv.rows.map(r => `<tr><td>@${esc(r.handle)}</td><td>${r.claims.map(c => `<span class="chip">${esc(c.code)}</span>`).join('')}</td><td>${money(sum(r.claims, c => c.price))}</td><td>${r.joinerId ? '<span class="pill sea">Existing</span>' : '<span class="pill gold">New joiner</span>'}</td></tr>`).join('')}</tbody></table>` : ''}
+        ${pv.issues.length ? `<ul class="issues">${pv.issues.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+        ${claimCount ? `<div class="formacts"><button class="btn" data-action="commitClaims">Add ${claimCount} ${claimCount === 1 ? 'claim' : 'claims'}${newCount ? ` and create ${newCount} new ${newCount === 1 ? 'joiner' : 'joiners'}` : ''}</button></div>` : ''}</div>` : ''}
+    </section>
+    <h2 class="blk" style="margin-top:8px">Shipping for this order</h2>
+    <div class="list">${partRows || '<p class="pad muted">No joiners yet. Add claims above.</p>'}</div>
+    <h2 class="blk">All claims (${claims.length})</h2>
+    <div class="list">${claimRows || '<p class="pad muted">No claims yet.</p>'}</div>`;
+}
+
+/* --- Instagram caption grid --- */
+function buildCaption(go, claims, primary, emo, cb) {
+  const price = go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit' : 'PC'}${go.ot8_price != null ? `, OT8 ${money(go.ot8_price)}` : ''}` : '';
+  const dl = go.deadline ? `Deadline: ${fmtDate(go.deadline)}${go.deadline_time ? ', ' + go.deadline_time : ''}` : '';
+  const head = [`${go.emoji || ''} ${go.name}`.trim(), price, dl].filter(Boolean), isHost = jid => normHandle(primary(jid)) === normHandle(CONFIG.INSTAGRAM);
+  const who = jid => isHost(jid) ? `${emo(jid) || '💎'} GOM` : `${emo(jid) || '❔'} @${primary(jid)}`;
+  const live = claims.filter(c => c.status !== 'dropped').map(c => ({...c, emoji:emo(c.joiner_id)})).sort(claimCmp);
+  const ot8 = live.filter(c => c.member_code === 'OT8'), ot8Line = `OT8: ${ot8.map(c => em(c.emoji)).join('') || '✅'}`;
+  const seen = []; const see = jid => { if (!seen.includes(jid)) seen.push(jid); };
+  if (hasSets(go)) {
+    const an = analyze(go, live, cb);
+    const line = r => {
+      const cells = []; for (let n = 1; n <= an.N; n++) { const s = an.sets[n - 1] && an.sets[n - 1].cells[r]; cells.push(s ? em(s.claim.emoji) : '✅'); }
+      const w = an.seats.filter(x => x.row === r && x.pos > an.N).sort((a, b) => a.pos - b.pos).map(x => em(x.claim.emoji));
+      return an.gated ? `${r}: ${cells.join('')} | ${w.join('') || '✅'}` : `${r}: ${cells.join('') || '✅'}`;
+    };
+    an.R.forEach(r => an.seats.filter(x => x.row === r).sort((a, b) => a.pos - b.pos).forEach(x => see(x.claim.joiner_id)));
+    ot8.forEach(c => see(c.joiner_id));
+    return [...head, '', 'Availability:', ...an.R.map(line), ot8Line, '', ...seen.map(who)].join('\n');
+  }
+  const rows = new Map(); live.filter(c => c.member_code !== 'OT8').forEach(c => { if (!rows.has(c.member_code)) rows.set(c.member_code, []); rows.get(c.member_code).push(c.joiner_id); });
+  const e1 = jid => emo(jid) || '❔';
+  const codes = [...MEMBERS, ...[...rows.keys()].filter(k => !MEMBERS.includes(k))];
+  const lines = codes.filter(c => MEMBERS.includes(c) || rows.has(c)).map(c => `${c}: ${(rows.get(c) || []).map(e1).join('') || '✅'}`);
+  live.forEach(c => see(c.joiner_id));
+  return [...head, '', 'Availability:', ...lines, ot8Line, '', ...seen.map(who)].join('\n');
+}
+async function captionTab() {
+  await need('group_orders', 'joiners', 'joiner_accounts', 'comebacks');
+  const picker = goPicker();
+  const go = A.data.group_orders.find(g => g.id === A.goId);
+  if (!go) return picker + '<p class="muted">Pick an order to build its caption grid.</p>';
+  const [claims, ce] = await Promise.all([api.list('claims', {group_order_id:go.id}), go.comeback_id ? api.list('comeback_emojis', {comeback_id:go.comeback_id}).catch(() => []) : []]);
+  const jById = new Map(A.data.joiners.map(j => [j.id, j])), ceMap = new Map(ce.map(e => [e.joiner_id, e.emoji]));
+  const cb = A.data.comebacks.find(c => c.id === go.comeback_id) || null;
+  const text = buildCaption(go, claims, jid => (jById.get(jid) || {}).name || 'unknown', jid => ceMap.get(jid) || (jById.get(jid) || {}).emoji || null, cb);
+  const seen = new Map(); [...new Set(claims.filter(c => c.status !== 'dropped').map(c => c.joiner_id))].forEach(id => {
+    const e = ceMap.get(id) || (jById.get(id) || {}).emoji; if (e) seen.set(normEmoji(e), [...(seen.get(normEmoji(e)) || []), (jById.get(id) || {}).name || '?']); });
+  const dupes = [...seen.entries()].filter(([, v]) => v.length > 1);
+  const dupeNote = dupes.length ? `<p class="err" style="margin:0 0 12px">Two joiners share an emoji here: ${dupes.map(([e, v]) => `${esc(e)} (${v.map(esc).join(' and ')})`).join('; ')}. Give one of them a different emoji in the Joiners tab${go.comeback_id ? ' or the comeback list' : ''} so the grid is readable.</p>` : '';
+  return picker + `<section class="panel"><h2>Caption grid</h2>${dupeNote}<pre class="cap" id="capText">${esc(text)}</pre>
+    <div class="formacts"><button class="btn" data-action="copyCaption">Copy caption</button></div>
+    <p class="small muted" style="margin:14px 0 0">✅ is an open spot. ${hasSets(go) ? 'Each row shows the sets going through in order, then a | and the waitlist, which starts right after the last set that goes through.' : 'Each row lists everyone who claimed that member.'} OT8 claims have their own row. The key lists each joiner's emoji${go.comeback_id ? ' for this comeback' : ''}.</p></section>`;
+}
+
+async function comebackTab() {
+  await need('comebacks', 'joiners', 'joiner_accounts', 'group_orders');
+  const top = await crudTab('comebacks');
+  const cbs = A.data.comebacks.slice().sort(byNewest);
+  if (!cbs.length) return top + '<p class="muted">Add a comeback above, then paste your fixed and soft claim list here.</p>';
+  if (!cbs.some(c => c.id === A.cbId)) A.cbId = cbs[0].id;
+  const cb = cbs.find(c => c.id === A.cbId);
+  const orders = A.data.group_orders.filter(g => g.comeback_id === cb.id && g.status !== 'cancelled').sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+  const [roster, emojis, claimsAll] = await Promise.all([api.list('comeback_roster', {comeback_id:cb.id}), api.list('comeback_emojis', {comeback_id:cb.id}), api.list('claims')]);
+  const jById = new Map(A.data.joiners.map(j => [j.id, j])), emoOf = new Map(emojis.map(e => [e.joiner_id, e.emoji]));
+  const saved = roster.length ? rosterToText(cb, roster, emojis, A.data.joiners, CONFIG.INSTAGRAM) : '';
+  const text = A.rosterText || saved, pv = A.rosterPv;
+
+  // soft claimers: how many drops each has joined
+  const per = new Map(orders.map(g => { const cs = claimsAll.filter(c => c.group_order_id === g.id).map(c => ({...c, emoji:emoOf.get(c.joiner_id) || (jById.get(c.joiner_id) || {}).emoji}));
+    return [g.id, {an:anOf2(g, cs, cb), cs}]; }));
+  const stateFor = (g, jid) => { const x = per.get(g.id); return joinState(g, x.an, x.cs.filter(c => c.joiner_id === jid)); };
+  const softIds = [...new Set(roster.filter(r => r.tier === 'soft').map(r => r.joiner_id))].filter(id => jById.has(id));
+  const min = num(cb.soft_min_orders);
+  const soft = softIds.map(id => {
+    const joined = orders.filter(g => stateFor(g, id) === 'joined').length, left = orders.filter(g => claimsOpen(g) && !['joined', 'wait'].includes(stateFor(g, id))).length;
+    const spots = roster.filter(r => r.joiner_id === id && r.tier === 'soft').sort((a, b) => a.position - b.position).map(r => r.member_code + (r.waitlist ? ' (wait)' : ''));
+    return {id, joined, left, spots, status: joined >= min ? 'met' : joined + left >= min ? 'behind' : 'risk'};
+  }).sort((a, b) => a.joined - b.joined || (jById.get(a.id).name || '').localeCompare(jById.get(b.id).name || ''));
+  const accounts = new Map(A.data.joiner_accounts.map(a => [a.handle, a.joiner_id]));
+  const pvHandles = pv ? [...new Map(pv.entries.map(e => [e.handle, e])).values()] : [];
+  const newCount = pvHandles.filter(e => !accounts.has(e.handle)).length;
+  const spotText = hd => pv.entries.filter(e => e.handle === hd).map(e => `${e.tier === 'fixed' ? 'Fixed' : e.waitlist ? 'Soft wait' : 'Soft'} ${e.member_code}`).join(', ');
+  const openOrders = orders.filter(g => g.roster_required && g.status === 'open');
+
+  return top + `
+    <section class="panel" style="margin-top:18px"><h2>Claim list</h2>
+      <div class="field"><label for="cbPick">Comeback</label><select id="cbPick" data-pick="cb">${cbs.map(c => `<option value="${c.id}" ${c.id === cb.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+      <p class="small muted" style="margin:12px 0 0">${roster.length ? `${new Set(roster.map(r => r.joiner_id)).size} people, ${roster.filter(r => r.tier === 'fixed').length} fixed and ${roster.filter(r => r.tier === 'soft').length} soft spots saved.` : 'No list saved for this comeback yet.'}
+      ${orders.length ? ` ${orders.length} ${orders.length === 1 ? 'order is' : 'orders are'} in this comeback.` : ' No orders are in this comeback yet. Choose it in a group order.'}</p></section>
+
+    <section class="panel"><h2>Paste or edit the list</h2>
+      <p class="small muted" style="margin-top:0">Paste your Instagram list: the <b>Fixed claim:</b> and <b>Soft claim:</b> rows (✅ is an open spot, everything after the | is the waitlist), then the emoji key with each handle. A line like <b>💎 GOM</b> is you. Nothing changes until you press Save.</p>
+      <textarea id="rosterText" style="min-height:260px" aria-label="Claim list" placeholder="Fixed claim:&#10;HJ: 💎💚 |&#10;...&#10;&#10;Soft claim:&#10;HJ: 🍮📸🥞♟️✅ | ✅&#10;...&#10;&#10;💎 GOM&#10;🍮 @handle">${esc(text)}</textarea>
+      <div class="formacts"><button class="btn" data-action="previewRoster">Preview</button>${roster.length ? '<button class="btn ghost" data-action="copyRoster">Copy saved list</button><button class="btn danger" data-action="clearRosterBtn">Remove saved list</button>' : ''}</div>
+      ${pv ? `<div style="margin-top:18px">
+        <p style="margin:0 0 8px"><b>${pv.entries.filter(e => e.tier === 'fixed').length}</b> fixed, <b>${pv.entries.filter(e => e.tier === 'soft' && !e.waitlist).length}</b> soft and <b>${pv.entries.filter(e => e.waitlist).length}</b> waitlist spots. ${pv.slots.fixed} fixed and ${pv.slots.soft} soft spots per member.${newCount ? ` ${newCount} new ${newCount === 1 ? 'joiner' : 'joiners'} will be created.` : ''}</p>
+        ${pv.unknown.length ? `<ul class="issues"><li>These emojis are in the rows but not in the key: ${esc(pv.unknown.join(' '))}. Add them to the key, then preview again.</li></ul>` : ''}
+        ${pv.issues.length ? `<ul class="issues">${pv.issues.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+        ${pvHandles.length ? `<div style="overflow-x:auto"><table class="pv"><thead><tr><th>Emoji</th><th>Handle</th><th>Spots</th><th></th></tr></thead><tbody>${pvHandles.map(e => `<tr><td class="em2">${esc(e.emoji)}</td><td>@${esc(e.handle)}</td><td>${esc(spotText(e.handle))}</td><td>${accounts.has(e.handle) ? '<span class="pill sea">Existing</span>' : '<span class="pill gold">New joiner</span>'}</td></tr>`).join('')}</tbody></table></div>` : ''}
+        ${pv.entries.length && !pv.unknown.length ? `<div class="formacts"><button class="btn" data-action="saveRoster">Save list and add claimers to ${openOrders.length} open ${openOrders.length === 1 ? 'order' : 'orders'}</button></div>` : ''}</div>` : ''}
+    </section>
+
+    ${orders.length ? `<section class="panel"><h2>Orders in this comeback</h2>
+      ${orders.map(g => `<div class="mine-row"><span>${esc(goName(g))}</span><span>${goPill(g.status)} <span class="pill ${g.roster_required ? 'sea' : ''}">${g.roster_required ? 'Claimers added automatically' : 'Claimers not required'}</span></span></div>`).join('')}
+      ${roster.length && openOrders.length ? '<div class="formacts"><button class="btn ghost" data-action="syncCb">Add claimers to open orders again</button></div><p class="small muted" style="margin:8px 0 0">Adds anyone missing. Existing claims are kept.</p>' : ''}</section>` : ''}
+
+    ${soft.length ? `<section class="panel"><h2>Soft claimers: drops joined</h2>
+      <p class="small muted" style="margin-top:0">Soft claimers need to join at least ${min} drops of this comeback. A drop counts when a claim is going through or waiting on more members.</p>
+      <div style="overflow-x:auto"><table class="pv"><thead><tr><th>Joiner</th><th>Soft spots</th><th class="r">Joined</th><th>Status</th></tr></thead><tbody>
+      ${soft.map(s => `<tr><td>${esc(`${emoOf.get(s.id) || ''} ${jById.get(s.id).name}`.trim())}</td><td>${esc(s.spots.join(', '))}</td><td class="r">${s.joined} of ${min}</td>
+        <td>${s.status === 'met' ? '<span class="pill sea">Met</span>' : s.status === 'behind' ? `<span class="pill gold">${min - s.joined} to go</span>` : `<span class="pill coral">At risk, ${s.left} open</span>`}</td></tr>`).join('')}</tbody></table></div></section>` : ''}`;
+}
+function anOf2(g, cs, cb) { return hasSets(g) ? analyze(g, cs, cb) : null; }
+
+async function adminBody(tab) {
+  if (tab === 'money') return (await crudTab('payments')) + (await crudTab('charges'));
+  if (tab === 'claims') return claimsTab();
+  if (tab === 'comeback') return comebackTab();
+  if (tab === 'caption') return captionTab();
+  return crudTab(tab);
+}
+function adminLoginView() {
+  return `<div class="signin">${head('Host login', 'For the host only. Joiners can use My account instead.')}
+    <form class="panel stack" data-form="adminlogin">
+      <div class="field"><label for="ae">Email</label><input id="ae" name="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="ap">Password</label><input id="ap" name="password" type="password" autocomplete="current-password" required></div>
+      <p class="err" id="adminErr" role="alert"></p><button class="btn">Sign in</button>
+      ${DEMO ? '<p class="small muted" style="margin:0">Demo: any email, password <b>demo</b>.</p>' : ''}
+    </form></div>`;
+}
+async function pageAdmin() {
+  if (!A.checked) { A.is = await api.isAdmin(); A.checked = true; }
+  if (!A.is) return adminLoginView();
+  let body; try { body = await adminBody(A.tab); } catch (e) { body = `<div class="panel"><p class="err">${esc(e.message)}</p></div>`; }
+  return head('Host tools', 'Only you can see this page.') + `<div class="tabs" role="tablist">${ADMIN_TABS.map(([k, l]) => `<button role="tab" aria-selected="${k === A.tab}" data-action="tab" data-tab="${k}">${l}</button>`).join('')}<button class="btn ghost small" data-action="adminOut">Sign out</button></div>${body}`;
+}
+
+/* =====================================================================
+   12. Router + events
+   ===================================================================== */
+const app = $('#app');
+const PAGES = {drops:pageDrops, calendar:pageCalendar, orders:pageOrders, me:pageMe, admin:pageAdmin};
+const TITLES = {drops:'Comeback drops', calendar:'Calendar', orders:'Order status', me:'My account', admin:'Host tools'};
+let renderId = 0;
+const routeName = () => { const r = location.hash.replace(/^#\/?/, '').split('/')[0]; return PAGES[r] ? r : 'drops'; };
+
+async function render() {
+  const id = ++renderId, r = routeName();
+  document.querySelectorAll('[data-r]').forEach(a => { if (a.dataset.r === r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  document.title = TITLES[r] + ' | ' + CONFIG.INSTAGRAM + ' group orders';
+  let html;
+  try {
+    if (window.__bootError) throw window.__bootError;
+    if (S.loadError) throw S.loadError;
+    html = await PAGES[r]();
+  } catch (e) {
+    html = `<div class="panel"><h2>Something went wrong</h2><p class="err">${esc(e.message || e)}</p><p class="muted small">Check the Supabase URL and key in index.html, and that schema.sql ran without errors.</p></div>`;
+  }
+  if (id === renderId) app.innerHTML = html;
+}
+
+const actions = {
+  signout() { S.me = null; session.del('jo'); render(); },
+  clearFilters() { S.filters = {q:'', store:'', type:'', status:''}; render(); },
+  async adminOut() { await api.adminSignOut(); A.is = false; A.data = {}; render(); },
+  tab(b) { A.tab = b.dataset.tab; A.preview = null; render(); },
+  async edit(b) { A.edit[b.dataset.key] = b.dataset.id; await render(); const f = $(`form[data-key="${b.dataset.key}"]`); if (f) f.scrollIntoView({block:'center'}); },
+  cancelEdit(b) { delete A.edit[b.dataset.key]; render(); },
+  async del(b) {
+    const cfg = CFG[b.dataset.key], row = A.data[cfg.table].find(r => r.id === b.dataset.id);
+    const ok = await ask({title:`Delete "${cfg.label(row)}"?`, html:'<p>This can\'t be undone.' + (cfg.table === 'joiners' ? ' Their claims, fees, and payments are deleted too.' : '') + '</p>', ok:'Delete', danger:true});
+    if (!ok) return;
+    await api.remove(cfg.table, row.id);
+    if (cfg.table === 'drops' && (row.images || []).length) api.removeImages(row.images).catch(() => {});
+    invalidate(cfg.table, 'claims'); await refreshPublic(); toast('Deleted'); render();
+  },
+  async pin(b) {
+    const j = A.data.joiners.find(x => x.id === b.dataset.id);
+    const r = await ask({title:`Set PIN for ${j.name}`, html:'<div class="field"><label for="pinIn">New PIN (4 or more characters)</label><input id="pinIn" name="pin" type="text" minlength="4" autocomplete="off" required></div><p class="small muted">Send them this PIN privately. They sign in on My account with their handle and this PIN.</p>', ok:'Save PIN'});
+    if (!r) return;
+    await api.setPin(j.id, r.pin); invalidate('joiners');
+    toast(DEMO ? 'Demo mode does not store PINs. Sign in with 1234.' : 'PIN saved'); render();
+  },
+  previewClaims() {
+    const go = A.data.group_orders.find(g => g.id === A.goId);
+    A.claimText = $('#claimText').value; A.preview = buildPreview(A.claimText, go); render();
+  },
+  async commitClaims() {
+    const go = A.data.group_orders.find(g => g.id === A.goId), pv = A.preview; if (!pv) return;
+    const newOnes = pv.rows.filter(r => !r.joinerId);
+    for (const r of newOnes) {
+      const j = await api.save('joiners', {name:r.handle, emoji:null});
+      await api.save('joiner_accounts', {handle:r.handle, joiner_id:j.id, platform:'instagram'});
+      r.joinerId = j.id;
+    }
+    let t = Date.now(); const host = await ensureHost();
+    const rows = pv.rows.flatMap(r => r.claims.map(c => ({group_order_id:go.id, joiner_id:r.joinerId, member_code:c.code, items:c.items, price:c.price, status:'filled', source:r.joinerId === host ? 'gom' : 'joiner', created_at:new Date(t++).toISOString()})));
+    await api.saveMany('claims', rows);
+    if (go.comeback_id && go.roster_required) await syncOrder(go, null, {add:false});      // sort them into fixed, soft and extra
+    invalidate('joiners', 'joiner_accounts'); await refreshPublic();
+    A.preview = null; A.claimText = '';
+    toast(`Added ${rows.length} claims${newOnes.length ? `. ${newOnes.length} new joiners need a PIN and emoji in the Joiners tab` : ''}`); render();
+  },
+  async toggleClaim(b) { await api.save('claims', {id:b.dataset.id, status:b.dataset.status === 'filled' ? 'dropped' : 'filled'}); await refreshPublic(); render(); },
+  async delClaim(b) {
+    const ok = await ask({title:'Delete this claim?', html:'<p>Use "Mark dropped" instead if the joiner dropped it and you want to keep a record.</p>', ok:'Delete', danger:true});
+    if (!ok) return; await api.remove('claims', b.dataset.id); await refreshPublic(); render();
+  },
+  qty(b) {
+    const inp = $('input[name="q"]', b.parentElement), v = Math.max(0, Math.min(Number(inp.max) || 10, (parseInt(inp.value, 10) || 0) + Number(b.dataset.d)));
+    inp.value = v; b.closest('.mchip').classList.toggle('on', v > 0); claimNote(b.closest('form'));
+  },
+  async unclaim(b) {
+    const c = cred(), claim = S.me && S.me.claims.find(x => x.id === b.dataset.id); if (!c || !claim) return;
+    const g = goById(claim.group_order_id), cb = cbOf(g);
+    const back = claim.source === 'fixed' || claim.source === 'soft' ? `If you add ${esc(claim.member_code)} back you go to the end of the ${claim.source} claimers, still ahead of everyone else.` : 'If you add it back you join the end of the line for that member.';
+    const ok = await ask({title:`Drop ${claim.member_code}?`, html:`<p>You won't be charged for it. ${back}</p>${claim.source === 'fixed' ? '<p><b>Heads up:</b> this is a fixed claim. You are dropping it because you have an OT8.</p>' : ''}${claim.source === 'soft' && cb ? `<p><b>Heads up:</b> soft claimers need to join at least ${cb.soft_min_orders} drops of ${esc(cb.name)}.</p>` : ''}`, ok:'Drop claim', danger:true});
+    if (!ok) return;
+    const res = await api.joinerUnclaim(c.h, c.p, b.dataset.id);
+    if (res.error) { toast(claimError(res), true); return; }
+    await refreshPublic(); await doLogin(c.h, c.p, true); await keepScroll(render); toast('Claim dropped');
+  },
+  previewRoster() { A.rosterText = $('#rosterText').value; A.rosterPv = parseRoster(A.rosterText, CONFIG.INSTAGRAM); render(); },
+  async saveRoster() {
+    const pv = A.rosterPv, cb = A.data.comebacks.find(c => c.id === A.cbId); if (!pv || !cb || pv.unknown.length || !pv.entries.length) return;
+    const accounts = new Map(A.data.joiner_accounts.map(a => [a.handle, a.joiner_id])), idOf = new Map(), emojiOf = new Map();
+    for (const e of pv.entries) {
+      emojiOf.set(e.handle, e.emoji);
+      if (idOf.has(e.handle)) continue;
+      let jid = accounts.get(e.handle);
+      if (!jid) { const j = await api.save('joiners', {name:e.handle, emoji:e.emoji}); await api.save('joiner_accounts', {handle:e.handle, joiner_id:j.id, platform:'instagram'}); jid = j.id; accounts.set(e.handle, jid); }
+      idOf.set(e.handle, jid);
+    }
+    await api.clearRoster(cb.id);
+    await api.saveMany('comeback_roster', pv.entries.map(e => ({comeback_id:cb.id, tier:e.tier, member_code:e.member_code, position:e.position, waitlist:e.waitlist, joiner_id:idOf.get(e.handle)})));
+    await api.saveMany('comeback_emojis', [...emojiOf].map(([hd, emoji]) => ({comeback_id:cb.id, joiner_id:idOf.get(hd), emoji})));
+    await api.save('comebacks', {id:cb.id, fixed_slots:pv.slots.fixed, soft_slots:pv.slots.soft});
+    invalidate('joiners', 'joiner_accounts', 'comebacks', 'claims'); A.rosterPv = null; A.rosterText = '';
+    await ensureHost();
+    const r = await syncComeback(cb.id); await refreshPublic();
+    toast(`List saved. ${r.added} ${r.added === 1 ? 'claim' : 'claims'} added${r.updated ? `, ${r.updated} moved to the right place in line` : ''} across ${r.orders} open ${r.orders === 1 ? 'order' : 'orders'}.`); render();
+  },
+  async syncCb() { const r = await syncComeback(A.cbId); await refreshPublic(); toast(r.added || r.updated ? `Added ${r.added} ${r.added === 1 ? 'claim' : 'claims'}${r.updated ? `, moved ${r.updated} into the right place in line` : ''} across ${r.orders} open orders.` : 'Everyone is already on the open orders.'); render(); },
+  async syncOrder() {
+    const go = A.data.group_orders.find(g => g.id === A.goId); if (!go || !go.comeback_id) return;
+    const r = await syncOrder(go); await refreshPublic(); toast(r.added || r.updated ? `Added ${r.added} ${r.added === 1 ? 'claim' : 'claims'}${r.updated ? `, moved ${r.updated} into the right place in line` : ''}.` : 'Everyone is already on this order and in the right place.'); render();
+  },
+  async copyRoster() {
+    const t = $('#rosterText').value;
+    try { await navigator.clipboard.writeText(t); } catch { const ta = $('#rosterText'); ta.select(); document.execCommand('copy'); }
+    toast('List copied');
+  },
+  async clearRosterBtn() {
+    const ok = await ask({title:'Remove the saved list?', html:'<p>This clears the fixed and soft claimers and their emojis for this comeback. Claims already on orders are not removed.</p>', ok:'Remove list', danger:true});
+    if (!ok) return; await api.clearRoster(A.cbId); A.rosterText = ''; A.rosterPv = null; await refreshPublic(); toast('List removed'); render();
+  },
+  lb(b) { openLightbox(b.dataset.gal, Number(b.dataset.i) || 0); },
+  async calSel(b) {
+    const d = b.dataset.date; CAL.sel = d; CAL.month = d.slice(0, 7);
+    await render(); refocus(`[data-action="calSel"][data-date="${d}"]`);
+  },
+  async calMove(b) {
+    const step = b.dataset.step, [Y, M] = CAL.month.split('-').map(Number);
+    if (step === 'today') { CAL.month = today().slice(0, 7); CAL.sel = today(); }
+    else { CAL.month = ymd(new Date(Y, M - 1 + Number(step), 1)).slice(0, 7); CAL.sel = CAL.month === today().slice(0, 7) ? today() : CAL.month + '-01'; }
+    await render(); refocus(`[data-action="calMove"][data-step="${step}"]`);
+  },
+  async calView(b) { CAL.view = b.dataset.view; await render(); refocus(`[data-action="calView"][data-view="${CAL.view}"]`); },
+  async calKind(b) { const k = b.dataset.kind; CAL.kinds[k] = !CAL.kinds[k]; await render(); refocus(`[data-action="calKind"][data-kind="${k}"]`); },
+  imgDel(b) { const w = b.closest('[data-imgs]'), list = readImgs(w); list.splice(Number(b.dataset.i), 1); writeImgs(w, list); $('[data-imgmsg]', w).textContent = 'Removed. Press the save button to keep this change.'; },
+  imgFirst(b) { const w = b.closest('[data-imgs]'), list = readImgs(w), [x] = list.splice(Number(b.dataset.i), 1); list.unshift(x); writeImgs(w, list); $('[data-imgmsg]', w).textContent = 'Cover changed. Press the save button to keep this change.'; },
+  async copyCaption() {
+    const text = $('#capText').textContent;
+    try { await navigator.clipboard.writeText(text); } catch {
+      const r = document.createRange(); r.selectNodeContents($('#capText')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); s.removeAllRanges();
+    }
+    toast('Caption copied');
+  },
+};
+const forms = {
+  async login(f) {
+    const fd = new FormData(f), err = $('#loginErr');
+    err.textContent = '';
+    try { await doLogin(fd.get('handle'), fd.get('pin')); render(); } catch (e) { err.textContent = e.message; }
+  },
+  async claimlogin(f) {
+    const fd = new FormData(f), err = $('[data-err]', f); err.textContent = '';
+    try { await doLogin(fd.get('handle'), fd.get('pin')); await keepScroll(render); } catch (e) { err.textContent = e.message; }
+  },
+  async claim(f) {
+    const goId = f.dataset.go, err = $('[data-err]', f); err.textContent = '';
+    const members = []; f.querySelectorAll('input[name="q"]').forEach(i => { const k = Math.max(0, Math.min(10, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) members.push(i.dataset.code); });
+    if (!members.length) { err.textContent = 'Pick at least one member.'; return; }
+    const c = cred(); if (!c) { S.me = null; render(); return; }
+    const res = await api.joinerClaim(c.h, c.p, goId, members);
+    if (res.error) {
+      err.textContent = claimError(res);
+      if (res.error === 'invalid' || res.error === 'locked') { S.me = null; session.del('jo'); }
+      return;
+    }
+    await refreshPublic(); await doLogin(c.h, c.p, true);
+    const g = goById(goId), an = anOf(g);
+    const waits = an && S.me ? S.me.claims.filter(x => x.group_order_id === goId && x.status === 'filled' && claimInfo(g, x, an).state === 'wait').length : 0;
+    const counts = new Map(); members.forEach(m => counts.set(m, (counts.get(m) || 0) + 1));
+    await keepScroll(render);
+    toast(`Claimed ${[...counts].map(([m, k]) => k > 1 ? `${m} x${k}` : m).join(', ')}${waits ? `. Some of your claims are on the waitlist` : ''}`);
+  },
+  async adminlogin(f) {
+    const fd = new FormData(f), err = $('#adminErr'); err.textContent = '';
+    try {
+      await api.adminSignIn(fd.get('email'), fd.get('password'));
+      A.is = await api.isAdmin();
+      if (!A.is) throw new Error('You are signed in, but this account is not set up as host yet. See step 2 in README.md.');
+      render();
+    } catch (e) { err.textContent = e.message; }
+  },
+  async crud(f) {
+    const key = f.dataset.key, cfg = CFG[key], row = readForm(cfg, f), editId = A.edit[key];
+    if (key === 'drops') {
+      if (row.event_end_on && !row.event_on) throw new Error('Add the event date first, or clear the last day.');
+      if (row.event_end_on && row.event_end_on < row.event_on) throw new Error('The last day is before the event date.');
+    }
+    const oldImgs = key === 'drops' && editId ? ((A.data.drops.find(r => r.id === editId) || {}).images || []) : [];
+    if (editId) row.id = editId;
+    let handles = null;
+    if (key === 'joiners') { handles = (row.handles || '').split(/[\s,]+/).map(normHandle).filter(Boolean); delete row.handles; if (!handles.length) handles = [normHandle(row.name)]; row.name = row.name.replace(/^@/, ''); }
+    if (key === 'group_orders') {
+      const rowsN = row.album_type === 'Digipack (Unit)' ? 4 : 8;
+      if (row.min_members != null && !(Number.isInteger(row.min_members) && row.min_members >= 1 && row.min_members <= rowsN)) throw new Error(`Members needed for a set must be a whole number from 1 to ${rowsN}.`);
+      if (row.claims_on_site && row.price_per_pc == null) throw new Error('Set a price before joiners can claim on this site.');
+    }
+    const oldGo = key === 'group_orders' && editId ? A.data.group_orders.find(r => r.id === editId) : null;
+    if (key === 'group_orders' && row.status === 'cancelled') toast('Tip: mark that order\'s claims as dropped or refund them so balances stay right.');
+    const saved = await api.save(cfg.table, row);
+    const notes = [];
+    if (key === 'group_orders') {
+      const go = {...(oldGo || {}), ...row, ...saved};
+      if (oldGo && (num(oldGo.price_per_pc) !== num(go.price_per_pc) || num(oldGo.ot8_price) !== num(go.ot8_price))) { const n = await repriceClaims(oldGo, go); if (n) notes.push(`${n} claim ${n === 1 ? 'price' : 'prices'} updated`); }
+      if (go.comeback_id && go.roster_required && go.status === 'open') { const r = await syncOrder(go); if (r.added) notes.push(`${r.added} comeback ${r.added === 1 ? 'claimer' : 'claimers'} added`); }
+    }
+    if (handles) await api.setHandles(saved.id || editId, handles);
+    if (key === 'drops') { const gone = oldImgs.filter(o => !(row.images || []).some(n => n.src === o.src)); if (gone.length) api.removeImages(gone).catch(() => {}); }
+    delete A.edit[key]; invalidate(cfg.table, 'joiner_accounts'); await refreshPublic();
+    if (!(key === 'group_orders' && row.status === 'cancelled')) toast(['Saved', ...notes].join('. '));
+    render();
+  },
+};
+const refocus = sel => { const el = $(sel); if (el) el.focus(); };
+async function guard(fn, ...args) { try { await fn(...args); } catch (e) { toast(e.message || String(e), true); } }
+
+app.addEventListener('click', e => {
+  const b = e.target.closest('[data-action]'); if (!b || !actions[b.dataset.action]) return;
+  e.preventDefault(); guard(actions[b.dataset.action], b);
+});
+app.addEventListener('submit', e => {
+  const f = e.target.closest('form[data-form]'); if (!f || !forms[f.dataset.form]) return;
+  e.preventDefault(); guard(forms[f.dataset.form], f);
+});
+app.addEventListener('input', e => {
+  const t = e.target;
+  if (t.name === 'q' && t.closest('form[data-form="claim"]')) { t.closest('.mchip').classList.toggle('on', (parseInt(t.value, 10) || 0) > 0); claimNote(t.closest('form')); return; }
+  if (!t.dataset.filter) return;
+  S.filters[t.dataset.filter] = t.value; $('#dropList').innerHTML = dropList();
+});
+app.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; $('#dropList').innerHTML = dropList(); return; }
+  if (t.matches('[data-imgfile]')) { guard(addPhotos, t); return; }
+  if (t.name === 'q' && t.closest('form[data-form="claim"]')) {
+    const f = t.closest('form'); t.closest('.mchip').classList.toggle('on', (parseInt(t.value, 10) || 0) > 0); claimNote(f); return;
+  }
+  if (t.dataset.cal === 'past') { CAL.past = t.checked; render().then(() => refocus('[data-cal="past"]')); return; }
+  if (t.dataset.pick === 'go') { A.goId = t.value; A.preview = null; render(); return; }
+  if (t.dataset.pick === 'cb') { A.cbId = t.value; A.rosterPv = null; A.rosterText = ''; render(); return; }
+  if (t.hasAttribute('data-part')) {
+    const row = t.closest('.prow'), jid = t.dataset.joiner;
+    guard(async () => {
+      await api.save('participants', {group_order_id:A.goId, joiner_id:jid,
+        shipping_type:$('[data-field="shipping_type"]', row).value || null,
+        shipped:$('[data-field="shipped"]', row).checked,
+        tracking:$('[data-field="tracking"]', row).value.trim() || null});
+      toast('Saved');
+    });
+  }
+});
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+
+// theme toggle
+const applyTheme = t => { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; };
+applyTheme(prefs.get('theme'));
+$('#theme').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark'; applyTheme(next); prefs.set('theme', next);
+});
+
+/* =====================================================================
+   13. Start
+   ===================================================================== */
+$('#ig-handle').textContent = '@' + CONFIG.INSTAGRAM;
+if (DEMO) $('#demo-slot').innerHTML = '<div class="demo">Demo mode with sample data. Nothing you do here is saved. Add your Supabase keys in index.html to go live.</div>';
+(async () => {
+  if (api) { try { await refreshPublic(); } catch (e) { S.loadError = e; } }
+  render();
+})();
+})();
+</script>
+</body>
+</html>
