@@ -434,7 +434,7 @@ const DEMO = !(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY);
    2. Constants
    ===================================================================== */
 const MEMBERS = ['HJ','SH','YH','YS','SN','MG','WY','JH'];
-const ALBUM_TYPES = ['Photobook','Digipack (Member)','Digipack (Unit)','POCA','Other'];
+const ALBUM_TYPES = ['Photobook','Digipack (Member)','Digipack (Unit)','POCA','Merch','Other'];
 const STATUSES = [['open','Claims open'],['ordered','Ordered'],['at_kaddy','At kaddy'],['in_transit','On the way to host'],['on_hand','On hand'],['completed','Shipped to joiners'],['cancelled','Cancelled']];
 const STATUS_LABEL = Object.fromEntries(STATUSES);
 const FLOW = ['open','ordered','at_kaddy','in_transit','on_hand','completed'];
@@ -474,6 +474,7 @@ const whenChip = d => { const n = daysFromNow(d); return n === 0 ? 'Today' : n =
 const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now();
 const normHandle = h => String(h || '').trim().replace(/^@/, '').toLowerCase();
 const isUnitGO = g => g && g.album_type === 'Digipack (Unit)';
+const isMerch = g => g && g.album_type === 'Merch';
 const byNewest = (a, b) => (b.created_at || '').localeCompare(a.created_at || '');
 const mkStore = area => ({
   get(k){ try { return window[area].getItem(k); } catch { return null; } },
@@ -518,10 +519,14 @@ const claimCmp = (a, b) => (RANK[a.source || 'joiner'] ?? 4) - (RANK[b.source ||
   || (a.roster_pos ?? 1e9) - (b.roster_pos ?? 1e9)
   || String(a.created_at || '').localeCompare(String(b.created_at || ''))
   || String(a.id || '').localeCompare(String(b.id || ''));
-const rowsOf = go => go && go.album_type === 'Digipack (Unit)' ? UNIT_ROWS : MEMBERS;
+const MERCH_ROW = ['ITEM'];      // merch isn't split by member: one generic claimable row
+const rowsOf = go => go && go.album_type === 'Digipack (Unit)' ? UNIT_ROWS : go && go.album_type === 'Merch' ? MERCH_ROW : MEMBERS;
 const hasSets = go => !!go && !!go.set_mode && go.set_mode !== 'none';
+// member/unit/item, singular and plural, for whichever kind of row this order uses
+const rowWords = R => R === UNIT_ROWS ? {one:'unit', many:'units'} : R === MERCH_ROW ? {one:'item', many:'items'} : {one:'member', many:'members'};
 // The "claim everything" code: OT8 claims all 8 individual members; a unit order has 4 PCs, so it's OT4.
-const fullCode = go => rowsOf(go) === UNIT_ROWS ? 'OT4' : 'OT8';
+// Merch has nothing to "claim everything" of -- there's only the one row already.
+const fullCode = go => isMerch(go) ? null : rowsOf(go) === UNIT_ROWS ? 'OT4' : 'OT8';
 const ceilCent = x => Math.ceil(x * 100 - 1e-9) / 100;
 
 // Every member has one line of claims, in priority order. Spot n in a line = set n.
@@ -591,7 +596,7 @@ function placeText(info, an) {
   return st.state === 'in' ? `${L}, going through` : st.state === 'wait' ? `${L}, not ordered unless its set fills up` : `${L}, not ordered`;
 }
 function setNote(x, an) {
-  const W = an.R === UNIT_ROWS ? 'units' : 'members', of = `${x.count} of ${an.R.length} ${W}`;
+  const W = rowWords(an.R).many, of = `${x.count} of ${an.R.length} ${W}`;
   if (x.status === 'full') return `Set ${x.n}: full, going through`;
   if (x.status === 'go') return an.mode === 'sort' ? `Set ${x.n}: ${of} claimed` : x.extra
     ? `Set ${x.n}: ${of} claimed, going through. ${x.missing.join(', ')} unclaimed, so each claim pays +${money(x.extra)}`
@@ -601,17 +606,19 @@ function setNote(x, an) {
   return '';
 }
 function rulesList(go, cb) {
-  const R = rowsOf(go), W = R === UNIT_ROWS ? 'units' : 'members', w1 = R === UNIT_ROWS ? 'unit' : 'member';
+  const R = rowsOf(go), full = fullCode(go), {many:W, one:w1} = rowWords(R);
   const min = Math.min(R.length, num(go.min_members) || R.length), out = [];
   const gate = `A set goes through when at least ${min} of ${R.length} ${W} are claimed in it. Sets fill in order, and the waitlist starts right after the last set that goes through.`;
   if (go.set_mode === 'drop') out.push(`${gate} A waitlisted claim is not charged unless enough people claim to bring its set up to ${min} by the deadline. If a set goes through with a ${w1} unclaimed, that ${w1} is not charged to joiners.`);
   if (go.set_mode === 'split') out.push(`${gate} If a set goes through with some ${W} unclaimed, their cost is split evenly across the claims in that set, and the unclaimed ${W} are raffled off to that set's joiners. A waitlisted claim is not charged unless its set fills enough to go through.`);
   if (go.set_mode === 'sort') out.push(`I order exactly the number of claims instead of full sets, so nothing is waitlisted. You may not get the ${w1} you claimed.`);
-  if (hasSets(go)) out.push(`You can claim the same ${w1} more than once. ${fullCode(go)} claims are not part of the sets. They sit in their own row and are always ordered, and you can claim more than one.`);
+  if (hasSets(go)) out.push(full ? `You can claim the same ${w1} more than once. ${full} claims are not part of the sets. They sit in their own row and are always ordered, and you can claim more than one.` : `You can claim the same ${w1} more than once.`);
   out.push(cb && go.roster_required
     ? `Each ${w1} has one line, and spots go in this order: GOM, fixed claimers, soft claimers, then everyone else by claim time. A fixed or soft claimer who drops a spot and adds the same ${w1} back goes to the end of their group. Their other claims come after all fixed and soft claimers, ahead of everyone else.`
     : `Spots in each ${w1}'s line go in claim order.`);
-  if (cb && go.roster_required) out.push(`Fixed claimers keep their fixed ${W} unless they switch to ${fullCode(go)} or I drop them, and can add or drop other ${W} any time. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`);
+  if (cb && go.roster_required) out.push(full
+    ? `Fixed claimers keep their fixed ${W} unless they switch to ${full} or I drop them, and can add or drop other ${W} any time. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`
+    : `Fixed claimers keep their fixed ${W} unless I drop them, and can add or drop other ${W} any time. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`);
   if (go.deadline) out.push(`Claim deadline: ${fmtDate(go.deadline)}${go.deadline_time ? ', ' + go.deadline_time : ''}.`);
   return out;
 }
@@ -806,7 +813,7 @@ function seedDemo() {
   };
   // stand-in photocards (colored cards labelled with the member) so the demo shows what uploads look like
   const demoImages = (pc_kind, i) => {
-    const labels = pc_kind === 'unit' ? ['HJ/SH','YH/MG','YS/WY','SN/JH'] : MEMBERS.slice(0, 3 + (i % 6));
+    const labels = pc_kind === 'unit' ? ['HJ/SH','YH/MG','YS/WY','SN/JH'] : pc_kind === 'merch' ? ['Item'] : MEMBERS.slice(0, 3 + (i % 6));
     return labels.map((label, k) => {
       const hue = (i * 47 + k * 23) % 360;
       const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 170'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${hue},72%,74%)'/><stop offset='1' stop-color='hsl(${(hue + 50) % 360},62%,38%)'/></linearGradient></defs><rect width='110' height='170' fill='url(#g)'/><rect x='6' y='6' width='98' height='158' rx='5' fill='none' stroke='white' stroke-opacity='.7' stroke-width='1.5'/><text x='55' y='94' font-family='sans-serif' font-size='${label.length > 2 ? 24 : 32}' font-weight='700' text-anchor='middle' fill='white'>${label}</text><text x='55' y='152' font-family='sans-serif' font-size='9' text-anchor='middle' fill='white' fill-opacity='.85'>sample photocard</text></svg>`;
@@ -1286,12 +1293,18 @@ function deadlineChip(g) {
   return `<span class="pill ${n <= 3 ? 'coral' : ''}">${n === 0 ? 'Last day' : n === 1 ? '1 day left' : n + ' days left'}</span>`;
 }
 // Who each claim emoji belongs to, for this order (a comeback order uses that comeback's emoji, if set)
+// Only the joiners with a live claim on this order, matched by their resolved emoji (comeback override, if any,
+// else their default). If two joiners share an emoji here, only one of them will show -- see the caption tab's
+// duplicate-emoji warning.
 function joinerKeyList(g) {
   const list = S.pub.joiners || []; if (!list.length) return '';
   const effEmoji = j => { if (g.comeback_id) { const ov = (S.pub.cbEmojis || []).find(e => e.comeback_id === g.comeback_id && e.joiner_id === j.id); if (ov) return ov.emoji; } return j.emoji; };
-  const rows = list.slice().sort((a, b) => a.name.localeCompare(b.name))
+  const claimed = new Set(seatClaims(g).map(c => normEmoji(c.emoji || '')).filter(Boolean));
+  const here = list.filter(j => claimed.has(normEmoji(effEmoji(j))));
+  if (!here.length) return '';
+  const rows = here.slice().sort((a, b) => a.name.localeCompare(b.name))
     .map(j => `<div class="mine-row"><span>${esc(em(effEmoji(j)))} @${esc(j.name)}</span></div>`).join('');
-  return `<details class="setdet"><summary>Joiner key (${list.length})</summary><div class="stack" style="margin-top:8px">${rows}</div></details>`;
+  return `<details class="setdet"><summary>Joiner key (${here.length})</summary><div class="stack" style="margin-top:8px">${rows}</div></details>`;
 }
 function goPhotos(g) {
   const key = 'go:' + g.id, items = galleryItems(key); if (!items.length) return '';
@@ -1306,7 +1319,7 @@ const anOf = g => hasSets(g) ? analyze(g, seatClaims(g), cbOf(g)) : null;
 const em = e => e || '❔';
 const myIds = () => new Set(S.me ? S.me.claims.map(c => c.id) : []);
 const claimsOpen = g => g.status === 'open' && !(g.deadline && daysFromNow(g.deadline) < 0);
-const wName = an => an.R === UNIT_ROWS ? 'unit' : 'member';
+const wName = an => rowWords(an.R).one;
 const cred = () => { try { return JSON.parse(session.get('jo')); } catch { return null; } };
 async function keepScroll(fn) { const y = window.scrollY; await fn(); window.scrollTo(0, y); }
 
@@ -1327,12 +1340,12 @@ function availGrid(an, mine = new Set()) {
       : `<td class="${cls(n)}" title="${n > N ? 'Waitlist spot open' : 'Open spot'}">✅</td>`;
   }).join('')}</tr>`).join('');
   const full = fullCode(an.go);
-  const ot8 = `<tr class="ot8row"><th scope="row">${esc(full)}</th><td colspan="${ncols}">${an.ot8.length
+  const ot8 = full ? `<tr class="ot8row"><th scope="row">${esc(full)}</th><td colspan="${ncols}">${an.ot8.length
     ? an.ot8.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(full)}, always ordered">${esc(em(c.emoji))}</span>`).join('')
-    : '<span class="muted small">None yet</span>'}</td></tr>`;
+    : '<span class="muted small">None yet</span>'}</td></tr>` : '';
   const foot = `<tr><th scope="row">Set</th>${sets.map(x => { const [t, k, title] = FOOT(x, an); return `<td class="${cls(x.n)} ${k}" title="${esc(title)}">${esc(t)}</td>`; }).join('')}</tr>`;
   return `<div class="gridwrap"><table class="av" aria-label="Availability by ${wName(an)} and set"><thead>${head}</thead><tbody>${body}${ot8}</tbody><tfoot>${foot}</tfoot></table></div>
-    <p class="small muted" style="margin:8px 0 0">Each column is a set. ✅ is an open spot.${an.gated ? ' Dashed columns are the waitlist, which starts right after the last set that goes through.' : ''} ${esc(full)} claims have their own row and are always ordered.${mine.size ? ' Your claims are outlined.' : ''}</p>`;
+    <p class="small muted" style="margin:8px 0 0">Each column is a set. ✅ is an open spot.${an.gated ? ' Dashed columns are the waitlist, which starts right after the last set that goes through.' : ''}${full ? ` ${esc(full)} claims have their own row and are always ordered.` : ''}${mine.size ? ' Your claims are outlined.' : ''}</p>`;
 }
 function sumLine(an) {
   const P = (t, c = '') => `<span class="pill ${c}">${esc(t)}</span>`, n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
@@ -1356,8 +1369,8 @@ function claimsSoFar(g) {
   const cs = seatClaims(g).sort(claimCmp); cs.forEach(s => { if (by[s.member_code]) by[s.member_code].push(em(s.emoji)); });
   const ot8 = cs.filter(s => s.member_code === full).map(s => em(s.emoji));
   const cell = a => `<td style="text-align:left;letter-spacing:3px;padding:3px 10px">${a.length ? esc(a.join(' ')) : '<span class="muted small" style="letter-spacing:0">None yet</span>'}</td>`;
-  return `<div><h4 class="sh">Claims so far</h4><div class="gridwrap"><table class="av"><tbody>${rows.map(r => `<tr><th scope="row">${esc(r)}</th>${cell(by[r])}</tr>`).join('')}<tr class="ot8row"><th scope="row">${esc(full)}</th>${cell(ot8)}</tr></tbody></table></div>
-    <p class="small muted" style="margin:8px 0 0">${esc(full)} claims have their own row and are ordered on top of everything else.</p></div>`;
+  return `<div><h4 class="sh">Claims so far</h4><div class="gridwrap"><table class="av"><tbody>${rows.map(r => `<tr><th scope="row">${esc(r)}</th>${cell(by[r])}</tr>`).join('')}${full ? `<tr class="ot8row"><th scope="row">${esc(full)}</th>${cell(ot8)}</tr>` : ''}</tbody></table></div>
+    ${full ? `<p class="small muted" style="margin:8px 0 0">${esc(full)} claims have their own row and are ordered on top of everything else.</p>` : ''}</div>`;
 }
 const claimError = (r, go) => ({
   invalid:'That handle and PIN don\'t match. Sign in again.', locked:'Too many wrong PINs. Wait 15 minutes and try again.',
@@ -1389,7 +1402,7 @@ const hypoAn = (g, hyp) => hasSets(g) ? analyze(g, [...seatClaims(g), ...hyp], c
 function claimNote(f) {
   const g = goById(f.dataset.go), note = $('[data-claimnote]', f), codes = [];
   f.querySelectorAll('input[name="q"]').forEach(i => { const k = Math.max(0, Math.min(10, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) codes.push(i.dataset.code); });
-  if (!codes.length) { note.textContent = 'Use + to pick a member. Pick the same one twice to claim it twice.'; return; }
+  if (!codes.length) { const w1 = rowWords(rowsOf(g)).one; note.textContent = `Use + to pick a ${w1}.${rowsOf(g).length > 1 ? ' Pick the same one twice to claim it twice.' : ''}`; return; }
   const hyp = hypoClaims(g, codes), infos = hyp.map(c => claimInfo(g, c, hypoAn(g, hyp)));
   const charged = r2(infos.reduce((a, i) => a + i.amount, 0)), extra = r2(infos.reduce((a, i) => a + i.extra, 0)), waits = infos.filter(i => i.state === 'wait').length;
   const counts = new Map(); codes.forEach(c => counts.set(c, (counts.get(c) || 0) + 1));
@@ -1408,18 +1421,18 @@ function claimPanel(g, an) {
     <p class="err" data-err role="alert"></p><button class="btn">Sign in</button>
     <p class="small muted" style="margin:0">No PIN yet? DM @${esc(CONFIG.INSTAGRAM)}.${DEMO ? ' Demo: <b>demo_joiner</b>, PIN <b>1234</b>.' : ''}</p></form>`;
   const R = rowsOf(g), ctx = joinerCtx(g), mineLive = ctx.mine, heldOf = code => mineLive.filter(c => c.member_code === code).length;
+  const {one:w1} = rowWords(R);
   const qty = (code, price, sub) => `<div class="mchip q"><b>${esc(code)}</b><small>${esc(sub)}</small>
     <span class="qty"><button type="button" class="qb" data-action="qty" data-d="-1" aria-label="One fewer ${esc(code)}">&minus;</button><input type="number" name="q" value="0" min="0" max="10" inputmode="numeric" data-code="${esc(code)}" data-price="${price}" aria-label="How many ${esc(code)} to claim"><button type="button" class="qb" data-action="qty" data-d="1" aria-label="One more ${esc(code)}">+</button></span></div>`;
   const next = r => { if (!an) return money(g.price_per_pc); const h = hypoClaims(g, [r]), st = hypoAn(g, h).seats.find(s => s.claim.id === h[0].id); return st.state === 'in' ? `Next: set ${st.pos}` : 'Next: waitlist'; };
   const chips = R.map(r => qty(r, g.price_per_pc, `${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`)).join('');
-  const full = fullCode(g), fullPrice = claimPrice(g, full);
-  const fullChip = qty(full, fullPrice, `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(fullPrice)}, always ordered`);
+  const full = fullCode(g), fullChip = full ? qty(full, claimPrice(g, full), `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(claimPrice(g, full))}, always ordered`) : '';
   const fixedHere = [...new Set(mineLive.filter(c => c.source === 'fixed').map(c => c.member_code))];
-  const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim' : 'claims'} (${esc(fixedHere.join(', '))}) stay on this order${heldOf(full) ? `. You have a ${esc(full)}, so you can drop them below.` : ` unless you switch to ${esc(full)}: claim a ${esc(full)} and you can drop them. You can add and drop other ${wName(an || {R})}s any time.`}</p>` : '';
+  const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim' : 'claims'} (${esc(fixedHere.join(', '))}) stay on this order${full ? (heldOf(full) ? `. You have a ${esc(full)}, so you can drop them below.` : ` unless you switch to ${esc(full)}: claim a ${esc(full)} and you can drop them. You can add and drop other ${w1}s any time.`) : ` unless I drop them. You can add and drop other ${w1}s any time.`}</p>` : '';
   return `<form class="panel-mini" data-form="claim" data-go="${g.id}"><h4 class="sh" style="margin:0">Claim as ${esc(em(ctx.emoji))} ${esc(me.joiner.name)}</h4>
     <div class="mchips" role="group" aria-label="Choose how many of each to claim">${chips}${fullChip}</div>
     ${fixedNote}
-    <p class="small muted" style="margin:0" data-claimnote role="status">Use + to pick a member. Pick the same one twice to claim it twice.</p>
+    <p class="small muted" style="margin:0" data-claimnote role="status">Use + to pick a ${w1}.${R.length > 1 ? ' Pick the same one twice to claim it twice.' : ''}</p>
     <p class="err" data-err role="alert"></p>
     <div class="formacts" style="margin:0"><button class="btn">Claim</button><button type="button" class="btn ghost" data-action="signout">Sign out</button></div></form>`;
 }
@@ -1463,7 +1476,7 @@ function goCard(g) {
     ['Order deadline', g.deadline ? `${esc(fmtDate(g.deadline) + (g.deadline_time ? ', ' + g.deadline_time : ''))} ${deadlineChip(g)}` : ''],
     ['Winners announced', win ? esc(fmtDate(win.winners_on) + (win.winners_note ? ', ' + win.winners_note : '')) : ''],
     [evt ? `${EVT_NAME[evt.drop_type] || 'Event'} date` : '', evt ? esc(fmtDate(evt.event_on) + (evt.event_end_on ? ' to ' + fmtDate(evt.event_end_on) : '') + (evt.event_note ? ', ' + evt.event_note : '')) : ''],
-    ['Price', g.price_per_pc != null ? esc(`${money(g.price_per_pc)} per ${isUnitGO(g) ? 'unit' : 'PC'}${g.ot8_price != null ? `, ${fullCode(g)} ${money(g.ot8_price)}` : ''}`) : ''],
+    ['Price', g.price_per_pc != null ? esc(`${money(g.price_per_pc)} per ${isUnitGO(g) ? 'unit' : isMerch(g) ? 'item' : 'PC'}${g.ot8_price != null && fullCode(g) ? `, ${fullCode(g)} ${money(g.ot8_price)}` : ''}`) : ''],
     ['Rules', hasSets(g) ? esc(SET_MODE_SHORT[g.set_mode] + (g.min_members && g.set_mode !== 'sort' ? `, ${g.min_members} of ${rowsOf(g).length} needed` : '')) : ''],
     ['Joiners', esc(st.joiners || '')], ['Items claimed', esc(st.items || '')],
     ['Kaddy box', ship ? esc(`#${ship.number}, ${SHIP_LABEL[ship.status].toLowerCase()}`) : ''],
@@ -1705,7 +1718,7 @@ function meView(d) {
     `<div class="prow2"><div class="muted small">${esc(fmtDate(p.paid_on))}</div><div>${esc(p.note || (p.amount < 0 ? 'Refund' : 'Payment'))} <span class="muted small">${esc(p.method || '')}</span></div><div class="r">${money(p.amount)}</div><div></div></div>`).join('');
 
   return `<div class="me-head">
-      <div class="sticker" aria-hidden="true">${esc(j.emoji || '🏴‍☠️')}</div>
+      <div class="sticker" aria-hidden="true">${esc(j.emoji || '💎')}</div>
       <div><p class="muted small" style="margin:0">Joiner account</p><h1>${esc(j.name)}</h1>${alts.length ? `<p class="muted small" style="margin:4px 0 0">Also joins as ${alts.map(a => '@' + esc(a)).join(', ')}</p>` : ''}</div>
       <button class="btn ghost signout" data-action="signout">Sign out</button>
     </div>
@@ -1759,7 +1772,7 @@ const CFG = {
   drops: {table:'drops', need:['drops','group_orders','drop_group_orders','comebacks'], title:'Drop', add:'Add drop',
     fields:[F('name','Set name','text',{req:1,wide:1}), F('store','Store','combo',{options:() => distinctVals('drops','store')}), F('drop_type','Type','select',{opts:opts(['POB','FC','FS','LD','Higher','Album','Other'])}),
       F('round','Round','text',{hint:'Fills in from the store and comeback below once you pick both. You can still edit it.'}),
-      F('album_type','Album','combo',{options:() => distinctVals('drops','album_type')}), F('pc_kind','Single or unit','select',{req:1,opts:[['single','Single'],['unit','Unit']]}),
+      F('album_type','Album','combo',{options:() => distinctVals('drops','album_type')}), F('pc_kind','Single, unit or merch','select',{req:1,opts:[['single','Single'],['unit','Unit'],['merch','Merch (not a photocard)']]}),
       F('comeback_id','Comeback','ref',{ref:'comebacks',hint:'Used to work out the next round for this store, and passed along to a group order created for this drop.'}),
       F('announced_on','Announced on','date'), F('status','Status','select',{req:1,opts:DROP_STATUSES}),
       F('group_order_ids','Group orders','multiref',{ref:'group_orders',wide:1,hint:'Leave empty when adding a new drop and a matching group order is created for you automatically. Pick one or more existing orders instead if this drop belongs there.'}),
@@ -1776,7 +1789,7 @@ const CFG = {
   group_orders: {table:'group_orders', need:['group_orders','shipments','drops','drop_group_orders','comebacks'], title:'Group order', add:'Add group order',
     fields:[F('name','Name','text',{req:1,wide:1}), F('emoji','Set emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}),
       F('kaddy','Kaddy'), F('album_type','Album type','select',{req:1,opts:opts(ALBUM_TYPES)}),
-      F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair.'}), F('ot8_price','OT8 / OT4 price','number',{hint:'The price for claiming every member (OT8 for a member album, OT4 for a unit album). Leave empty to use the per-item price times the number of items.'}),
+      F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair. For merch, the price per item.'}), F('ot8_price','OT8 / OT4 price','number',{hint:'The price for claiming every member (OT8 for a member album, OT4 for a unit album). Not used for merch. Leave empty to use the per-item price times the number of items.'}),
       F('bonus_ratio','Bonus: claim __, get 1 unit PC','number',{hint:'Leave empty for no bonus deal. Example: 3 means every 3 items claimed earns 1 bonus unit PC. For member albums only.'}),
       F('bonus_price','Bonus unit PC price','number',{hint:'Leave empty if the bonus PC is free.'}),
       F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
@@ -2033,8 +2046,9 @@ function buildPreview(text, go) {
     const row = rows.get(handle) || {handle, joinerId:accounts.get(handle) || null, claims:[]};
     toks.forEach(raw => {
       const code = raw.toUpperCase().replace(/\.$/, ''), parts = code.split('/');
-      const R = rowsOf(go), full = fullCode(go), okCode = code === full || (hasSets(go) ? R.includes(code) : (parts.length <= 2 && parts.every(p => MEMBERS.includes(p))));
-      if (!okCode) { issues.push(`Line ${i + 1}: "${raw}" is not ${full} or ${hasSets(go) ? `one of ${R.join(', ')} for this order` : `a member (${MEMBERS.join(', ')}) or a unit like HJ/SH`}`); return; }
+      const R = rowsOf(go), full = fullCode(go);
+      const okCode = code === full || R.includes(code) || (!isMerch(go) && !hasSets(go) && parts.length <= 2 && parts.every(p => MEMBERS.includes(p)));
+      if (!okCode) { issues.push(`Line ${i + 1}: "${raw}" is not ${full ? full + ' or ' : ''}${hasSets(go) || isMerch(go) ? `one of ${R.join(', ')} for this order` : `a member (${MEMBERS.join(', ')}) or a unit like HJ/SH`}`); return; }
       row.claims.push({code, items:claimItems(go, code), price:claimPrice(go, code)});
     });
     rows.set(handle, row);
@@ -2114,8 +2128,8 @@ async function claimsTab() {
     ${go.bonus_ratio ? bonusPanel(go, claims, bonusClaims) : ''}
     ${setsPanelA}
     <section class="panel"><h2>Add claims</h2>
-      <p class="small muted" style="margin-top:0">One joiner per line, like <b>@handle: HJ, SH, YS/WY</b> or <b>@handle: ${esc(fullCode(go))}</b>. Lines are added in the order you paste them. Write a member twice to claim it twice (like <b>@handle: HJ, HJ, ${esc(fullCode(go))}, ${esc(fullCode(go))}</b>). Claims by you go first in line, then fixed and soft claimers, then everyone else. Prices come from this order: ${go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit pair' : 'PC'}${go.ot8_price != null ? `, ${esc(fullCode(go))} ${money(go.ot8_price)}` : ''}` : '<b>no price set yet</b> (set it in Group orders first)'}.</p>
-      <textarea id="claimText" placeholder="@starlit_atiny: HJ, SH&#10;@bun.tiny: ${esc(fullCode(go))}" aria-label="Claims">${esc(A.claimText)}</textarea>
+      <p class="small muted" style="margin-top:0">One joiner per line, like <b>@handle: ${esc(rowsOf(go).slice(0, 2).join(', '))}</b>${fullCode(go) ? ` or <b>@handle: ${esc(fullCode(go))}</b>` : ''}. Lines are added in the order you paste them. Write one twice to claim it twice${fullCode(go) ? ` (like <b>@handle: ${esc(rowsOf(go)[0])}, ${esc(rowsOf(go)[0])}, ${esc(fullCode(go))}, ${esc(fullCode(go))}</b>)` : ''}. Claims by you go first in line, then fixed and soft claimers, then everyone else. Prices come from this order: ${go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit pair' : isMerch(go) ? 'item' : 'PC'}${go.ot8_price != null && fullCode(go) ? `, ${esc(fullCode(go))} ${money(go.ot8_price)}` : ''}` : '<b>no price set yet</b> (set it in Group orders first)'}.</p>
+      <textarea id="claimText" placeholder="@starlit_atiny: ${esc(rowsOf(go).slice(0, 2).join(', '))}${fullCode(go) ? `&#10;@bun.tiny: ${esc(fullCode(go))}` : ''}" aria-label="Claims">${esc(A.claimText)}</textarea>
       <div class="formacts"><button class="btn" data-action="previewClaims">Preview</button></div>
       ${pv ? `<div style="margin-top:18px">${pv.rows.length ? `<table class="pv"><thead><tr><th>Handle</th><th>Claims</th><th>Total</th><th></th></tr></thead><tbody>${pv.rows.map(r => `<tr><td>@${esc(r.handle)}</td><td>${r.claims.map(c => `<span class="chip">${esc(c.code)}</span>`).join('')}</td><td>${money(sum(r.claims, c => c.price))}</td><td>${r.joinerId ? '<span class="pill sea">Existing</span>' : '<span class="pill gold">New joiner</span>'}</td></tr>`).join('')}</tbody></table>` : ''}
         ${pv.issues.length ? `<ul class="issues">${pv.issues.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
@@ -2130,12 +2144,12 @@ async function claimsTab() {
 /* --- Instagram caption grid --- */
 function buildCaption(go, claims, primary, emo, cb) {
   const full = fullCode(go);
-  const price = go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit' : 'PC'}${go.ot8_price != null ? `, ${full} ${money(go.ot8_price)}` : ''}` : '';
+  const price = go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit' : isMerch(go) ? 'item' : 'PC'}${go.ot8_price != null && full ? `, ${full} ${money(go.ot8_price)}` : ''}` : '';
   const dl = go.deadline ? `Deadline: ${fmtDate(go.deadline)}${go.deadline_time ? ', ' + go.deadline_time : ''}` : '';
   const head = [`${go.emoji || ''} ${go.name}`.trim(), price, dl].filter(Boolean), isHost = jid => normHandle(primary(jid)) === normHandle(CONFIG.INSTAGRAM);
   const who = jid => isHost(jid) ? `${emo(jid) || '💎'} GOM` : `${emo(jid) || '❔'} @${primary(jid)}`;
   const live = claims.filter(c => c.status !== 'dropped').map(c => ({...c, emoji:emo(c.joiner_id)})).sort(claimCmp);
-  const ot8 = live.filter(c => c.member_code === full), ot8Line = `${full}: ${ot8.map(c => em(c.emoji)).join('') || '✅'}`;
+  const ot8 = full ? live.filter(c => c.member_code === full) : [], ot8Line = full ? `${full}: ${ot8.map(c => em(c.emoji)).join('') || '✅'}` : null;
   const seen = []; const see = jid => { if (!seen.includes(jid)) seen.push(jid); };
   if (hasSets(go)) {
     const an = analyze(go, live, cb);
@@ -2146,7 +2160,7 @@ function buildCaption(go, claims, primary, emo, cb) {
     };
     an.R.forEach(r => an.seats.filter(x => x.row === r).sort((a, b) => a.pos - b.pos).forEach(x => see(x.claim.joiner_id)));
     ot8.forEach(c => see(c.joiner_id));
-    return [...head, '', 'Availability:', ...an.R.map(line), ot8Line, '', ...seen.map(who)].join('\n');
+    return [...head, '', 'Availability:', ...an.R.map(line), ...(ot8Line ? [ot8Line] : []), '', ...seen.map(who)].join('\n');
   }
   const R = rowsOf(go);
   const rows = new Map(); live.filter(c => c.member_code !== full).forEach(c => { if (!rows.has(c.member_code)) rows.set(c.member_code, []); rows.get(c.member_code).push(c.joiner_id); });
@@ -2154,7 +2168,7 @@ function buildCaption(go, claims, primary, emo, cb) {
   const codes = [...R, ...[...rows.keys()].filter(k => !R.includes(k))];
   const lines = codes.filter(c => R.includes(c) || rows.has(c)).map(c => `${c}: ${(rows.get(c) || []).map(e1).join('') || '✅'}`);
   live.forEach(c => see(c.joiner_id));
-  return [...head, '', 'Availability:', ...lines, ot8Line, '', ...seen.map(who)].join('\n');
+  return [...head, '', 'Availability:', ...lines, ...(ot8Line ? [ot8Line] : []), '', ...seen.map(who)].join('\n');
 }
 async function captionTab() {
   await need('group_orders', 'joiners', 'joiner_accounts', 'comebacks');
@@ -2171,7 +2185,7 @@ async function captionTab() {
   const dupeNote = dupes.length ? `<p class="err" style="margin:0 0 12px">Two joiners share an emoji here: ${dupes.map(([e, v]) => `${esc(e)} (${v.map(esc).join(' and ')})`).join('; ')}. Give one of them a different emoji in the Joiners tab${go.comeback_id ? ' or the comeback list' : ''} so the grid is readable.</p>` : '';
   return picker + `<section class="panel"><h2>Caption grid</h2>${dupeNote}<pre class="cap" id="capText">${esc(text)}</pre>
     <div class="formacts"><button class="btn" data-action="copyCaption">Copy caption</button></div>
-    <p class="small muted" style="margin:14px 0 0">✅ is an open spot. ${hasSets(go) ? 'Each row shows the sets going through in order, then a | and the waitlist, which starts right after the last set that goes through.' : 'Each row lists everyone who claimed that member.'} ${esc(fullCode(go))} claims have their own row. The key lists each joiner's emoji${go.comeback_id ? ' for this comeback' : ''}.</p></section>`;
+    <p class="small muted" style="margin:14px 0 0">✅ is an open spot. ${hasSets(go) ? 'Each row shows the sets going through in order, then a | and the waitlist, which starts right after the last set that goes through.' : `Each row lists everyone who claimed that ${wName({R:rowsOf(go)})}.`}${fullCode(go) ? ` ${esc(fullCode(go))} claims have their own row.` : ''} The key lists each joiner's emoji${go.comeback_id ? ' for this comeback' : ''}.</p></section>`;
 }
 
 async function comebackTab() {
@@ -2462,10 +2476,10 @@ const forms = {
     let handles = null;
     if (key === 'joiners') { handles = (row.handles || '').split(/[\s,]+/).map(normHandle).filter(Boolean); delete row.handles; if (!handles.length) handles = [normHandle(row.name)]; row.name = row.name.replace(/^@/, ''); }
     if (key === 'group_orders') {
-      const rowsN = row.album_type === 'Digipack (Unit)' ? 4 : 8;
+      const rowsN = row.album_type === 'Digipack (Unit)' ? 4 : row.album_type === 'Merch' ? 1 : 8;
       if (row.min_members != null && !(Number.isInteger(row.min_members) && row.min_members >= 1 && row.min_members <= rowsN)) throw new Error(`Members needed for a set must be a whole number from 1 to ${rowsN}.`);
       if (row.claims_on_site && row.price_per_pc == null) throw new Error('Set a price before joiners can claim on this site.');
-      if (row.bonus_ratio != null) { if (!(Number.isInteger(row.bonus_ratio) && row.bonus_ratio >= 1)) throw new Error('The bonus ratio must be a whole number of 1 or more.'); if (row.album_type === 'Digipack (Unit)') throw new Error('The bonus unit PC deal is for member albums; this order is already a unit album.'); }
+      if (row.bonus_ratio != null) { if (!(Number.isInteger(row.bonus_ratio) && row.bonus_ratio >= 1)) throw new Error('The bonus ratio must be a whole number of 1 or more.'); if (row.album_type === 'Digipack (Unit)' || row.album_type === 'Merch') throw new Error('The bonus unit PC deal is for member albums.'); }
     }
     const oldGo = key === 'group_orders' && editId ? A.data.group_orders.find(r => r.id === editId) : null;
     if (key === 'group_orders' && row.status === 'cancelled') toast('Tip: mark that order\'s claims as dropped or refund them so balances stay right.');
@@ -2480,7 +2494,7 @@ const forms = {
       const dropId = saved.id || editId;
       let targetIds = wantGoIds;
       if (!editId && !wantGoIds.length) {
-        const albumType = row.pc_kind === 'unit' ? 'Digipack (Unit)' : (ALBUM_TYPES.find(a => a.toLowerCase() === String(row.album_type || '').toLowerCase()) || 'Photobook');
+        const albumType = row.pc_kind === 'unit' ? 'Digipack (Unit)' : row.pc_kind === 'merch' ? 'Merch' : (ALBUM_TYPES.find(a => a.toLowerCase() === String(row.album_type || '').toLowerCase()) || 'Photobook');
         const newGo = await api.save('group_orders', {...CFG.group_orders.defaults, name:row.name, album_type:albumType, comeback_id:row.comeback_id || null,
           deadline:row.deadline || null, deadline_time:row.deadline_time || null});
         targetIds = [newGo.id]; notes.push('Created a matching group order');
