@@ -1249,7 +1249,7 @@ const pcCover = (key, items, title) => pcButton(key, items, 0, items.length > 1 
 function openLightbox(key, start) {
   const items = galleryItems(key); if (!items.length) return;
   let i = Math.min(Math.max(start, 0), items.length - 1);
-  const d = document.createElement('dialog'); d.className = 'lb'; d.setAttribute('aria-label', 'Photocard previews');
+  const d = document.createElement('dialog'); d.className = 'lb'; d.setAttribute('aria-label', 'Item previews');
   const many = items.length > 1;
   d.innerHTML = `<div class="lb-in"><div class="lb-top"><span class="small muted" data-n aria-live="polite"></span><button type="button" class="btn ghost small" data-x>Close</button></div>
     <img class="lb-img" alt=""><p class="lb-cap"></p>
@@ -1829,7 +1829,7 @@ const CFG = {
       F('announced_on','Announced on','date'),
       F('album_type','Album type','select',{opts:DROP_ALBUM_TYPES,hint:'PC only.'}), F('pc_type','PC type','select',{opts:PC_TYPES,hint:'PC only.'}), F('solo_unit','Solo or unit','select',{opts:[['Solo','Solo'],['Unit','Unit']],hint:'PC only.'}),
       F('category','Category','combo',{options:() => distinctVals('drops','category'),hint:'Merch only.'}),
-      F('images','Photocard previews','images',{wide:1}),
+      F('images','Item previews','images',{wide:1}),
       F('deadline','Order deadline','date',{hint:'In KST.'}), F('deadline_time','Deadline time','text',{hint:'Optional, like 11:59 PM KST'}),
       F('event_type','Event type','select',{req:1,opts:EVENT_TYPES}),
       F('event_on','Event date','date',{hint:'Only if there\'s an event.'}),
