@@ -519,11 +519,12 @@ const claimCmp = (a, b) => (RANK[a.source || 'joiner'] ?? 4) - (RANK[b.source ||
   || (a.roster_pos ?? 1e9) - (b.roster_pos ?? 1e9)
   || String(a.created_at || '').localeCompare(String(b.created_at || ''))
   || String(a.id || '').localeCompare(String(b.id || ''));
-const MERCH_ROW = ['ITEM'];      // merch isn't split by member: one generic claimable row
-const rowsOf = go => go && go.album_type === 'Digipack (Unit)' ? UNIT_ROWS : go && go.album_type === 'Merch' ? MERCH_ROW : MEMBERS;
+// A merch order's rows are its own named items (host-defined), not a fixed list -- go.merchItems is attached wherever a group order is loaded.
+const rowsOf = go => go && go.album_type === 'Digipack (Unit)' ? UNIT_ROWS : go && go.album_type === 'Merch' ? (go.merchItems || []).map(i => i.name) : MEMBERS;
+const merchItem = (go, name) => (go && go.merchItems || []).find(i => i.name === name);
 const hasSets = go => !!go && !!go.set_mode && go.set_mode !== 'none';
 // member/unit/item, singular and plural, for whichever kind of row this order uses
-const rowWords = R => R === UNIT_ROWS ? {one:'unit', many:'units'} : R === MERCH_ROW ? {one:'item', many:'items'} : {one:'member', many:'members'};
+const rowWords = go => isMerch(go) ? {one:'item', many:'items'} : rowsOf(go) === UNIT_ROWS ? {one:'unit', many:'units'} : {one:'member', many:'members'};
 // The "claim everything" code: OT8 claims all 8 individual members; a unit order has 4 PCs, so it's OT4.
 // Merch has nothing to "claim everything" of -- there's only the one row already.
 const fullCode = go => isMerch(go) ? null : rowsOf(go) === UNIT_ROWS ? 'OT4' : 'OT8';
@@ -596,7 +597,7 @@ function placeText(info, an) {
   return st.state === 'in' ? `${L}, going through` : st.state === 'wait' ? `${L}, not ordered unless its set fills up` : `${L}, not ordered`;
 }
 function setNote(x, an) {
-  const W = rowWords(an.R).many, of = `${x.count} of ${an.R.length} ${W}`;
+  const W = rowWords(an.go).many, of = `${x.count} of ${an.R.length} ${W}`;
   if (x.status === 'full') return `Set ${x.n}: full, going through`;
   if (x.status === 'go') return an.mode === 'sort' ? `Set ${x.n}: ${of} claimed` : x.extra
     ? `Set ${x.n}: ${of} claimed, going through. ${x.missing.join(', ')} unclaimed, so each claim pays +${money(x.extra)}`
@@ -606,7 +607,7 @@ function setNote(x, an) {
   return '';
 }
 function rulesList(go, cb) {
-  const R = rowsOf(go), full = fullCode(go), {many:W, one:w1} = rowWords(R);
+  const R = rowsOf(go), full = fullCode(go), {many:W, one:w1} = rowWords(go);
   const min = Math.min(R.length, num(go.min_members) || R.length), out = [];
   const gate = `A set goes through when at least ${min} of ${R.length} ${W} are claimed in it. Sets fill in order, and the waitlist starts right after the last set that goes through.`;
   if (go.set_mode === 'drop') out.push(`${gate} A waitlisted claim is not charged unless enough people claim to bring its set up to ${min} by the deadline. If a set goes through with a ${w1} unclaimed, that ${w1} is not charged to joiners.`);
@@ -752,7 +753,7 @@ function rosterToText(cb, roster, emojis, joiners, hostHandle) {
    4. DEMO data + API  (used when Supabase is not configured)
    ===================================================================== */
 function seedDemo() {
-  const D = {drops:[], group_orders:[], shipments:[], joiners:[], joiner_accounts:[], claims:[], participants:[], charges:[], payments:[], comebacks:[], comeback_roster:[], comeback_emojis:[], drop_group_orders:[], bonus_claims:[]};
+  const D = {drops:[], group_orders:[], shipments:[], joiners:[], joiner_accounts:[], claims:[], participants:[], charges:[], payments:[], comebacks:[], comeback_roster:[], comeback_emojis:[], drop_group_orders:[], bonus_claims:[], merch_items:[]};
   let seed = 11; const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
   const pick = arr => arr[Math.floor(rnd() * arr.length)];
 
@@ -947,7 +948,7 @@ function demoApi() {
         shipments: db.shipments.map(({id,number,kaddy,status,paid_on,shipped_on,delivered_on}) => ({id,number,kaddy,status,paid_on,shipped_on,delivered_on})),
         stats: statsMap(), comebacks: db.comebacks, seats: seatList(),
         joiners: db.joiners.map(({id,name,emoji}) => ({id,name,emoji})),
-        dropLinks: db.drop_group_orders, cbEmojis: db.comeback_emojis});
+        dropLinks: db.drop_group_orders, cbEmojis: db.comeback_emojis, merchItems: db.merch_items});
     },
     async login(handle, pin) {
       const a = db.joiner_accounts.find(x => x.handle === normHandle(handle));
@@ -1017,8 +1018,10 @@ function demoApi() {
       const g = db.group_orders.find(x => x.id === goId);
       if (!g || !g.claims_on_site || g.status !== 'open') return {error:'closed'};
       if (g.deadline && today() > g.deadline) return {error:'deadline'};
-      if (g.price_per_pc == null) return {error:'no_price'};
-      const R = rowsOf(g), full = fullCode(g), codes = (members || []).map(x => String(x).trim().toUpperCase()).filter(Boolean);
+      g.merchItems = db.merch_items.filter(m => m.group_order_id === goId);
+      const merch = isMerch(g);
+      if (merch ? !g.merchItems.length : g.price_per_pc == null) return {error:'no_price'};
+      const R = rowsOf(g), full = fullCode(g), codes = (members || []).map(x => String(x).trim()).filter(Boolean).map(x => merch ? x : x.toUpperCase());
       if (!codes.length) return {error:'nothing'};
       if (codes.length > 40) return {error:'too_many'};
       const bad = codes.find(c => c !== full && !R.includes(c)); if (bad) return {error:'bad_member', detail:bad};
@@ -1030,7 +1033,7 @@ function demoApi() {
         const spots = roster.filter(r => r.joiner_id === jid && c !== full && c.split('/').includes(r.member_code));
         const haveStanding = db.claims.some(x => x.group_order_id === goId && x.joiner_id === jid && x.member_code === c && x.status === 'filled' && ['fixed', 'soft', 'gom'].includes(x.source));
         db.claims.push({id:uid(), group_order_id:goId, joiner_id:jid, member_code:c, items:c === full ? R.length : 1,
-          price: c === full ? (g.ot8_price ?? r2(g.price_per_pc * R.length)) : g.price_per_pc, status:'filled', note:null,
+          price: claimPrice(g, c), status:'filled', note:null,
           source: claimSourceFor(g, {isHost:!!(j && j.is_host), onList, spots, haveStanding, code:c}), roster_pos:null,
           created_at:new Date(Date.now() + k++).toISOString()});
       });
@@ -1055,7 +1058,7 @@ function demoApi() {
 function supabaseApi() {
   if (!window.supabase) throw new Error('Could not load the Supabase library. Check your internet connection.');
   const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-  const ORDER = {joiner_accounts:['handle'], participants:['group_order_id','joiner_id'], go_stats:['group_order_id'], public_shipments:['number'], order_seats:['claim_id'], comeback_emojis:['comeback_id','joiner_id'], public_joiners:['name'], drop_group_orders:['drop_id']};
+  const ORDER = {joiner_accounts:['handle'], participants:['group_order_id','joiner_id'], go_stats:['group_order_id'], public_shipments:['number'], order_seats:['claim_id'], comeback_emojis:['comeback_id','joiner_id'], public_joiners:['name'], drop_group_orders:['drop_id'], merch_items:['group_order_id','position']};
   const fail = e => {
     const m = e.message || String(e);
     if (/schema cache|column .* does not exist/i.test(m)) throw new Error('The database is missing newer columns or tables. In Supabase, run upgrade-photos-calendar.sql (photos and dates) and upgrade-sets-comeback.sql (set rules and the comeback list), then reload this page.');
@@ -1079,10 +1082,10 @@ function supabaseApi() {
     demo: false,
     async loadPublic() {
       const soft = pr => pr.catch(() => []);     // an older database without the newer upgrades still loads
-      const [drops, gos, shipments, st, comebacks, seats, joiners, dropLinks, cbEmojis] = await Promise.all([
+      const [drops, gos, shipments, st, comebacks, seats, joiners, dropLinks, cbEmojis, merchItems] = await Promise.all([
         all('drops'), all('group_orders'), all('public_shipments'), all('go_stats'),
-        soft(all('comebacks')), soft(all('order_seats')), soft(all('public_joiners')), soft(all('drop_group_orders')), soft(all('comeback_emojis'))]);
-      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})), joiners, dropLinks, cbEmojis,
+        soft(all('comebacks')), soft(all('order_seats')), soft(all('public_joiners')), soft(all('drop_group_orders')), soft(all('comeback_emojis')), soft(all('merch_items'))]);
+      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})), joiners, dropLinks, cbEmojis, merchItems,
         stats: Object.fromEntries(st.map(s => [s.group_order_id, {joiners:s.joiners, items:s.items}]))};
     },
     async login(handle, pin) {
@@ -1153,12 +1156,12 @@ try { api = DEMO ? demoApi() : supabaseApi(); } catch (e) { api = null; window._
    6. State
    ===================================================================== */
 const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, loadError:null};
-const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null};
+const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null, editMerchItem:null};
 const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, announce:true, event:true}, past:false};
 const goById = id => S.pub.gos.find(g => g.id === id);
 const seatsOf = id => S.pub.seats.filter(x => x.group_order_id === id);
 const goName = g => g ? `${g.emoji || ''} ${g.name}`.trim() : 'Deleted order';
-async function refreshPublic() { S.pub = await api.loadPublic(); }
+async function refreshPublic() { S.pub = await api.loadPublic(); attachMerchItems(S.pub.gos, S.pub.merchItems); }
 const dropGoIds = d => (S.pub.dropLinks || []).filter(l => l.drop_id === d.id).map(l => l.group_order_id);
 // A drop can now link to several orders; this is the one shown for its status pill and fallback dates.
 const primaryGoOf = d => { const gs = dropGoIds(d).map(goById).filter(Boolean); return gs.find(g => g.status === 'open') || gs.slice().sort(byNewest)[0] || null; };
@@ -1319,7 +1322,13 @@ const anOf = g => hasSets(g) ? analyze(g, seatClaims(g), cbOf(g)) : null;
 const em = e => e || '❔';
 const myIds = () => new Set(S.me ? S.me.claims.map(c => c.id) : []);
 const claimsOpen = g => g.status === 'open' && !(g.deadline && daysFromNow(g.deadline) < 0);
-const wName = an => rowWords(an.R).one;
+// "$48.00 per item" if every item is the same price, "$48.00-$60.00 per item" if they differ, '' if there are none yet
+const merchPriceLine = go => {
+  const items = (go && go.merchItems) || []; if (!items.length) return '';
+  const ps = items.map(i => num(i.price)), lo = Math.min(...ps), hi = Math.max(...ps);
+  return `${lo === hi ? money(lo) : `${money(lo)}-${money(hi)}`} per item`;
+};
+const wName = an => rowWords(an.go).one;
 const cred = () => { try { return JSON.parse(session.get('jo')); } catch { return null; } };
 async function keepScroll(fn) { const y = window.scrollY; await fn(); window.scrollTo(0, y); }
 
@@ -1402,7 +1411,7 @@ const hypoAn = (g, hyp) => hasSets(g) ? analyze(g, [...seatClaims(g), ...hyp], c
 function claimNote(f) {
   const g = goById(f.dataset.go), note = $('[data-claimnote]', f), codes = [];
   f.querySelectorAll('input[name="q"]').forEach(i => { const k = Math.max(0, Math.min(10, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) codes.push(i.dataset.code); });
-  if (!codes.length) { const w1 = rowWords(rowsOf(g)).one; note.textContent = `Use + to pick a ${w1}.${rowsOf(g).length > 1 ? ' Pick the same one twice to claim it twice.' : ''}`; return; }
+  if (!codes.length) { const w1 = rowWords(g).one; note.textContent = `Use + to pick a ${w1}.${rowsOf(g).length > 1 ? ' Pick the same one twice to claim it twice.' : ''}`; return; }
   const hyp = hypoClaims(g, codes), infos = hyp.map(c => claimInfo(g, c, hypoAn(g, hyp)));
   const charged = r2(infos.reduce((a, i) => a + i.amount, 0)), extra = r2(infos.reduce((a, i) => a + i.extra, 0)), waits = infos.filter(i => i.state === 'wait').length;
   const counts = new Map(); codes.forEach(c => counts.set(c, (counts.get(c) || 0) + 1));
@@ -1413,7 +1422,7 @@ function claimNote(f) {
 function claimPanel(g, an) {
   if (!g.claims_on_site) return g.status === 'open' ? `<p class="small muted" style="margin:0">Claim by commenting on the Instagram post. This grid updates as claims are added.</p>` : '';
   if (!claimsOpen(g)) return '<p class="small muted" style="margin:0">Claims are closed for this order.</p>';
-  if (g.price_per_pc == null) return '<p class="small muted" style="margin:0">Claiming opens once the price is set.</p>';
+  if (isMerch(g) ? !(g.merchItems || []).length : g.price_per_pc == null) return `<p class="small muted" style="margin:0">Claiming opens once ${isMerch(g) ? 'at least one item is added' : 'the price is set'}.</p>`;
   const me = S.me;
   if (!me) return `<form class="panel-mini" data-form="claimlogin" autocomplete="on"><h4 class="sh" style="margin:0">Sign in to claim</h4>
     <div class="field"><label for="ch-${g.id}">Instagram handle</label><input id="ch-${g.id}" name="handle" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="@yourhandle" required></div>
@@ -1421,11 +1430,11 @@ function claimPanel(g, an) {
     <p class="err" data-err role="alert"></p><button class="btn">Sign in</button>
     <p class="small muted" style="margin:0">No PIN yet? DM @${esc(CONFIG.INSTAGRAM)}.${DEMO ? ' Demo: <b>demo_joiner</b>, PIN <b>1234</b>.' : ''}</p></form>`;
   const R = rowsOf(g), ctx = joinerCtx(g), mineLive = ctx.mine, heldOf = code => mineLive.filter(c => c.member_code === code).length;
-  const {one:w1} = rowWords(R);
+  const {one:w1} = rowWords(g);
   const qty = (code, price, sub) => `<div class="mchip q"><b>${esc(code)}</b><small>${esc(sub)}</small>
     <span class="qty"><button type="button" class="qb" data-action="qty" data-d="-1" aria-label="One fewer ${esc(code)}">&minus;</button><input type="number" name="q" value="0" min="0" max="10" inputmode="numeric" data-code="${esc(code)}" data-price="${price}" aria-label="How many ${esc(code)} to claim"><button type="button" class="qb" data-action="qty" data-d="1" aria-label="One more ${esc(code)}">+</button></span></div>`;
-  const next = r => { if (!an) return money(g.price_per_pc); const h = hypoClaims(g, [r]), st = hypoAn(g, h).seats.find(s => s.claim.id === h[0].id); return st.state === 'in' ? `Next: set ${st.pos}` : 'Next: waitlist'; };
-  const chips = R.map(r => qty(r, g.price_per_pc, `${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`)).join('');
+  const next = r => { if (!an) return money(claimPrice(g, r)); const h = hypoClaims(g, [r]), st = hypoAn(g, h).seats.find(s => s.claim.id === h[0].id); return st.state === 'in' ? `Next: set ${st.pos}` : 'Next: waitlist'; };
+  const chips = R.map(r => qty(r, claimPrice(g, r), `${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`)).join('');
   const full = fullCode(g), fullChip = full ? qty(full, claimPrice(g, full), `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(claimPrice(g, full))}, always ordered`) : '';
   const fixedHere = [...new Set(mineLive.filter(c => c.source === 'fixed').map(c => c.member_code))];
   const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim' : 'claims'} (${esc(fixedHere.join(', '))}) stay on this order${full ? (heldOf(full) ? `. You have a ${esc(full)}, so you can drop them below.` : ` unless you switch to ${esc(full)}: claim a ${esc(full)} and you can drop them. You can add and drop other ${w1}s any time.`) : ` unless I drop them. You can add and drop other ${w1}s any time.`}</p>` : '';
@@ -1476,7 +1485,7 @@ function goCard(g) {
     ['Order deadline', g.deadline ? `${esc(fmtDate(g.deadline) + (g.deadline_time ? ', ' + g.deadline_time : ''))} ${deadlineChip(g)}` : ''],
     ['Winners announced', win ? esc(fmtDate(win.winners_on) + (win.winners_note ? ', ' + win.winners_note : '')) : ''],
     [evt ? `${EVT_NAME[evt.drop_type] || 'Event'} date` : '', evt ? esc(fmtDate(evt.event_on) + (evt.event_end_on ? ' to ' + fmtDate(evt.event_end_on) : '') + (evt.event_note ? ', ' + evt.event_note : '')) : ''],
-    ['Price', g.price_per_pc != null ? esc(`${money(g.price_per_pc)} per ${isUnitGO(g) ? 'unit' : isMerch(g) ? 'item' : 'PC'}${g.ot8_price != null && fullCode(g) ? `, ${fullCode(g)} ${money(g.ot8_price)}` : ''}`) : ''],
+    ['Price', isMerch(g) ? esc(merchPriceLine(g)) : (g.price_per_pc != null ? esc(`${money(g.price_per_pc)} per ${isUnitGO(g) ? 'unit' : 'PC'}${g.ot8_price != null && fullCode(g) ? `, ${fullCode(g)} ${money(g.ot8_price)}` : ''}`) : '')],
     ['Rules', hasSets(g) ? esc(SET_MODE_SHORT[g.set_mode] + (g.min_members && g.set_mode !== 'sort' ? `, ${g.min_members} of ${rowsOf(g).length} needed` : '')) : ''],
     ['Joiners', esc(st.joiners || '')], ['Items claimed', esc(st.items || '')],
     ['Kaddy box', ship ? esc(`#${ship.number}, ${SHIP_LABEL[ship.status].toLowerCase()}`) : ''],
@@ -1487,6 +1496,7 @@ function goCard(g) {
     <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
     ${g.public_note ? `<p class="small muted" style="margin:0">${esc(g.public_note)}</p>` : ''}
     ${g.post_url ? `<a class="small" href="${esc(g.post_url)}" target="_blank" rel="noopener">See the Instagram post</a>` : ''}
+    ${!wide && g.status === 'open' && g.price_per_pc != null ? '<p class="small muted" style="margin:0">Claim by commenting on the Instagram post to join.</p>' : ''}
     ${joinerKeyList(g)}`;
   if (wide) return `<article class="gocard wide"><div class="gc-l">${left}</div><div class="gc-r">${setsPanel(g, an)}</div></article>`;
   const fold = an && g.status !== 'cancelled' ? `<details class="mini-fold"><summary>Sets and availability</summary><div class="stack">${setsPanel(g, an, true)}</div></details>` : '';
@@ -1789,7 +1799,7 @@ const CFG = {
   group_orders: {table:'group_orders', need:['group_orders','shipments','drops','drop_group_orders','comebacks'], title:'Group order', add:'Add group order',
     fields:[F('name','Name','text',{req:1,wide:1}), F('emoji','Set emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}),
       F('kaddy','Kaddy'), F('album_type','Album type','select',{req:1,opts:opts(ALBUM_TYPES)}),
-      F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair. For merch, the price per item.'}), F('ot8_price','OT8 / OT4 price','number',{hint:'The price for claiming every member (OT8 for a member album, OT4 for a unit album). Not used for merch. Leave empty to use the per-item price times the number of items.'}),
+      F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair. Not used for merch -- each item on a merch order has its own price (Claims tab).'}), F('ot8_price','OT8 / OT4 price','number',{hint:'The price for claiming every member (OT8 for a member album, OT4 for a unit album). Not used for merch. Leave empty to use the per-item price times the number of items.'}),
       F('bonus_ratio','Bonus: claim __, get 1 unit PC','number',{hint:'Leave empty for no bonus deal. Example: 3 means every 3 items claimed earns 1 bonus unit PC. For member albums only.'}),
       F('bonus_price','Bonus unit PC price','number',{hint:'Leave empty if the bonus PC is free.'}),
       F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
@@ -1832,11 +1842,21 @@ const CFG = {
 };
 const ADMIN_TABS = [['drops','Drops'],['group_orders','Group orders'],['comeback','Comeback list'],['claims','Claims and shipping'],['money','Payments and fees'],['joiners','Joiners'],['shipments','Kaddy boxes'],['caption','Caption']];
 
-const OPTIONAL_TABLES = new Set(['comebacks', 'comeback_roster', 'comeback_emojis']);
+const OPTIONAL_TABLES = new Set(['comebacks', 'comeback_roster', 'comeback_emojis', 'merch_items']);
+// Each merch item belongs to one group order; attach them onto the go objects so rowsOf/claimPrice (which only
+// take a go) can see them, the same way a merch order gets its rows.
+function attachMerchItems(gos, items) {
+  const by = new Map(); (items || []).forEach(i => { if (!by.has(i.group_order_id)) by.set(i.group_order_id, []); by.get(i.group_order_id).push(i); });
+  (gos || []).forEach(g => { g.merchItems = (by.get(g.id) || []).slice().sort((a, b) => (a.position - b.position) || a.name.localeCompare(b.name)); });
+}
 async function need(...names) {
   await Promise.all(names.filter(n => !A.data[n]).map(async n => {
     try { A.data[n] = await api.list(n); } catch (e) { if (OPTIONAL_TABLES.has(n)) A.data[n] = []; else throw e; }
   }));
+  if (names.includes('group_orders')) {
+    if (!A.data.merch_items) { try { A.data.merch_items = await api.list('merch_items'); } catch { A.data.merch_items = []; } }
+    attachMerchItems(A.data.group_orders, A.data.merch_items);
+  }
 }
 const invalidate = (...names) => names.forEach(n => { delete A.data[n]; });
 const joinerLabel = id => { const j = (A.data.joiners || []).find(x => x.id === id); return j ? `${j.emoji || ''} ${j.name}`.trim() : 'Unknown joiner'; };
@@ -1974,7 +1994,7 @@ function goPicker() {
   return `<div class="panel"><div class="field"><label for="goPick">Group order</label><select id="goPick" data-pick="go"><option value="">Choose an order</option>${gos.map(g => `<option value="${g.id}" ${g.id === A.goId ? 'selected' : ''}>${esc(goName(g))}</option>`).join('')}</select></div></div>`;
 }
 
-const claimPrice = (go, code) => code === fullCode(go) ? (go.ot8_price != null ? num(go.ot8_price) : r2(num(go.price_per_pc) * rowsOf(go).length)) : num(go.price_per_pc);
+const claimPrice = (go, code) => isMerch(go) ? num((merchItem(go, code) || {}).price ?? go.price_per_pc) : code === fullCode(go) ? (go.ot8_price != null ? num(go.ot8_price) : r2(num(go.price_per_pc) * rowsOf(go).length)) : num(go.price_per_pc);
 const claimItems = (go, code) => code === fullCode(go) ? rowsOf(go).length : 1;      // a unit claim is one PC
 
 // "Claim N items, get 1 unit PC": earned units are limited by how many items are actually claimed so far.
@@ -2056,6 +2076,25 @@ function buildPreview(text, go) {
   return {rows:[...rows.values()], issues};
 }
 
+function merchItemsPanel(go) {
+  const items = go.merchItems || [];
+  const editing = A.editMerchItem && items.find(i => i.id === A.editMerchItem);
+  const rows = items.map(i => `<div class="mine-row"><span>${esc(i.name)} — ${money(i.price)}</span>
+    <span><button type="button" class="btn ghost small" data-action="editMerchItem" data-id="${i.id}">Edit</button>
+    <button type="button" class="btn ghost small" style="margin-left:8px" data-action="removeMerchItem" data-id="${i.id}">Remove</button></span></div>`).join('');
+  return `<section class="panel"><h2>Merch items</h2>
+    <p class="small muted" style="margin-top:0">Each item claims on its own, at its own price. Joiners can't claim anything here until at least one item exists.</p>
+    ${rows || '<p class="small muted" style="margin:0">No items yet -- add one below.</p>'}
+    <form data-form="merchItem" class="panel-mini" style="margin-top:14px">
+      <input type="hidden" name="id" value="${editing ? esc(editing.id) : ''}">
+      <div class="fgrid">
+        <div class="field"><label for="miName">Item name</label><input id="miName" name="name" value="${editing ? esc(editing.name) : ''}" required></div>
+        <div class="field"><label for="miPrice">Price</label><input id="miPrice" name="price" type="number" step="any" min="0" value="${editing ? editing.price : ''}" required></div>
+      </div>
+      <div class="formacts"><button class="btn">${editing ? 'Save changes' : 'Add item'}</button>${editing ? '<button type="button" class="btn ghost" data-action="cancelMerchItem">Cancel</button>' : ''}</div>
+    </form>
+  </section>`;
+}
 function bonusPanel(go, claims, bonusClaims) {
   const earned = bonusEarned(go, claims), live = bonusClaims.filter(b => b.status === 'filled'), used = live.length;
   const jById = new Map(A.data.joiners.map(j => [j.id, j]));
@@ -2125,10 +2164,11 @@ async function claimsTab() {
   return picker + `
     ${go.comeback_id && go.roster_required ? `<section class="panel"><h2>Comeback claimers</h2><p class="small muted" style="margin-top:0">This order is part of ${esc(cbA ? cbA.name : 'a comeback')}. This adds anyone from the list who is missing and puts every claim in the right group in line: GOM, fixed, soft, then a list member's extra claims, then everyone else. A spot someone dropped on purpose (or who switched to OT8/OT4) is not added back.</p>
       <div class="formacts" style="margin:0"><button class="btn" data-action="syncOrder">Add comeback claimers and sort claims</button></div></section>` : ''}
+    ${isMerch(go) ? merchItemsPanel(go) : ''}
     ${go.bonus_ratio ? bonusPanel(go, claims, bonusClaims) : ''}
     ${setsPanelA}
     <section class="panel"><h2>Add claims</h2>
-      <p class="small muted" style="margin-top:0">One joiner per line, like <b>@handle: ${esc(rowsOf(go).slice(0, 2).join(', '))}</b>${fullCode(go) ? ` or <b>@handle: ${esc(fullCode(go))}</b>` : ''}. Lines are added in the order you paste them. Write one twice to claim it twice${fullCode(go) ? ` (like <b>@handle: ${esc(rowsOf(go)[0])}, ${esc(rowsOf(go)[0])}, ${esc(fullCode(go))}, ${esc(fullCode(go))}</b>)` : ''}. Claims by you go first in line, then fixed and soft claimers, then everyone else. Prices come from this order: ${go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit pair' : isMerch(go) ? 'item' : 'PC'}${go.ot8_price != null && fullCode(go) ? `, ${esc(fullCode(go))} ${money(go.ot8_price)}` : ''}` : '<b>no price set yet</b> (set it in Group orders first)'}.</p>
+      <p class="small muted" style="margin-top:0">One joiner per line, like <b>@handle: ${esc(rowsOf(go).slice(0, 2).join(', '))}</b>${fullCode(go) ? ` or <b>@handle: ${esc(fullCode(go))}</b>` : ''}. Lines are added in the order you paste them. Write one twice to claim it twice${fullCode(go) ? ` (like <b>@handle: ${esc(rowsOf(go)[0])}, ${esc(rowsOf(go)[0])}, ${esc(fullCode(go))}, ${esc(fullCode(go))}</b>)` : ''}. Claims by you go first in line, then fixed and soft claimers, then everyone else. ${isMerch(go) ? (merchPriceLine(go) ? `Prices come from each item: ${esc(merchPriceLine(go))}.` : '<b>No items priced yet</b> (add some in the Merch items panel above).') : `Prices come from this order: ${go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit pair' : 'PC'}${go.ot8_price != null && fullCode(go) ? `, ${esc(fullCode(go))} ${money(go.ot8_price)}` : ''}` : '<b>no price set yet</b> (set it in Group orders first)'}.`}</p>
       <textarea id="claimText" placeholder="@starlit_atiny: ${esc(rowsOf(go).slice(0, 2).join(', '))}${fullCode(go) ? `&#10;@bun.tiny: ${esc(fullCode(go))}` : ''}" aria-label="Claims">${esc(A.claimText)}</textarea>
       <div class="formacts"><button class="btn" data-action="previewClaims">Preview</button></div>
       ${pv ? `<div style="margin-top:18px">${pv.rows.length ? `<table class="pv"><thead><tr><th>Handle</th><th>Claims</th><th>Total</th><th></th></tr></thead><tbody>${pv.rows.map(r => `<tr><td>@${esc(r.handle)}</td><td>${r.claims.map(c => `<span class="chip">${esc(c.code)}</span>`).join('')}</td><td>${money(sum(r.claims, c => c.price))}</td><td>${r.joinerId ? '<span class="pill sea">Existing</span>' : '<span class="pill gold">New joiner</span>'}</td></tr>`).join('')}</tbody></table>` : ''}
@@ -2144,7 +2184,7 @@ async function claimsTab() {
 /* --- Instagram caption grid --- */
 function buildCaption(go, claims, primary, emo, cb) {
   const full = fullCode(go);
-  const price = go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit' : isMerch(go) ? 'item' : 'PC'}${go.ot8_price != null && full ? `, ${full} ${money(go.ot8_price)}` : ''}` : '';
+  const price = isMerch(go) ? merchPriceLine(go) : (go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit' : 'PC'}${go.ot8_price != null && full ? `, ${full} ${money(go.ot8_price)}` : ''}` : '');
   const dl = go.deadline ? `Deadline: ${fmtDate(go.deadline)}${go.deadline_time ? ', ' + go.deadline_time : ''}` : '';
   const head = [`${go.emoji || ''} ${go.name}`.trim(), price, dl].filter(Boolean), isHost = jid => normHandle(primary(jid)) === normHandle(CONFIG.INSTAGRAM);
   const who = jid => isHost(jid) ? `${emo(jid) || '💎'} GOM` : `${emo(jid) || '❔'} @${primary(jid)}`;
@@ -2346,6 +2386,16 @@ const actions = {
     const ok = await ask({title:'Remove this bonus PC?', html:'<p>This can\'t be undone.</p>', ok:'Remove', danger:true});
     if (!ok) return; await api.remove('bonus_claims', b.dataset.id); toast('Removed'); render();
   },
+  editMerchItem(b) { A.editMerchItem = b.dataset.id; render(); },
+  cancelMerchItem() { A.editMerchItem = null; render(); },
+  async removeMerchItem(b) {
+    const ok = await ask({title:'Remove this item?', html:'<p>Existing claims for it are kept, but nobody can claim it again.</p>', ok:'Remove', danger:true});
+    if (!ok) return;
+    await api.remove('merch_items', b.dataset.id);
+    invalidate('merch_items', 'group_orders'); await refreshPublic();
+    if (A.editMerchItem === b.dataset.id) A.editMerchItem = null;
+    toast('Removed'); render();
+  },
   qty(b) {
     const inp = $('input[name="q"]', b.parentElement), v = Math.max(0, Math.min(Number(inp.max) || 10, (parseInt(inp.value, 10) || 0) + Number(b.dataset.d)));
     inp.value = v; b.closest('.mchip').classList.toggle('on', v > 0); claimNote(b.closest('form'));
@@ -2418,6 +2468,20 @@ const actions = {
   },
 };
 const forms = {
+  async merchItem(f) {
+    const go = A.data.group_orders.find(g => g.id === A.goId); if (!go) return;
+    const fd = new FormData(f), id = fd.get('id') || '', name = (fd.get('name') || '').trim(), price = Number(fd.get('price'));
+    if (!name) throw new Error('Give the item a name.');
+    if (!(price >= 0)) throw new Error('Enter a price of 0 or more.');
+    const dup = (go.merchItems || []).some(i => i.name === name && i.id !== id);
+    if (dup) throw new Error(`"${name}" is already an item on this order. Edit it instead, or use a different name.`);
+    const row = {group_order_id:go.id, name, price};
+    if (id) row.id = id; else row.position = (go.merchItems || []).length;
+    await api.save('merch_items', row);
+    invalidate('merch_items', 'group_orders'); await refreshPublic();
+    A.editMerchItem = null;
+    toast(id ? 'Item updated' : 'Item added'); render();
+  },
   async bonusAssign(f) {
     const go = A.data.group_orders.find(g => g.id === A.goId); if (!go) return;
     const fd = new FormData(f), joinerId = fd.get('joiner_id'), unitCode = fd.get('unit_code'), price = fd.get('price') === '' ? 0 : Number(fd.get('price'));
@@ -2476,9 +2540,9 @@ const forms = {
     let handles = null;
     if (key === 'joiners') { handles = (row.handles || '').split(/[\s,]+/).map(normHandle).filter(Boolean); delete row.handles; if (!handles.length) handles = [normHandle(row.name)]; row.name = row.name.replace(/^@/, ''); }
     if (key === 'group_orders') {
-      const rowsN = row.album_type === 'Digipack (Unit)' ? 4 : row.album_type === 'Merch' ? 1 : 8;
-      if (row.min_members != null && !(Number.isInteger(row.min_members) && row.min_members >= 1 && row.min_members <= rowsN)) throw new Error(`Members needed for a set must be a whole number from 1 to ${rowsN}.`);
-      if (row.claims_on_site && row.price_per_pc == null) throw new Error('Set a price before joiners can claim on this site.');
+      const rowsN = row.album_type === 'Digipack (Unit)' ? 4 : row.album_type === 'Merch' ? 99 : 8;
+      if (row.min_members != null && !(Number.isInteger(row.min_members) && row.min_members >= 1 && row.min_members <= rowsN)) throw new Error(row.album_type === 'Merch' ? 'Members needed for a set must be a whole number of 1 or more.' : `Members needed for a set must be a whole number from 1 to ${rowsN}.`);
+      if (row.claims_on_site && row.price_per_pc == null && row.album_type !== 'Merch') throw new Error('Set a price before joiners can claim on this site.');
       if (row.bonus_ratio != null) { if (!(Number.isInteger(row.bonus_ratio) && row.bonus_ratio >= 1)) throw new Error('The bonus ratio must be a whole number of 1 or more.'); if (row.album_type === 'Digipack (Unit)' || row.album_type === 'Merch') throw new Error('The bonus unit PC deal is for member albums.'); }
     }
     const oldGo = key === 'group_orders' && editId ? A.data.group_orders.find(r => r.id === editId) : null;
