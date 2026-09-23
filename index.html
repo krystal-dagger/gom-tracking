@@ -1061,7 +1061,7 @@ function supabaseApi() {
   const ORDER = {joiner_accounts:['handle'], participants:['group_order_id','joiner_id'], go_stats:['group_order_id'], public_shipments:['number'], order_seats:['claim_id'], comeback_emojis:['comeback_id','joiner_id'], public_joiners:['name'], drop_group_orders:['drop_id'], merch_items:['group_order_id','position']};
   const fail = e => {
     const m = e.message || String(e);
-    if (/schema cache|column .* does not exist/i.test(m)) throw new Error('The database is missing newer columns or tables. In Supabase, run upgrade-photos-calendar.sql (photos and dates) and upgrade-sets-comeback.sql (set rules and the comeback list), then reload this page.');
+    if (/schema cache|column .* does not exist/i.test(m)) throw new Error(`Supabase can't see a table or column this needs. Make sure you've run, in order: schema.sql, upgrade-photos-calendar.sql, upgrade-drops-orders-bonus.sql, upgrade-merch.sql, upgrade-merch-items.sql. If you have, this can also mean a newer table isn't exposed to the API yet -- check Project Settings > Data API > Exposed schemas/tables in Supabase -- or that the schema cache just needs a nudge: run \`NOTIFY pgrst, 'reload schema';\` in the SQL editor. Then reload this page.`);
     throw new Error(m);
   };
 
@@ -1108,7 +1108,9 @@ function supabaseApi() {
       else if (row.id) { const {id, ...rest} = row; q = sb.from(t).update(rest).eq('id', id); }
       else q = sb.from(t).insert(row);
       const {data, error} = await q.select();
-      if (error) fail(error); return data[0];
+      if (error) fail(error);
+      if (!data || !data[0]) throw new Error(`Saved to ${t}, but Supabase didn't send the row back. In Supabase, check Project Settings > Data API > Exposed schemas/tables -- newer projects require each new table to be added there before the API can see it. Also try running \`NOTIFY pgrst, 'reload schema';\` in the SQL editor, then refresh this page.`);
+      return data[0];
     },
     async saveMany(t, rows) { const {error} = await sb.from(t).insert(rows); if (error) fail(error); },
     async remove(t, id) { const {error} = await sb.from(t).delete().eq('id', id); if (error) fail(error); },
