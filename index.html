@@ -188,8 +188,12 @@ details.fold{margin-top:10px} details.fold>summary{cursor:pointer;font:600 20px/
 .pay>div{flex:1;min-width:220px} .pay strong{font:700 20px var(--display);color:var(--coral)}
 .pay p{margin:4px 0 0;color:var(--text);font-size:14.5px}
 h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
-.ocard{padding:14px 20px;border-top:1px solid var(--line)}
+.ocard{display:flex;gap:12px;padding:14px 20px;border-top:1px solid var(--line);align-items:flex-start}
 .ocard:first-child{border-top:0}
+.ocard-pick{flex:none;display:flex;align-items:center;height:22px;margin-top:2px}
+.ocard-pick input{width:18px;height:18px;margin:0;cursor:pointer}
+.ocard-thumb{flex:none;width:40px;height:auto;max-height:62px;border-radius:6px;object-fit:contain;background:var(--panel-2);box-shadow:0 0 0 1px var(--line)}
+.ocard-body{flex:1;min-width:0}
 .ocard-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .ocard-head .nm{font-weight:600}
 .ocard-claims{margin-top:8px}
@@ -199,6 +203,10 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .ocard-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;font-size:13.5px}
 .ocard-foot .owed{font-weight:700;color:var(--coral)}
 .ocard-foot .owed.clear{color:var(--sea)}
+.paybar{position:sticky;bottom:12px;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--text);color:var(--panel);padding:12px 18px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);margin:14px 0}
+.paybar b{font-variant-numeric:tabular-nums}
+.paybar .btn{background:var(--panel);color:var(--text)}
 .prow2{display:grid;grid-template-columns:90px minmax(0,1fr) 110px 100px;gap:14px;padding:12px 20px;border-top:1px solid var(--line);align-items:center}
 .prow2:first-child{border-top:0}
 .prow2 .r{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
@@ -1136,6 +1144,18 @@ function demoApi() {
       if (c.source === 'fixed' && !db.claims.some(x => x.group_order_id === c.group_order_id && x.joiner_id === jid && x.member_code === fullCode(g) && x.status === 'filled')) return {error:'fixed'};
       c.status = 'dropped'; return {ok:true};
     },
+    async uploadPaymentProof(blob) {   // demo just keeps it as a data URL, matching photo uploads
+      return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => no(new Error('Could not read that image.')); r.readAsDataURL(blob); });
+    },
+    async paymentProofUrl(path) { return path; },   // already a data URL in demo mode
+    async submitPayment(handle, pin, amount, method, note, screenshotPath, orderIds) {
+      const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
+      if (!(amount > 0)) return {error:'bad_amount'};
+      if (!['paypal', 'venmo', 'wise'].includes(method)) return {error:'bad_method'};
+      db.payments.push({id:uid(), joiner_id:jid, group_order_id:null, amount, method, paid_on:today(), note,
+        status:'pending', screenshot_path:screenshotPath, order_ids:orderIds, host_note:null, created_at:new Date().toISOString()});
+      return {ok:true};
+    },
   };
 }
 
@@ -1227,6 +1247,21 @@ function supabaseApi() {
     async joinerUnclaim(handle, pin, claimId) {
       const {data, error} = await sb.rpc('joiner_unclaim', {p_handle:handle, p_pin:pin, p_claim:claimId}); if (error) fail(error); return data;
     },
+    async uploadPaymentProof(blob) {
+      const path = `${uid()}.jpg`;
+      const {error} = await sb.storage.from('payment-proofs').upload(path, blob, {contentType:'image/jpeg', cacheControl:'3600'});
+      if (error) throw new Error(/row-level security|not found|bucket|jwt/i.test(error.message)
+        ? 'Screenshot upload is not set up yet. Run upgrade-payment-approvals.sql in Supabase.' : error.message);
+      return path;
+    },
+    async paymentProofUrl(path) {
+      const {data, error} = await sb.storage.from('payment-proofs').createSignedUrl(path, 120);
+      if (error) fail(error); return data.signedUrl;
+    },
+    async submitPayment(handle, pin, amount, method, note, screenshotPath, orderIds) {
+      const {data, error} = await sb.rpc('joiner_submit_payment', {p_handle:handle, p_pin:pin, p_amount:amount, p_method:method, p_note:note, p_screenshot_path:screenshotPath, p_order_ids:orderIds});
+      if (error) fail(error); return data;
+    },
     async clearRoster(cbId) {
       for (const t of ['comeback_roster', 'comeback_emojis']) { const {error} = await sb.from(t).delete().eq('comeback_id', cbId); if (error) fail(error); }
     },
@@ -1244,7 +1279,7 @@ try { api = DEMO ? demoApi() : supabaseApi(); } catch (e) { api = null; window._
 /* =====================================================================
    6. State
    ===================================================================== */
-const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, loadError:null, openGoId:null};
+const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, loadError:null, openGoId:null, paySelection:null};
 const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, adding:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null, editMerchItem:null, editGoMerchItem:null, editBonusItem:null, editRaffle:null};
 const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, announce:true, event:true}, past:false};
 const goById = id => S.pub.gos.find(g => g.id === id);
@@ -1615,6 +1650,39 @@ function goModal() {
     </div>
   </div>`;
 }
+// The "Pay now" popup: pick a method, see what to leave in the payment note, attach a screenshot, submit.
+// Lands as a pending payment -- nothing counts as paid until the host approves it.
+function payModal() {
+  if (!S.paySelection || !S.paySelection.length || !S.me) return '';
+  const gos = S.paySelection.map(s => ({...s, go:S.pub.gos.find(g => g.id === s.id)})).filter(x => x.go);
+  if (!gos.length) return '';
+  const total = r2(sum(gos, x => x.amount));
+  const j = S.me.joiner;
+  const refNote = [j.emoji || '', ...gos.map(x => x.go.emoji || '')].filter(Boolean).join(' ');
+  const methods = [['paypal','PayPal',CONFIG.PAYPAL], ['venmo','Venmo',CONFIG.VENMO], ['wise','Wise',CONFIG.WISE]].filter(x => x[2]);
+  return `<div class="modal-back" data-modal-key="__pay">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Pay now">
+      <div class="modal-head"><h2>Pay now</h2><button type="button" class="modal-x" data-action="closePayModal" aria-label="Close">\u2715</button></div>
+      <div class="modal-body">
+        <form data-form="submitPayment">
+          <p class="small muted" style="margin-top:0">Paying for:</p>
+          ${gos.map(x => `<div class="mine-row compact"><span>${esc(x.go.emoji || '📦')} ${esc(goDisplayName(x.go))}</span><span>${money(x.amount)}</span></div>`).join('')}
+          <div class="fgrid" style="margin-top:14px">
+            <div class="field"><label for="payAmt">Amount you're sending</label><input id="payAmt" name="amount" type="number" step="any" min="0.01" value="${total}" required></div>
+            <div class="field"><label for="payMethod">Method</label><select id="payMethod" name="method" required>${methods.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></div>
+          </div>
+          <p class="small muted" id="payMethodLink" style="margin:10px 0 0">${methods.length ? `<a href="${esc(methods[0][2])}" target="_blank" rel="noopener">Open ${esc(methods[0][1])}</a>` : ''}</p>
+          <p class="small" style="margin:14px 0 0"><b>In your payment note, please include:</b> <span style="font-size:18px">${esc(refNote)}</span></p>
+          <p class="small muted" style="margin:4px 0 0">That's your emoji plus the emoji for each order above, so it can be matched up on this end.</p>
+          <div class="field" style="margin-top:14px"><label for="payShot">Screenshot of the payment</label><input id="payShot" name="screenshot" type="file" accept="image/*" required></div>
+          <p class="err" data-err role="alert"></p>
+          <div class="formacts"><button class="btn">Submit for review</button><button type="button" class="btn ghost" data-action="closePayModal">Cancel</button></div>
+          <input type="hidden" name="order_ids" value="${esc(gos.map(x => x.id).join(','))}">
+        </form>
+      </div>
+    </div>
+  </div>`;
+}
 
 
 /* =====================================================================
@@ -1731,7 +1799,11 @@ function computeMe(d) {
   const liveCharges = d.charges.filter(c => { const g = c.group_order_id && goById(c.group_order_id); return !g || g.status !== 'Cancelled'; });
   const dueCh = liveCharges.filter(c => c.due), futCh = liveCharges.filter(c => !c.due);
   const claimsCost = sum(filled, c => infoOf.get(c.id).amount), feesDue = sum(dueCh, c => c.amount);
-  const totalDue = r2(claimsCost + feesDue), paid = sum(d.payments, p => p.amount);
+  const totalDue = r2(claimsCost + feesDue);
+  const approved = p => (p.status || 'approved') === 'approved';
+  const paid = sum(d.payments.filter(approved), p => p.amount);
+  const pendingPayments = d.payments.filter(p => p.status === 'pending');
+  const pendingPayTotal = sum(pendingPayments, p => p.amount);
   const active = S.pub.gos.filter(g => g.status !== 'Cancelled');
   const joinedIds = new Set(filled.filter(c => infoOf.get(c.id).state !== 'wait' && infoOf.get(c.id).state !== 'dropped').map(c => c.group_order_id));
   const joined = active.filter(g => joinedIds.has(g.id)).length;
@@ -1741,7 +1813,7 @@ function computeMe(d) {
     const cs = filled.filter(c => albumOf(goById(c.group_order_id)) === t);
     return {type:t, items:sum(cs, c => share(c, 'in')), cost:sum(cs, c => infoOf.get(c.id).amount)};
   }).filter(x => x.items > 0 || x.cost > 0);
-  return {live, filled, dropped, dueCh, futCh, claimsCost, feesDue, totalDue, paid, balance:r2(totalDue - paid), infoOf,
+  return {live, filled, dropped, dueCh, futCh, claimsCost, feesDue, totalDue, paid, pendingPayments, pendingPayTotal, balance:r2(totalDue - paid), infoOf,
     active:active.length, joined, pct:active.length ? Math.round(joined / active.length * 100) : 0,
     pendingCost: sum(filled, c => infoOf.get(c.id).pendingBase),
     itemsFilled: sum(filled, c => share(c, 'in')),
@@ -1802,6 +1874,7 @@ function meView(d) {
   const orders = [...new Set(d.claims.map(c => c.group_order_id))].map(goById).filter(Boolean)
     .sort((a, b) => (a.status === 'Shipped to Joiners') - (b.status === 'Shipped to Joiners') || byNewest(a, b));
   const cat = (label, amt) => amt > 0.005 ? `<span>${esc(label)} <b>${money(amt)}</b></span>` : `<span class="muted">${esc(label)} —</span>`;
+  const pendingHere = gid => m.pendingPayments.some(p => (p.order_ids || []).includes(gid) || p.group_order_id === gid);
   const orderRows = orders.map(g => {
     const cs = d.claims.filter(c => c.group_order_id === g.id);
     const chargesHere = d.charges.filter(c => c.group_order_id === g.id);
@@ -1810,19 +1883,28 @@ function meView(d) {
     const ems = dueAmt('ems'), customs = dueAmt('customs'), doms = dueAmt('doms');
     const other = r2(sum(chargesHere.filter(c => (c.kind === 'other' || c.kind === 'fee') && c.due), c => c.amount));
     const notDueHere = r2(sum(chargesHere.filter(c => !c.due), c => c.amount));
-    const paidHere = r2(sum(d.payments.filter(p => p.group_order_id === g.id), p => p.amount));
+    const paidHere = r2(sum(d.payments.filter(p => (p.status || 'approved') === 'approved' && ((p.order_ids || []).includes(g.id) || p.group_order_id === g.id)), p => p.amount));
     const total = r2(initials + ems + customs + doms + other);
     const owed = g.status === 'Cancelled' ? 0 : r2(total - paidHere);
     const part = d.participation.find(p => p.group_order_id === g.id);
     const overdue = g.payment_deadline && owed > 0.005 && today() > g.payment_deadline;
+    const items = g.drop ? galleryItems('drop:' + g.drop.id) : [];
+    const thumb = items.length ? `<img class="ocard-thumb" src="${esc(items[0].thumb || items[0].src)}" alt="">` : '';
+    const isPending = pendingHere(g.id);
+    const canPay = owed > 0.005 && !isPending && g.status !== 'Cancelled';
     return `<div class="ocard">
-      <div class="ocard-head"><div class="nm"><span aria-hidden="true">${esc(g.emoji || '📦')}</span> ${esc(goDisplayName(g))}</div>${goPill(g.status)}</div>
+      ${canPay ? `<label class="ocard-pick"><input type="checkbox" class="pay-select" data-go="${g.id}" data-owed="${owed}"><span class="sr">Select ${esc(goDisplayName(g))} to pay</span></label>` : ''}
+      ${thumb}
+      <div class="ocard-body">
+      <div class="ocard-head"><div class="nm">${esc(g.emoji || '📦')} ${esc(goDisplayName(g))}</div>${goPill(g.status)}</div>
       <div class="ocard-claims">${chipsMe(cs, m.infoOf)}</div>
       <div class="ocard-costs">${cat('Initials', initials)}${cat('EMS', ems)}${cat('Customs', customs)}${cat('DOMs', doms)}${cat('Other', other)}</div>
       ${g.payment_deadline ? `<p class="small ${overdue ? 'err' : 'muted'}" style="margin:8px 0 0">${overdue ? 'Payment was due' : 'Pay by'} ${esc(fmtDate(g.payment_deadline))}</p>` : ''}
       <div class="ocard-foot"><span>${shipCell(g, part)}</span>${g.status === 'Cancelled' ? '<span class="muted">Refund</span>'
+        : isPending ? '<span class="pill gold">Payment pending review</span>'
         : `<span class="owed${owed > 0.005 ? '' : ' clear'}">${owed > 0.005 ? `Owed ${money(owed)}` : paidHere > 0.005 || total > 0.005 ? 'Paid in full' : 'Nothing due'}</span>`}</div>
       ${notDueHere > 0.005 ? `<p class="small muted" style="margin:8px 0 0">+${money(notDueHere)} not due yet</p>` : ''}
+      </div>
     </div>`;
   }).join('');
 
@@ -1867,7 +1949,9 @@ function meView(d) {
       ${m.futCh.map(c => `<div class="future"><span>${esc(c.label)}</span><span><b>${money(c.amount)}</b> <span class="pill gold">Not due</span></span></div>`).join('')}
       <p class="muted small" style="margin:10px 0 0">These get added to your balance once the order is on hand and ready to ship.</p></section>` : ''}
 
+    ${m.pendingPayTotal > 0.005 ? `<p class="small muted" style="margin:8px 0 0">${money(m.pendingPayTotal)} in submitted ${m.pendingPayments.length === 1 ? 'payment is' : 'payments are'} awaiting review.</p>` : ''}
     <h2 class="blk">Your orders</h2>
+    <div id="payBar" class="paybar" style="display:none"><span><span id="paySelCount">0</span> selected: <b id="paySelTotal">$0.00</b></span><button type="button" class="btn" data-action="openPayModal">Pay now</button></div>
     ${orders.length ? `<div class="list">${orderRows}</div>` : '<p class="muted">No claims yet. Watch the Drops page for new orders.</p>'}
 
     ${pays ? `<h2 class="blk">Payments</h2><div class="list">${pays}</div>` : ''}`;
@@ -1936,9 +2020,11 @@ const CFG = {
     sub:r => `${handlesOf(r.id).map(h => '@' + h).join(', ')}, ${r.pin_hash ? 'PIN set' : 'no PIN yet'}`, sort:(a, b) => a.name.localeCompare(b.name), pin:true},
   payments: {table:'payments', need:['payments','joiners','group_orders'], title:'Payment', add:'Record payment',
     fields:[F('joiner_id','Joiner','ref',{ref:'joiners',req:1,wide:1}), F('amount','Amount','number',{req:1,hint:'Negative for a refund.'}), F('method','Method','select',{opts:opts(['paypal','venmo','wise','cash','other'])}),
-      F('paid_on','Date','date',{req:1}), F('group_order_id','For order (optional)','ref',{ref:'group_orders'}), F('note','Note','text',{wide:1})],
-    defaults:{method:'paypal', paid_on:today()}, label:r => `${joinerLabel(r.joiner_id)}  ${money(r.amount)}`,
-    sub:r => [r.method, fmtDate(r.paid_on), r.note].filter(Boolean).join(', '), sort:(a, b) => (b.paid_on || '').localeCompare(a.paid_on || '') || byNewest(a, b), limit:40},
+      F('paid_on','Date','date',{req:1}), F('group_order_id','For order (optional)','ref',{ref:'group_orders'}), F('note','Note','text',{wide:1}),
+      F('status','Status','select',{opts:opts(['pending','approved','denied','refunded']),hint:'Payments you record here start approved. Only joiner-submitted ones need review.'}),
+      F('host_note','Host note','text',{wide:1,hint:'Optional. Shown to nobody but you.'})],
+    defaults:{method:'paypal', paid_on:today(), status:'approved'}, label:r => `${joinerLabel(r.joiner_id)}  ${money(r.amount)}`,
+    sub:r => [r.method, fmtDate(r.paid_on), r.status !== 'approved' ? r.status : '', r.note].filter(Boolean).join(', '), sort:(a, b) => (b.paid_on || '').localeCompare(a.paid_on || '') || byNewest(a, b), limit:40},
   charges: {table:'charges', need:['charges','joiners','group_orders'], title:'Fee', add:'Add fee',
     fields:[F('joiner_id','Joiner','ref',{ref:'joiners',req:1,wide:1}), F('label','What it is for','text',{req:1,wide:1}), F('amount','Amount','number',{req:1}),
       F('kind','Kind','select',{req:1,opts:opts(['ems','doms','customs','fee','other'])}), F('group_order_id','For order','ref',{ref:'group_orders'}),
@@ -2137,6 +2223,37 @@ function updateFormSections(form) {
       : (s === 'pc' ? (!dropType || dropType === 'PC') : true);
     el.style.display = show ? '' : 'none';
   });
+}
+// Joiner-submitted payments waiting on a yes/no, plus a quick way to refund a recent approved one.
+async function pendingPaymentsPanel() {
+  await need('payments', 'joiners', 'group_orders', 'drops');
+  const jName = jid => { const j = A.data.joiners.find(x => x.id === jid); return j ? `${j.emoji || ''} ${j.name}`.trim() : 'Unknown joiner'; };
+  const ordersFor = p => (p.order_ids && p.order_ids.length ? p.order_ids : p.group_order_id ? [p.group_order_id] : [])
+    .map(id => A.data.group_orders.find(g => g.id === id)).filter(Boolean);
+  const pending = (A.data.payments || []).filter(p => p.status === 'pending').sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+  const pendingRows = pending.map(p => `<div class="acard">
+    <div class="acard-main">
+      <div class="acard-title"><strong>${esc(jName(p.joiner_id))}</strong> <span class="pill gold">Pending</span></div>
+      <div class="acard-meta"><span><b>${money(p.amount)}</b></span><span>${esc(p.method)}</span><span>${esc(fmtDate(p.paid_on))}</span></div>
+      ${ordersFor(p).length ? `<div class="acard-meta"><span>For: ${ordersFor(p).map(g => esc(goDisplayName(g))).join(', ')}</span></div>` : ''}
+      ${p.note ? `<div class="acard-notes">Note left: ${esc(p.note)}</div>` : ''}
+      ${p.screenshot_path ? `<div class="acard-meta"><button type="button" class="linklike small" data-action="viewProof" data-id="${p.id}">View screenshot</button></div>` : ''}
+    </div>
+    <div class="acard-acts">
+      <button class="btn small" data-action="approvePayment" data-id="${p.id}">Approve</button>
+      <button class="btn ghost small" data-action="denyPayment" data-id="${p.id}">Deny</button>
+    </div>
+  </div>`).join('');
+  const approved = (A.data.payments || []).filter(p => (p.status || 'approved') === 'approved').sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')).slice(0, 8);
+  const approvedRows = approved.map(p => `<div class="acard">
+    <div class="acard-main">
+      <div class="acard-title"><strong>${esc(jName(p.joiner_id))}</strong></div>
+      <div class="acard-meta"><span><b>${money(p.amount)}</b></span><span>${esc(p.method)}</span><span>${esc(fmtDate(p.paid_on))}</span></div>
+    </div>
+    <div class="acard-acts"><button class="btn ghost small" data-action="refundPayment" data-id="${p.id}">Refund</button></div>
+  </div>`).join('');
+  return `${pending.length ? `<section class="panel"><h2>Pending payments (${pending.length})</h2>${pendingRows}</section>` : ''}
+    ${approved.length ? `<details class="fold" style="margin-bottom:22px"><summary>Recently approved -- issue a refund</summary><div style="margin-top:10px">${approvedRows}</div></details>` : ''}`;
 }
 async function crudTab(key) {
   const cfg = CFG[key]; await need(...cfg.need);
@@ -2568,7 +2685,7 @@ async function comebackTab() {
 function anOf2(g, cs, cb) { return analyze(g, cs, cb); }
 
 async function adminBody(tab) {
-  if (tab === 'money') return (await crudTab('payments')) + (await crudTab('charges'));
+  if (tab === 'money') return (await pendingPaymentsPanel()) + (await crudTab('payments')) + (await crudTab('charges'));
   if (tab === 'claims') return claimsTab();
   if (tab === 'comeback') return comebackTab();
   if (tab === 'caption') return captionTab();
@@ -2611,7 +2728,7 @@ async function render() {
   } catch (e) {
     html = `<div class="panel"><h2>Something went wrong</h2><p class="err">${esc(e.message || e)}</p><p class="muted small">Check the Supabase URL and key in index.html, and that schema.sql ran without errors.</p></div>`;
   }
-  if (id === renderId) app.innerHTML = html + goModal();
+  if (id === renderId) app.innerHTML = html + goModal() + payModal();
 }
 
 const actions = {
@@ -2627,6 +2744,34 @@ const actions = {
   closeModal(b) { delete A.edit[b.dataset.key]; delete A.adding[b.dataset.key]; render(); },
   openGo(b) { S.openGoId = b.dataset.id; render(); },
   closeGoModal() { S.openGoId = null; render(); },
+  openPayModal() {
+    const boxes = [...document.querySelectorAll('.pay-select:checked')];
+    if (!boxes.length) return;
+    S.paySelection = boxes.map(b => ({id:b.dataset.go, amount:Number(b.dataset.owed) || 0}));
+    render();
+  },
+  closePayModal() { S.paySelection = null; render(); },
+  async approvePayment(b) {
+    await api.save('payments', {id:b.dataset.id, status:'approved'});
+    invalidate('payments'); toast('Payment approved'); render();
+  },
+  async denyPayment(b) {
+    const ok = await ask({title:'Deny this payment?', html:'<p>It stays on record but will not count toward what they\'ve paid. Tell them why outside the app if it needs fixing (wrong amount, no note, etc).</p>', ok:'Deny', danger:true});
+    if (!ok) return;
+    await api.save('payments', {id:b.dataset.id, status:'denied'});
+    invalidate('payments'); toast('Payment denied'); render();
+  },
+  async refundPayment(b) {
+    const ok = await ask({title:'Mark this payment refunded?', html:'<p>It will stop counting toward what they\'ve paid. Send the actual refund yourself outside the app first.</p>', ok:'Mark refunded', danger:true});
+    if (!ok) return;
+    await api.save('payments', {id:b.dataset.id, status:'refunded'});
+    invalidate('payments'); toast('Marked refunded'); render();
+  },
+  async viewProof(b) {
+    const p = (A.data.payments || []).find(x => x.id === b.dataset.id); if (!p || !p.screenshot_path) return;
+    const url = await api.paymentProofUrl(p.screenshot_path);
+    window.open(url, '_blank', 'noopener');
+  },
   async del(b) {
     const cfg = CFG[b.dataset.key], row = A.data[cfg.table].find(r => r.id === b.dataset.id);
     const ok = await ask({title:`Delete "${cfg.label(row)}"?`, html:'<p>This can\'t be undone.' + (cfg.table === 'joiners' ? ' Their claims, fees, and payments are deleted too.' : '') + '</p>', ok:'Delete', danger:true});
@@ -2781,6 +2926,29 @@ const actions = {
   },
 };
 const forms = {
+  async submitPayment(f) {
+    const c = cred(); if (!c || !S.me) return;
+    const fd = new FormData(f), amount = Number(fd.get('amount')), method = fd.get('method');
+    const orderIds = String(fd.get('order_ids') || '').split(',').filter(Boolean);
+    const file = fd.get('screenshot');
+    if (!(amount > 0)) throw new Error('Enter an amount of $0.01 or more.');
+    if (!file || !file.size) throw new Error('Attach a screenshot of the payment.');
+    const j = S.me.joiner;
+    const gos = orderIds.map(id => S.pub.gos.find(g => g.id === id)).filter(Boolean);
+    const note = [j.emoji || '', ...gos.map(g => g.emoji || '')].filter(Boolean).join(' ');
+    const btn = f.querySelector('.formacts .btn'); btn.disabled = true;
+    let path;
+    try {
+      const {full} = await processImage(file);
+      path = await api.uploadPaymentProof(full);
+    } finally { btn.disabled = false; }
+    const res = await api.submitPayment(c.h, c.p, amount, method, note, path, orderIds);
+    if (res.error) throw new Error(res.error === 'invalid' ? 'That handle and PIN don\'t match. Sign in again.' : res.error === 'bad_amount' ? 'Enter an amount of $0.01 or more.' : 'Something went wrong. Try again.');
+    S.paySelection = null;
+    await doLogin(c.h, c.p, true);
+    render();
+    toast('Payment submitted for review');
+  },
   async merchItem(f) {
     const fd = new FormData(f), dropId = fd.get('drop_id'), id = fd.get('id') || '', name = (fd.get('name') || '').trim(), memberOptions = fd.has('member_options');
     if (!dropId) return;
@@ -2918,7 +3086,7 @@ const forms = {
 const refocus = sel => { const el = $(sel); if (el) el.focus(); };
 async function guard(fn, ...args) { try { await fn(...args); } catch (e) { toast(e.message || String(e), true); } }
 
-const closeAnyModal = key => key === '__go' ? actions.closeGoModal() : actions.closeModal({dataset:{key}});
+const closeAnyModal = key => key === '__go' ? actions.closeGoModal() : key === '__pay' ? actions.closePayModal() : actions.closeModal({dataset:{key}});
 app.addEventListener('click', e => {
   if (e.target.classList && e.target.classList.contains('modal-back')) { closeAnyModal(e.target.dataset.modalKey); return; }
   const b = e.target.closest('[data-action]'); if (!b || !actions[b.dataset.action]) return;
@@ -2933,6 +3101,14 @@ app.addEventListener('submit', e => {
   const f = e.target.closest('form[data-form]'); if (!f || !forms[f.dataset.form]) return;
   e.preventDefault(); guard(forms[f.dataset.form], f);
 });
+function updatePayBar() {
+  const boxes = [...document.querySelectorAll('.pay-select:checked')];
+  const bar = $('#payBar'); if (!bar) return;
+  bar.style.display = boxes.length ? '' : 'none';
+  if (!boxes.length) return;
+  $('#paySelCount').textContent = boxes.length;
+  $('#paySelTotal').textContent = money(sum(boxes, b => Number(b.dataset.owed) || 0));
+}
 function autoRound(f) {
   const storeI = $('[name="store"]', f), cbI = $('[name="comeback_id"]', f), roundI = $('[name="round"]', f);
   if (!storeI || !roundI) return;
@@ -2949,6 +3125,13 @@ app.addEventListener('input', e => {
 });
 app.addEventListener('change', e => {
   const t = e.target;
+  if (t.classList.contains('pay-select')) { updatePayBar(); return; }
+  if (t.name === 'method' && t.closest('form[data-form="submitPayment"]')) {
+    const links = {paypal:['PayPal', CONFIG.PAYPAL], venmo:['Venmo', CONFIG.VENMO], wise:['Wise', CONFIG.WISE]};
+    const [label, href] = links[t.value] || [];
+    $('#payMethodLink').innerHTML = href ? `<a href="${esc(href)}" target="_blank" rel="noopener">Open ${esc(label)}</a>` : '';
+    return;
+  }
   if ((t.name === 'type' || t.name === 'drop_id') && t.closest('form[data-form="crud"]')) updateFormSections(t.closest('form'));
   if (t.name === 'comeback_id' && t.closest('form[data-key="drops"]')) { autoRound(t.closest('form')); return; }
   if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; $('#dropList').innerHTML = dropList(); return; }
