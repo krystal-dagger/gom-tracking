@@ -54,6 +54,7 @@ h1{font-weight:700;font-size:clamp(28px,4.4vw,40px);line-height:1.08;letter-spac
 a{color:inherit}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .muted{color:var(--muted)} .small{font-size:14px}
+.linklike{background:none;border:none;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
 /* header */
@@ -100,6 +101,12 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 
 /* pills, chips */
 .pill{display:inline-block;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.pill-btn{display:inline-block;font:inherit;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--panel-2);color:var(--muted);white-space:nowrap;border:1px solid transparent;cursor:pointer}
+.pill-btn:hover{border-color:var(--focus)}
+.pill-btn.gold{background:var(--gold-bg);color:var(--gold)}
+.pill-btn.sea{background:var(--sea-bg);color:var(--sea)}
+.pill-btn.coral{background:var(--coral-bg);color:var(--coral)}
+.drop-gos{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .pill.gold{background:var(--gold-bg);color:var(--gold)}
 .pill.sea{background:var(--sea-bg);color:var(--sea)}
 .pill.coral{background:var(--coral-bg);color:var(--coral)}
@@ -225,6 +232,7 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 /* modal form popups (Drops, Group orders) */
 .modal-back{position:fixed;inset:0;background:rgba(5,10,16,.6);display:grid;place-items:center;padding:20px;z-index:60;overflow-y:auto}
 .modal{background:var(--panel);border-radius:16px;max-width:640px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);margin:auto}
+.modal.wide{max-width:920px}
 .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 22px 0}
 .modal-head h2{margin:0}
 .modal-x{background:transparent;border:0;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:6px;border-radius:8px}
@@ -427,7 +435,6 @@ table.pv td.r,table.pv th.r{text-align:right;font-variant-numeric:tabular-nums}
     <nav aria-label="Main">
       <a href="#/drops" data-r="drops">Drops</a>
       <a href="#/calendar" data-r="calendar">Calendar</a>
-      <a href="#/orders" data-r="orders">Order status</a>
       <a href="#/me" data-r="me">My account</a>
     </nav>
     <button class="icon-btn" id="theme" type="button" aria-label="Switch light or dark theme"><span aria-hidden="true">🌗</span></button>
@@ -1233,12 +1240,27 @@ try { api = DEMO ? demoApi() : supabaseApi(); } catch (e) { api = null; window._
 /* =====================================================================
    6. State
    ===================================================================== */
-const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, loadError:null};
+const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, loadError:null, openGoId:null};
 const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, adding:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null, editMerchItem:null, editGoMerchItem:null, editBonusItem:null, editRaffle:null};
 const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, announce:true, event:true}, past:false};
 const goById = id => S.pub.gos.find(g => g.id === id);
 const seatsOf = id => S.pub.seats.filter(x => x.group_order_id === id);
-const goName = g => g ? `${g.emoji || ''} ${g.name}`.trim() : 'Deleted order';
+// A group order's own name is gone: its display name is the drop's name, plus an optional set name
+// ("Rabbit Version"), plus "Batch N" once a drop has more than one order (in creation order).
+function goBatchOf(g, all) {
+  const siblings = (all || S.pub.gos || []).filter(x => x.drop_id === g.drop_id).sort((a, b) => (a.created_at || '').localeCompare(b.created_at || '') || String(a.id).localeCompare(String(b.id)));
+  const i = siblings.findIndex(x => x.id === g.id);
+  return i < 0 ? 1 : i + 1;
+}
+function goDisplayName(g, all) {
+  if (!g) return 'Deleted order';
+  const bits = [(g.drop && g.drop.name) || g.name || 'Order'];
+  if (g.set_name) bits.push(g.set_name);
+  const batch = goBatchOf(g, all);
+  if (batch > 1) bits.push(`Batch ${batch}`);
+  return bits.join(' \u2014 ');
+}
+const goName = (g, all) => g ? `${g.emoji || ''} ${goDisplayName(g, all)}`.trim() : 'Deleted order';
 async function refreshPublic() {
   S.pub = await api.loadPublic();
   attachDrops(S.pub.gos, S.pub.drops);
@@ -1315,10 +1337,12 @@ function effDeadline(d) {
   return d.deadline ? {date:d.deadline, time:d.deadline_time} : null;
 }
 function dropRow(d, anyPics) {
-  const g = primaryGoOf(d);
+  const gos = gosOfDrop(d.id).slice().sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
   const st = dropStatus(d);
-  const pill = g ? `<a class="pl" href="#/orders" title="See this order">${goPill(g.status)}</a>`
-    : `<span class="pill">${esc(DROP_FILTER[st] || st)}</span>`;
+  const goButtons = gos.length ? gos.map(g => {
+    const label = g.set_name || (goBatchOf(g, gos) > 1 ? `Batch ${goBatchOf(g, gos)}` : '');
+    return `<button type="button" class="pill-btn ${GO_PILL[g.status] || ''}" data-action="openGo" data-id="${g.id}">${label ? esc(label) + ': ' : ''}${esc(STATUS_LABEL[g.status] || g.status)}</button>`;
+  }).join('') : `<span class="pill">${esc(DROP_FILTER[st] || st)}</span>`;
   const isNew = d.announced_on && (Date.now() - new Date(d.announced_on + 'T00:00:00')) / 864e5 <= 7;
   const items = galleryItems('drop:' + d.id);
   const thumb = items.length ? pcCover('drop:' + d.id, items, d.name) : (anyPics ? '<span class="pc-sp" aria-hidden="true"></span>' : '');
@@ -1338,7 +1362,7 @@ function dropRow(d, anyPics) {
       ${d.type === 'PC' && d.solo_unit === 'Unit' ? '<span>Unit</span>' : ''}
       ${d.round ? `<span>Round ${esc(d.round)}</span>` : ''}
     </p>${dates.length ? `<p class="meta">${dates.map(([k, v]) => `<span>${esc(k)} <span class="dt">${esc(v)}</span></span>`).join('')}</p>` : ''}</div></div>
-    <div class="drop-r">${pill}</div>
+    <div class="drop-r"><div class="drop-gos">${goButtons}</div></div>
   </article>`;
 }
 function dropList() {
@@ -1396,7 +1420,7 @@ function goPhotos(g) {
   const key = 'go:' + g.id, items = galleryItems(key); if (!items.length) return '';
   const more = items.length - 4;
   return `<div class="pcs">${items.slice(0, 4).map((_, i) => pcButton(key, items, i, i === 3 && more > 0 ? `<span class="more">+${more}</span>` : '',
-    i === 3 && more > 0 ? `View all ${items.length} photocards for ${g.name}` : '')).join('')}</div>`;
+    i === 3 && more > 0 ? `View all ${items.length} photocards for ${goDisplayName(g)}` : '')).join('')}</div>`;
 }
 /* ---- sets: availability grid, rules, claiming ---- */
 const cbOf = g => (g && g.drop && g.drop.comeback_id && S.pub.comebacks.find(c => c.id === g.drop.comeback_id)) || null;
@@ -1565,40 +1589,28 @@ function goCard(g) {
     ['Kaddy box', ship ? esc(`#${ship.number}, ${SHIP_LABEL[ship.status].toLowerCase()}`) : ''],
   ].filter(x => x[1] !== '');
   const left = `${goPhotos(g)}
-    <div class="gohead"><h3><span class="em" aria-hidden="true">${esc(g.emoji || '📦')}</span>${esc(g.name)}</h3>${goPill(g.status)}</div>
+    <div class="gohead"><h3><span class="em" aria-hidden="true">${esc(g.emoji || '📦')}</span>${esc(goDisplayName(g))}</h3>${goPill(g.status)}</div>
     ${stepper(g.status)}
     <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
     ${g.public_note ? `<p class="small muted" style="margin:0">${esc(g.public_note)}</p>` : ''}
     ${g.platform_link ? `<a class="small" href="${esc(g.platform_link)}" target="_blank" rel="noopener">See the ${g.platform === 'threads' ? 'Threads' : 'Instagram'} post</a>` : ''}
     ${joinerKeyList(g)}`;
   if (wide) return `<article class="gocard wide"><div class="gc-l">${left}</div><div class="gc-r">${setsPanel(g, an)}</div></article>`;
-  const fold = g.status !== 'Cancelled' ? `<details class="mini-fold"><summary>Sets and availability</summary><div class="stack">${setsPanel(g, an, true)}</div></details>` : '';
+  const fold = g.status !== 'Cancelled' ? `<details class="mini-fold" open><summary>Sets and availability</summary><div class="stack">${setsPanel(g, an, true)}</div></details>` : '';
   return `<article class="gocard">${left}${fold}</article>`;
 }
-function pageOrders() {
-  const gos = S.pub.gos.slice().sort(byNewest);
-  const groups = [
-    ['Claims open', 'Comment your claims on the Instagram post to join.', g => g.status === 'Claims Open', false],
-    ['In progress', 'Ordered, or on the way to me.', g => ['Claims Closed','Ordered','At Kaddy','Shipping to Host'].includes(g.status), false],
-    ['On hand', 'Here with me and waiting to be packed and shipped to you.', g => g.status === 'On Hand', false],
-    ['Completed', 'Everything has shipped out.', g => g.status === 'Shipped to Joiners', true],
-    ['Cancelled', '', g => g.status === 'Cancelled', true],
-  ];
-  const sections = groups.map(([title, sub, fn, fold]) => {
-    const list = gos.filter(fn); if (!list.length) return '';
-    const grid = `<div class="grid">${list.map(goCard).join('')}</div>`;
-    return fold
-      ? `<details class="fold sect"><summary>${title} (${list.length})</summary>${grid}</details>`
-      : `<section class="sect"><h2>${title}</h2><p class="sub">${sub}</p>${grid}</section>`;
-  }).join('');
-  const boxes = S.pub.shipments.slice().sort((a, b) => b.number - a.number).map(s => {
-    const inBox = gos.filter(g => g.shipment_id === s.id);
-    const dates = [['Paid', s.paid_on], ['Shipped', s.shipped_on], ['Arrived', s.delivered_on]].filter(x => x[1]).map(x => `${x[0]} ${fmtDate(x[1])}`).join(', ');
-    return `<div class="box"><b>Box ${s.number}</b><div><span class="emos" aria-label="${esc(inBox.map(g => g.name).join(', '))}">${inBox.map(g => `<span title="${esc(g.name)}">${esc(g.emoji || '📦')}</span>`).join(' ')}</span><small>${esc(s.kaddy || '')}${dates ? (s.kaddy ? ', ' : '') + esc(dates) : ''}</small></div><span class="pill ${s.status === 'delivered' ? 'sea' : ''}">${esc(SHIP_LABEL[s.status])}</span></div>`;
-  }).join('');
-  return head('Order status', 'Where every group order is right now, from claims to shipping.') + (sections || '<div class="empty">No group orders yet.</div>') +
-    (boxes ? `<section class="sect"><h2>Kaddy boxes</h2><p class="sub">Orders travel to me in boxes. Each emoji is a group order inside that box.</p><div class="list">${boxes}</div></section>` : '');
+// The order-detail popup, opened from a button on its drop's card (or a calendar/My-account link).
+function goModal() {
+  if (!S.openGoId) return '';
+  const g = S.pub.gos.find(x => x.id === S.openGoId); if (!g) return '';
+  return `<div class="modal-back" data-modal-key="__go">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-label="${esc(goDisplayName(g))}">
+      <div class="modal-head"><h2>${esc(goDisplayName(g))}</h2><button type="button" class="modal-x" data-action="closeGoModal" aria-label="Close">\u2715</button></div>
+      <div class="modal-body">${goCard(g)}</div>
+    </div>
+  </div>`;
 }
+
 
 /* =====================================================================
    9b. PAGE: Calendar
@@ -1624,7 +1636,7 @@ const evWhen = e => { const t = today(); return e.end && e.date <= t && t <= e.e
 function evRow(e, inDay) {
   const items = galleryItems(e.imgKey);
   const tile = items.length ? pcCover(e.imgKey, items, e.title) : `<span class="pc-ph" aria-hidden="true">${esc(e.emoji || '🎫')}</span>`;
-  const link = e.goId ? '<a class="small" href="#/orders">See order</a>' : e.link ? `<a class="small" href="${esc(e.link)}" target="_blank" rel="noopener">Details</a>` : '';
+  const link = e.goId ? `<button type="button" class="small linklike" data-action="openGo" data-id="${esc(e.goId)}">See order</button>` : e.link ? `<a class="small" href="${esc(e.link)}" target="_blank" rel="noopener">Details</a>` : '';
   return `<div class="ev${e.past ? ' past' : ''}">${tile}
     <div><h3>${esc(e.title)}</h3><p class="meta"><span class="pill ${KINDS[e.kind].pill}">${esc(e.label)}</span>
       ${e.sub ? `<span>${esc(e.sub)}</span>` : ''}${e.end ? `<span class="dt">${esc(fmtLong(e.date))} to ${esc(fmtLong(e.end))}</span>` : ''}${e.note ? `<span>${esc(e.note)}</span>` : ''}</p></div>
@@ -1750,7 +1762,7 @@ function comebackPanels(d, m) {
     const rowsHTML = orders.map(g => {
       const s = stateOf(g), open = claimsOpen(g);
       const pill = s === 'joined' ? '<span class="pill sea">Joined</span>' : s === 'wait' ? '<span class="pill gold">Waitlisted</span>' : s === 'dropped' ? '<span class="pill coral">Dropped</span>' : `<span class="pill">${open ? 'Not joined yet' : 'Not joined'}</span>`;
-      return `<div class="mine-row"><span>${esc(g.emoji || '📦')} ${esc(g.name)}</span><span>${pill}${s !== 'joined' && s !== 'wait' && open ? ` <a class="small" href="#/orders">Claim</a>` : ''}</span></div>`;
+      return `<div class="mine-row"><span>${esc(g.emoji || '📦')} ${esc(goDisplayName(g))}</span><span>${pill}${s !== 'joined' && s !== 'wait' && open ? ` <button type="button" class="small linklike" data-action="openGo" data-id="${esc(g.id)}">Claim</button>` : ''}</span></div>`;
     }).join('');
     const isSoft = soft.length > 0, joined = orders.filter(g => stateOf(g) === 'joined').length, min = num(cb.soft_min_orders);
     const openLeft = orders.filter(g => claimsOpen(g) && stateOf(g) !== 'joined' && stateOf(g) !== 'wait').length;
@@ -1786,7 +1798,7 @@ function meView(d) {
     const cost = r2(sum(cs.filter(c => c.status === 'filled' && m.infoOf.has(c.id)), c => m.infoOf.get(c.id).amount) + sum(d.charges.filter(c => c.group_order_id === g.id && c.due), c => c.amount));
     const part = d.participation.find(p => p.group_order_id === g.id);
     return `<div class="orow">
-      <div class="nm"><span aria-hidden="true">${esc(g.emoji || '📦')}</span> ${esc(g.name)}</div>
+      <div class="nm"><span aria-hidden="true">${esc(g.emoji || '📦')}</span> ${esc(goDisplayName(g))}</div>
       <div data-l="Your claims">${chipsMe(cs, m.infoOf)}</div>
       <div class="r" data-l="Cost">${g.status === 'Cancelled' ? '<span class="muted">Refund</span>' : money(cost)}</div>
       <div data-l="Order status">${goPill(g.status)}</div>
@@ -1868,7 +1880,7 @@ const CFG = {
     thumb:r => (r.images && r.images[0] && (r.images[0].thumb || r.images[0].src)) || '',
     sort:(a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')},
   group_orders: {table:'group_orders', need:['group_orders','shipments','drops','comebacks'], title:'Group order', add:'Add group order', modalForm:true, card:goCardAdmin,
-    fields:[F('name','Name','text',{req:1,wide:1}), F('drop_id','Drop','ref',{ref:'drops',req:1,hint:'Which drop this order is for. A new drop creates its first order for you automatically; add more here for extra rounds.'}),
+    fields:[F('drop_id','Drop','ref',{ref:'drops',req:1,wide:1,hint:'Which drop this order is for. A new drop creates its first order for you automatically; add more here for extra rounds. The order\'s name is worked out from the drop -- a second order for the same drop is labeled "Batch 2" automatically.'}),
       F('emoji','Emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}), F('platform_link','Platform link','text',{wide:1}),
       F('kaddy','Kaddy','select',{req:1,opts:KADDY_OPTS}), F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
       F('public_note','Notes (visible to joiners)','text',{wide:1}), F('host_note','Notes (host only)','text',{wide:1}),
@@ -1877,10 +1889,11 @@ const CFG = {
       F('min_members','Members needed for a set to go through','number',{hint:'0 means every claim goes through, uncapped.',section:'rules'}),
       F('split_cost','Split cost of unclaimed set members and raffle extras','bool',{hint:'Only used when members needed is more than 0.',section:'rules'}),
       F('sort_threshold','If split cost is above $, order exact claims and sort that set instead','number',{hint:'Leave empty to always split, however high the share gets.',section:'rules'}),
+      F('set_name','Set name','text',{hint:'Optional. For a member-set version this store sells separately, like "Rabbit Version" or "Glasses".',section:'pc'}),
       F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair.',section:'pc'}), F('ot8_price','OT8 / OT4 price','number',{hint:'Leave empty to use the per-item price times the number of items.',section:'pc'}),
       F('max_sets','Max # of sets to purchase','number',{hint:'Leave empty for no cap.',section:'pc'})],
     defaults:{platform:'instagram', kaddy:'None', status:'Claims Open', roster_required:true, min_members:0, split_cost:false, number_of_raffles:0},
-    label:r => goName(r), sub:r => rulesShort(r), sort:byNewest},
+    label:r => goName(r, A.data.group_orders), sub:r => rulesShort(r), sort:byNewest},
   comebacks: {table:'comebacks', need:['comebacks'], title:'Comeback', add:'Add comeback',
     fields:[F('name','Name','text',{req:1,wide:1}), F('soft_min_orders','Drops soft claimers must join','number',{req:1}),
       F('fixed_slots','Fixed spots per member','number',{req:1,hint:'Filled in from your list when you save it.'}), F('soft_slots','Soft spots per member','number',{req:1,hint:'Filled in from your list when you save it.'})],
@@ -1953,7 +1966,7 @@ const handlesOf = id => (A.data.joiner_accounts || []).filter(a => a.joiner_id =
 
 function refOptions(ref) {
   const rows = A.data[ref] || [];
-  if (ref === 'group_orders') return rows.slice().sort(byNewest).map(g => [g.id, goName(g)]);
+  if (ref === 'group_orders') return rows.slice().sort(byNewest).map(g => [g.id, goName(g, rows)]);
   if (ref === 'drops') return rows.slice().sort((a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')).map(d => [d.id, d.name]);
   if (ref === 'joiners') return rows.slice().sort((a, b) => a.name.localeCompare(b.name)).map(j => [j.id, `${j.emoji || ''} ${j.name}`.trim()]);
   if (ref === 'shipments') return rows.slice().sort((a, b) => b.number - a.number).map(s => [s.id, `Box ${s.number}`]);
@@ -2047,14 +2060,14 @@ function dropCard(r) {
   </div>`;
 }
 function goCardAdmin(r) {
-  const meta = [r.drop ? r.drop.name : '(drop missing)', r.platform === 'threads' ? 'Threads' : 'Instagram', r.kaddy !== 'None' ? r.kaddy : ''].filter(Boolean);
+  const meta = [r.platform === 'threads' ? 'Threads' : 'Instagram', r.kaddy !== 'None' ? r.kaddy : ''].filter(Boolean);
   const priceLine = isMerch(r) ? merchPriceLine(r) : (r.price_per_pc != null ? `${money(r.price_per_pc)} per ${isUnitGO(r) ? 'unit' : 'PC'}` : '');
   const dl = r.drop && r.drop.deadline ? `Order by ${fmtDate(r.drop.deadline)}${r.drop.deadline_time ? ', ' + r.drop.deadline_time : ''}` : '';
   const ship = r.shipment_id && (A.data.shipments || []).find(s => s.id === r.shipment_id);
   const facts = [priceLine, rulesShort(r), r.number_of_raffles ? `${r.number_of_raffles} raffle${r.number_of_raffles === 1 ? '' : 's'}` : ''].filter(Boolean);
   return `<div class="acard">
     <div class="acard-main">
-      <div class="acard-title"><span aria-hidden="true">${esc(r.emoji || '📦')}</span><strong>${esc(r.name)}</strong>${goPill(r.status)}</div>
+      <div class="acard-title"><span aria-hidden="true">${esc(r.emoji || '📦')}</span><strong>${esc(goDisplayName(r, A.data.group_orders))}</strong>${goPill(r.status)}</div>
       <div class="acard-meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div>
       ${facts.length ? `<div class="acard-meta">${facts.map(f => `<b>${esc(f)}</b>`).join(' \u00b7 ')}</div>` : ''}
       ${dl ? `<div class="acard-meta"><span>${esc(dl)}</span></div>` : ''}
@@ -2180,7 +2193,7 @@ async function addPhotos(input) {
 
 function goPicker() {
   const gos = A.data.group_orders.slice().sort(byNewest);
-  return `<div class="panel"><div class="field"><label for="goPick">Group order</label><select id="goPick" data-pick="go"><option value="">Choose an order</option>${gos.map(g => `<option value="${g.id}" ${g.id === A.goId ? 'selected' : ''}>${esc(goName(g))}</option>`).join('')}</select></div></div>`;
+  return `<div class="panel"><div class="field"><label for="goPick">Group order</label><select id="goPick" data-pick="go"><option value="">Choose an order</option>${gos.map(g => `<option value="${g.id}" ${g.id === A.goId ? 'selected' : ''}>${esc(goName(g, A.data.group_orders))}</option>`).join('')}</select></div></div>`;
 }
 
 const claimPrice = (go, code) => isMerch(go) ? num((merchItem(go, code) || {}).price ?? go.price_per_pc) : code === fullCode(go) ? (go.ot8_price != null ? num(go.ot8_price) : r2(num(go.price_per_pc) * rowsOf(go).length)) : num(go.price_per_pc);
@@ -2436,7 +2449,7 @@ function buildCaption(go, claims, primary, emo, cb) {
   const price = isMerch(go) ? merchPriceLine(go) : (go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit' : 'PC'}${go.ot8_price != null && full ? `, ${full} ${money(go.ot8_price)}` : ''}` : '');
   const dlDate = go.drop && go.drop.deadline;
   const dl = dlDate ? `Deadline: ${fmtDate(dlDate)}${go.drop.deadline_time ? ', ' + go.drop.deadline_time : ''}` : '';
-  const head = [`${go.emoji || ''} ${go.name}`.trim(), price, dl].filter(Boolean), isHost = jid => normHandle(primary(jid)) === normHandle(CONFIG.INSTAGRAM);
+  const head = [`${go.emoji || ''} ${goDisplayName(go)}`.trim(), price, dl].filter(Boolean), isHost = jid => normHandle(primary(jid)) === normHandle(CONFIG.INSTAGRAM);
   const who = jid => isHost(jid) ? `${emo(jid) || '💎'} GOM` : `${emo(jid) || '❔'} @${primary(jid)}`;
   const live = claims.filter(c => c.status !== 'dropped').map(c => ({...c, emoji:emo(c.joiner_id)})).sort(claimCmp);
   const ot8 = full ? live.filter(c => c.member_code === full) : [], ot8Line = full ? `${full}: ${ot8.map(c => em(c.emoji)).join('') || '✅'}` : null;
@@ -2519,7 +2532,7 @@ async function comebackTab() {
     </section>
 
     ${orders.length ? `<section class="panel"><h2>Orders in this comeback</h2>
-      ${orders.map(g => `<div class="mine-row"><span>${esc(goName(g))}</span><span>${goPill(g.status)} <span class="pill ${g.roster_required ? 'sea' : ''}">${g.roster_required ? 'Claimers added automatically' : 'Claimers not required'}</span></span></div>`).join('')}
+      ${orders.map(g => `<div class="mine-row"><span>${esc(goName(g, A.data.group_orders))}</span><span>${goPill(g.status)} <span class="pill ${g.roster_required ? 'sea' : ''}">${g.roster_required ? 'Claimers added automatically' : 'Claimers not required'}</span></span></div>`).join('')}
       ${roster.length && openOrders.length ? '<div class="formacts"><button class="btn ghost" data-action="syncCb">Add claimers to open orders again</button></div><p class="small muted" style="margin:8px 0 0">Adds anyone missing. Existing claims are kept.</p>' : ''}</section>` : ''}
 
     ${soft.length ? `<section class="panel"><h2>Soft claimers: drops joined</h2>
@@ -2557,8 +2570,8 @@ async function pageAdmin() {
    12. Router + events
    ===================================================================== */
 const app = $('#app');
-const PAGES = {drops:pageDrops, calendar:pageCalendar, orders:pageOrders, me:pageMe, admin:pageAdmin};
-const TITLES = {drops:'Comeback drops', calendar:'Calendar', orders:'Order status', me:'My account', admin:'Host tools'};
+const PAGES = {drops:pageDrops, calendar:pageCalendar, me:pageMe, admin:pageAdmin};
+const TITLES = {drops:'Comeback drops', calendar:'Calendar', me:'My account', admin:'Host tools'};
 let renderId = 0;
 const routeName = () => { const r = location.hash.replace(/^#\/?/, '').split('/')[0]; return PAGES[r] ? r : 'drops'; };
 
@@ -2574,7 +2587,7 @@ async function render() {
   } catch (e) {
     html = `<div class="panel"><h2>Something went wrong</h2><p class="err">${esc(e.message || e)}</p><p class="muted small">Check the Supabase URL and key in index.html, and that schema.sql ran without errors.</p></div>`;
   }
-  if (id === renderId) app.innerHTML = html;
+  if (id === renderId) app.innerHTML = html + goModal();
 }
 
 const actions = {
@@ -2588,6 +2601,8 @@ const actions = {
   cancelEdit(b) { delete A.edit[b.dataset.key]; delete A.adding[b.dataset.key]; render(); },
   addNew(b) { delete A.edit[b.dataset.key]; A.adding[b.dataset.key] = true; render(); },
   closeModal(b) { delete A.edit[b.dataset.key]; delete A.adding[b.dataset.key]; render(); },
+  openGo(b) { S.openGoId = b.dataset.id; render(); },
+  closeGoModal() { S.openGoId = null; render(); },
   async del(b) {
     const cfg = CFG[b.dataset.key], row = A.data[cfg.table].find(r => r.id === b.dataset.id);
     const ok = await ask({title:`Delete "${cfg.label(row)}"?`, html:'<p>This can\'t be undone.' + (cfg.table === 'joiners' ? ' Their claims, fees, and payments are deleted too.' : '') + '</p>', ok:'Delete', danger:true});
@@ -2879,15 +2894,16 @@ const forms = {
 const refocus = sel => { const el = $(sel); if (el) el.focus(); };
 async function guard(fn, ...args) { try { await fn(...args); } catch (e) { toast(e.message || String(e), true); } }
 
+const closeAnyModal = key => key === '__go' ? actions.closeGoModal() : actions.closeModal({dataset:{key}});
 app.addEventListener('click', e => {
-  if (e.target.classList && e.target.classList.contains('modal-back')) { actions.closeModal({dataset:{key:e.target.dataset.modalKey}}); return; }
+  if (e.target.classList && e.target.classList.contains('modal-back')) { closeAnyModal(e.target.dataset.modalKey); return; }
   const b = e.target.closest('[data-action]'); if (!b || !actions[b.dataset.action]) return;
   e.preventDefault(); guard(actions[b.dataset.action], b);
 });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const back = $('.modal-back'); if (!back) return;
-  actions.closeModal({dataset:{key:back.dataset.modalKey}});
+  closeAnyModal(back.dataset.modalKey);
 });
 app.addEventListener('submit', e => {
   const f = e.target.closest('form[data-form]'); if (!f || !forms[f.dataset.form]) return;
