@@ -82,6 +82,13 @@ nav a[aria-current="page"]{color:var(--text);background:var(--panel-2)}
 
 /* controls */
 input,select,textarea{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:42px}
+select{appearance:none;-webkit-appearance:none;padding-right:38px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23556b80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;background-size:16px}
+select:hover{border-color:var(--focus)}
+@media (prefers-color-scheme:dark){
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2390a6bc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5l5 5 5-5'/%3E%3C/svg%3E")}
+}
 textarea{min-height:130px;resize:vertical;line-height:1.5}
 .btn{font:600 15px/1 var(--body);background:var(--btn);color:var(--btn-ink);border:1px solid transparent;border-radius:10px;padding:12px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px}
 .btn.ghost{background:transparent;color:var(--text);border-color:var(--line)}
@@ -212,6 +219,8 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 @media(max-width:900px){.split{grid-template-columns:1fr}}
 .split>.panel{margin-bottom:0}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fsection{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.fsh{font:700 14px var(--display);color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:0 0 12px}
 .formacts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 .arow{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
 .arow:first-child{border-top:0}
@@ -235,16 +244,17 @@ dialog h3{font-size:19px;margin-bottom:12px}
 .toast.bad{background:var(--coral);color:#fff}
 
 /* photocard thumbnails and viewer */
-.pc{display:block;position:relative;flex:none;padding:0;border:0;border-radius:6px;overflow:hidden;background:var(--panel-2);aspect-ratio:55/85;cursor:zoom-in;box-shadow:0 0 0 1px var(--line)}
-.pc img{display:block;width:100%;height:100%;object-fit:cover}
+.pc{display:block;position:relative;flex:none;padding:0;border:0;border-radius:6px;overflow:hidden;background:var(--panel-2);cursor:zoom-in;box-shadow:0 0 0 1px var(--line)}
+.pc img{display:block;width:100%;height:auto;max-height:100%;object-fit:contain}
 .pc .n{position:absolute;right:3px;bottom:3px;min-width:18px;text-align:center;background:rgba(9,17,26,.8);color:#fff;font:700 11px/1 var(--body);padding:3px 5px;border-radius:999px}
 .pc .more{position:absolute;inset:0;display:grid;place-items:center;background:rgba(9,17,26,.62);color:#fff;font:700 17px var(--display)}
 .pc-ph{display:grid;place-items:center;flex:none;aspect-ratio:55/85;border-radius:6px;background:var(--panel-2);box-shadow:0 0 0 1px var(--line);font-size:22px}
 .drop-main{display:flex;gap:14px;align-items:center;min-width:0}
 .drop-main>div{min-width:0}
-.drop-main .pc,.drop-main .pc-sp{width:46px;flex:none}
+.drop-main .pc{width:46px;max-height:70px}
+.drop-main .pc-sp{width:46px;aspect-ratio:55/85;flex:none}
 @media(max-width:640px){.drop-main .pc-sp{display:none}}
-.pcs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pcs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:start}
 .dt{color:var(--text);font-weight:600}
 dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 .lb-in{padding:14px;display:grid;gap:10px}
@@ -310,7 +320,7 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 /* host tools: picture picker */
 .imgs{display:flex;flex-wrap:wrap;gap:10px}
 .imgt{margin:0;width:96px;display:grid;gap:6px;align-content:start}
-.imgt img{display:block;width:96px;aspect-ratio:55/85;object-fit:cover;border-radius:6px;background:var(--panel-2)}
+.imgt img{display:block;width:96px;height:auto;max-height:148px;object-fit:contain;border-radius:6px;background:var(--panel-2)}
 .imgt figcaption{display:grid;gap:4px}
 .imgt .btn{padding:5px 8px;min-height:30px;font-size:12.5px}
 .imgt .pill{text-align:center}
@@ -318,7 +328,7 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 .imgadd:focus-within label{outline:2px solid var(--focus);outline-offset:2px}
 .imgadd label{cursor:pointer}
 .ok{color:var(--sea);font-weight:600;font-size:14px}
-.mini{width:32px;aspect-ratio:55/85;object-fit:cover;border-radius:4px;background:var(--panel-2);flex:none}
+.mini{width:32px;height:auto;max-height:49px;object-fit:contain;border-radius:4px;background:var(--panel-2);flex:none}
 .arow-l{display:flex;gap:12px;align-items:center;min-width:0}
 
 /* sets: availability grid, rules, claiming */
@@ -442,8 +452,7 @@ const STATUS_LABEL = Object.fromEntries(STATUSES);
 const FLOW = ['Claims Open','Ordered','At Kaddy','Shipping to Host','On Hand','Shipped to Joiners'];
 const SHIP_STATUSES = [['pending','Not packed yet'],['packed','Packed'],['shipping_paid','Shipping paid'],['shipped','On the way'],['delivered','Arrived']];
 const SHIP_LABEL = Object.fromEntries(SHIP_STATUSES);
-const DROP_STATUSES = [['announced','Announced'],['go_open','Claims open'],['skipped','Not hosting']];
-const DROP_FILTER = {go_open:'Claims open',go_running:'Order running',announced:'Announced',skipped:'Not hosting'};
+const DROP_FILTER = {go_open:'Claims open',go_running:'Order running',no_order:'No order yet'};
 const SHIPPING_TYPES = ['US Stamped','US Tracked','WW Tracked','WW Stamped','Local Pickup'];
 const IMG_BUCKET = 'drop-images', MAX_IMGS = 12;
 const KADDY_OPTS = [['None','None'],['Kfriday','Kfriday'],['Paysable','Paysable']];
@@ -816,7 +825,7 @@ function seedDemo() {
     ['mk7','Strawberry','PC','Makestar','cb1','2.0','2026-06-08','announced','none',-9,null,null,'POCA','POB',null,null,'single'],
     ['music','Music Art POB','PC','Music Art','cb1','2.0','2026-07-08','announced','fancall',-40,-30,-22,'Regular','POB',null,null,'single'],
     ['mex','French Fry','PC','Ticketlink','cb1','2.0','2026-06-11','announced','fancall',-21,-10,-2,'POCA','POB',null,null,'single'],
-    ['kong','Kongsoonteez','PC','Whosfan','cb1','','2026-07-02','announced','event',4,-8,12,'Regular','LD',null,null,'single'],
+    ['kong','Kongsoonteez','PC','Whosfan','cb1','','2026-07-02','announced','fansign',4,-8,12,'Regular','LD',null,null,'single'],
     ['wm','Squish Kitten Bread','Merch','Withmuu',null,'1.0','2026-06-15','announced','none',9,null,null,null,null,null,'Plush','merch'],
     ['th','Teez-Heart','PC','K-Playground','cb1','','2026-06-21','announced','none',2,null,null,'Regular','POB',null,null,'single'],
   ];
@@ -831,7 +840,7 @@ function seedDemo() {
     D.drops.push(drop[key]);
   });
   // a drop with no order yet, sharing a store + comeback with mk4/mk7, to show the round auto-fill working
-  D.drops.push({id:'d-hairclip', name:'Hair Clip', type:'PC', store:'Makestar', comeback_id:'cb1', round:'3.0', announced_on:'2026-06-25', status:'planned', event_type:'event',
+  D.drops.push({id:'d-hairclip', name:'Hair Clip', type:'PC', store:'Makestar', comeback_id:'cb1', round:'3.0', announced_on:'2026-06-25', status:'planned', event_type:'fansign',
     deadline:null, deadline_time:null, event_on:off(6), winners_on:off(5), winners_time:'9 PM KST', album_type:'POCA', pc_type:'LD', solo_unit:'Solo', category:null,
     images:[], notes:null, created_at:'2026-06-25T00:00:00Z'});
 
@@ -1249,7 +1258,7 @@ const pcCover = (key, items, title) => pcButton(key, items, 0, items.length > 1 
 function openLightbox(key, start) {
   const items = galleryItems(key); if (!items.length) return;
   let i = Math.min(Math.max(start, 0), items.length - 1);
-  const d = document.createElement('dialog'); d.className = 'lb'; d.setAttribute('aria-label', 'Item previews');
+  const d = document.createElement('dialog'); d.className = 'lb'; d.setAttribute('aria-label', 'Photocard previews');
   const many = items.length > 1;
   d.innerHTML = `<div class="lb-in"><div class="lb-top"><span class="small muted" data-n aria-live="polite"></span><button type="button" class="btn ghost small" data-x>Close</button></div>
     <img class="lb-img" alt=""><p class="lb-cap"></p>
@@ -1280,8 +1289,7 @@ function openLightbox(key, start) {
    ===================================================================== */
 function dropStatus(d) {
   const g = primaryGoOf(d);
-  if (g) return g.status === 'Claims Open' ? 'go_open' : 'go_running';
-  return d.status;
+  return g ? (g.status === 'Claims Open' ? 'go_open' : 'go_running') : 'no_order';
 }
 function effDeadline(d) {
   return d.deadline ? {date:d.deadline, time:d.deadline_time} : null;
@@ -1290,7 +1298,7 @@ function dropRow(d, anyPics) {
   const g = primaryGoOf(d);
   const st = dropStatus(d);
   const pill = g ? `<a class="pl" href="#/orders" title="See this order">${goPill(g.status)}</a>`
-    : `<span class="pill ${{planned:'gold', go_open:'gold'}[st] || ''}">${esc(DROP_FILTER[st] || st)}</span>`;
+    : `<span class="pill">${esc(DROP_FILTER[st] || st)}</span>`;
   const isNew = d.announced_on && (Date.now() - new Date(d.announced_on + 'T00:00:00')) / 864e5 <= 7;
   const items = galleryItems('drop:' + d.id);
   const thumb = items.length ? pcCover('drop:' + d.id, items, d.name) : (anyPics ? '<span class="pc-sp" aria-hidden="true"></span>' : '');
@@ -1821,37 +1829,36 @@ async function pageMe() {
 const F = (k, l, t = 'text', o = {}) => ({k, l, t, ...o});
 const opts = list => list.map(o => Array.isArray(o) ? o : [o, o]);
 const CFG = {
-  drops: {table:'drops', need:['drops','comebacks'], title:'Drop', add:'Add drop',
-    fields:[F('name','Set name','text',{req:1,wide:1}), F('type','Type','select',{req:1,opts:[['PC','PC'],['Merch','Merch']]}),
+  drops: {table:'drops', need:['drops','comebacks','merch_items'], title:'Drop', add:'Add drop',
+    fields:[F('name','Name','text',{req:1,wide:1}), F('type','Type','select',{req:1,opts:[['PC','PC'],['Merch','Merch']]}),
       F('store','Store','combo',{options:() => distinctVals('drops','store')}),
       F('comeback_id','Comeback','ref',{ref:'comebacks',hint:'Used to work out the next round for this store. Add a new comeback from the Comeback list tab first if you need one.'}),
       F('round','Round','text',{hint:'Fills in from the store and comeback above once you pick both. You can still edit it.'}),
       F('announced_on','Announced on','date'),
-      F('album_type','Album type','select',{opts:DROP_ALBUM_TYPES,hint:'PC only.'}), F('pc_type','PC type','select',{opts:PC_TYPES,hint:'PC only.'}), F('solo_unit','Solo or unit','select',{opts:[['Solo','Solo'],['Unit','Unit']],hint:'PC only.'}),
-      F('category','Category','combo',{options:() => distinctVals('drops','category'),hint:'Merch only.'}),
-      F('images','Item previews','images',{wide:1}),
+      F('album_type','Album type','select',{opts:DROP_ALBUM_TYPES,section:'pc'}), F('pc_type','PC type','select',{opts:PC_TYPES,section:'pc'}), F('solo_unit','Solo or unit','select',{opts:[['Solo','Solo'],['Unit','Unit']],section:'pc'}),
+      F('category','Category','combo',{options:() => distinctVals('drops','category'),section:'merch'}),
+      F('images','Photocard previews','images',{wide:1}),
       F('deadline','Order deadline','date',{hint:'In KST.'}), F('deadline_time','Deadline time','text',{hint:'Optional, like 11:59 PM KST'}),
       F('event_type','Event type','select',{req:1,opts:EVENT_TYPES}),
       F('event_on','Event date','date',{hint:'Only if there\'s an event.'}),
       F('winners_on','Winner announcement date','date',{hint:'In KST. Only if there\'s an event.'}), F('winners_time','Winner announcement time','text',{hint:'Optional, like 8 PM KST'}),
-      F('status','Status','select',{req:1,opts:DROP_STATUSES}),
       F('notes','Notes (host only)','text',{wide:1})],
-    defaults:{type:'PC', status:'announced', announced_on:today(), images:[], event_type:'none'},
+    defaults:{type:'PC', announced_on:today(), images:[], event_type:'none'},
     label:r => r.name, sub:r => [r.store, r.type, r.type === 'PC' ? r.pc_type : r.category, fmtDate(r.announced_on), (r.images || []).length ? `${r.images.length} ${r.images.length === 1 ? 'photo' : 'photos'}` : 'no photos yet'].filter(Boolean).join(', '),
     thumb:r => (r.images && r.images[0] && (r.images[0].thumb || r.images[0].src)) || '',
     sort:(a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')},
   group_orders: {table:'group_orders', need:['group_orders','shipments','drops','comebacks'], title:'Group order', add:'Add group order',
     fields:[F('name','Name','text',{req:1,wide:1}), F('drop_id','Drop','ref',{ref:'drops',req:1,hint:'Which drop this order is for. A new drop creates its first order for you automatically; add more here for extra rounds.'}),
-      F('emoji','Set emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}), F('platform_link','Platform link','text',{wide:1}),
+      F('emoji','Emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}), F('platform_link','Platform link','text',{wide:1}),
       F('kaddy','Kaddy','select',{req:1,opts:KADDY_OPTS}), F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
       F('public_note','Notes (visible to joiners)','text',{wide:1}), F('host_note','Notes (host only)','text',{wide:1}),
-      F('min_members','Members needed for a set to go through','number',{hint:'0 means every claim goes through, uncapped.'}),
-      F('split_cost','Split cost of unclaimed set members and raffle extras','bool',{hint:'Only used when members needed is more than 0.'}),
-      F('sort_threshold','If split cost is above $, order exact claims and sort that set instead','number',{hint:'Leave empty to always split, however high the share gets.'}),
       F('roster_required','Add fixed and soft claimers automatically','bool',{hint:'Only when the drop has a comeback. GOM goes first, then fixed claimers, then soft claimers, in list order.'}),
       F('number_of_raffles','Number of raffles','number',{hint:'Add the raffles themselves in the Claims tab once you have a count.'}),
-      F('price_per_pc','Price per PC','number',{hint:'PC only. For unit sets, the price per unit pair.'}), F('ot8_price','OT8 / OT4 price','number',{hint:'PC only. Leave empty to use the per-item price times the number of items.'}),
-      F('max_sets','Max # of sets to purchase','number',{hint:'PC only. Leave empty for no cap.'})],
+      F('min_members','Members needed for a set to go through','number',{hint:'0 means every claim goes through, uncapped.',section:'rules'}),
+      F('split_cost','Split cost of unclaimed set members and raffle extras','bool',{hint:'Only used when members needed is more than 0.',section:'rules'}),
+      F('sort_threshold','If split cost is above $, order exact claims and sort that set instead','number',{hint:'Leave empty to always split, however high the share gets.',section:'rules'}),
+      F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair.',section:'pc'}), F('ot8_price','OT8 / OT4 price','number',{hint:'Leave empty to use the per-item price times the number of items.',section:'pc'}),
+      F('max_sets','Max # of sets to purchase','number',{hint:'Leave empty for no cap.',section:'pc'})],
     defaults:{platform:'instagram', kaddy:'None', status:'Claims Open', roster_required:true, min_members:0, split_cost:false, number_of_raffles:0},
     label:r => goName(r), sub:r => rulesShort(r), sort:byNewest},
   comebacks: {table:'comebacks', need:['comebacks'], title:'Comeback', add:'Add comeback',
@@ -1992,6 +1999,34 @@ function nextRound(store, comebackId) {
   return nums.length ? (Math.floor(Math.max(...nums)) + 1).toFixed(1) : '';
 }
 
+const SECTION_LABEL = {pc:'PC details', merch:'Merch details', rules:'Set rules'};
+// Group a form's fields by their (optional) section, and work out which sections should start hidden --
+// a "pc"/"merch" section on the drops form goes by its own Type field; on the group orders form, by the
+// type of drop it's linked to (shown by default until a drop is picked).
+function fieldSections(key, fields, vals) {
+  const groups = new Map();
+  fields.forEach(f => { const s = f.section || ''; if (!groups.has(s)) groups.set(s, []); groups.get(s).push(f); });
+  const dropType = key === 'drops' ? (vals.type || 'PC')
+    : key === 'group_orders' ? ((A.data.drops || []).find(d => d.id === vals.drop_id) || {}).type
+    : null;
+  const visible = s => {
+    if (key === 'drops') { if (s === 'pc') return dropType === 'PC'; if (s === 'merch') return dropType === 'Merch'; }
+    if (key === 'group_orders' && s === 'pc') return !dropType || dropType === 'PC';
+    return true;
+  };
+  return [...groups.entries()].map(([s, fs]) => ({section:s, fields:fs, visible:visible(s)}));
+}
+function updateFormSections(form) {
+  const key = form.dataset.key; if (key !== 'drops' && key !== 'group_orders') return;
+  const dropType = key === 'drops' ? (form.querySelector('[name=type]') || {}).value
+    : ((A.data.drops || []).find(d => d.id === (form.querySelector('[name=drop_id]') || {}).value) || {}).type;
+  form.querySelectorAll('[data-section]').forEach(el => {
+    const s = el.dataset.section;
+    const show = key === 'drops' ? (s === 'pc' ? dropType === 'PC' : s === 'merch' ? dropType === 'Merch' : true)
+      : (s === 'pc' ? (!dropType || dropType === 'PC') : true);
+    el.style.display = show ? '' : 'none';
+  });
+}
 async function crudTab(key) {
   const cfg = CFG[key]; await need(...cfg.need);
   let rows = A.data[cfg.table].slice().sort(cfg.sort);
@@ -2000,11 +2035,21 @@ async function crudTab(key) {
   const vals = editing
     ? (key === 'joiners' ? {...editing, handles:handlesOf(editing.id).join(', ')} : editing)
     : (cfg.defaults || {});
+  const sections = fieldSections(key, cfg.fields, vals);
+  const fieldsHTML = sections.map(sec => {
+    const body = `<div class="fgrid">${sec.fields.map(f => fieldHTML(f, vals[f.k])).join('')}</div>`;
+    return sec.section
+      ? `<div class="fsection" data-section="${sec.section}" style="${sec.visible ? '' : 'display:none'}"><h3 class="fsh">${esc(SECTION_LABEL[sec.section] || sec.section)}</h3>${body}</div>`
+      : body;
+  }).join('');
+  const merchCatalog = key === 'drops' && editing && editing.type === 'Merch'
+    ? `<div class="fsection" data-section="merch"><h3 class="fsh">Items</h3>${merchCatalogPanel(editing.id, {title:false})}</div>` : '';
   return `<div class="split">
     <form class="panel" data-form="crud" data-key="${key}"><h2>${editing ? 'Edit ' + esc(cfg.title.toLowerCase()) : esc(cfg.add)}</h2>
-      <div class="fgrid">${cfg.fields.map(f => fieldHTML(f, vals[f.k])).join('')}</div>
+      ${fieldsHTML}
       <div class="formacts"><button class="btn">${editing ? 'Save changes' : esc(cfg.add)}</button>${editing ? `<button type="button" class="btn ghost" data-action="cancelEdit" data-key="${key}">Cancel</button>` : ''}</div>
     </form>
+    ${merchCatalog}
     <div class="list">${rows.length ? rows.map(r => `<div class="arow"><div class="arow-l">${cfg.thumb && cfg.thumb(r) ? `<img class="mini" src="${esc(cfg.thumb(r))}" alt="">` : ''}<div><strong>${esc(cfg.label(r))}</strong><small>${esc(cfg.sub(r))}</small></div></div>
       <div class="acts">${cfg.pin ? `<button class="btn ghost small" data-action="pin" data-id="${r.id}">Set PIN</button>` : ''}
       <button class="btn ghost small" data-action="edit" data-key="${key}" data-id="${r.id}">Edit</button>
@@ -2138,13 +2183,30 @@ function buildPreview(text, go) {
   return {rows:[...rows.values()], issues};
 }
 
-function merchItemsPanel(go) {
-  const catalog = (A.data.merch_items || []).filter(i => i.drop_id === go.drop_id).sort((a, b) => (a.position - b.position) || a.name.localeCompare(b.name));
-  const pricing = new Map((A.data.go_merch_items || []).filter(x => x.group_order_id === go.id).map(x => [x.merch_item_id, x]));
+// The catalog of a drop's merch items (name + member options). Reused by the Drops tab (add/edit items on
+// the drop itself) and by the Merch items panel in Claims tab (which adds per-order pricing below it).
+function merchCatalogPanel(dropId, opts = {}) {
+  const catalog = (A.data.merch_items || []).filter(i => i.drop_id === dropId).sort((a, b) => (a.position - b.position) || a.name.localeCompare(b.name));
   const editingCat = A.editMerchItem && catalog.find(i => i.id === A.editMerchItem);
   const catRows = catalog.map(i => `<div class="mine-row"><span>${esc(i.name)}${i.member_options ? ' <span class="pill">Per member</span>' : ''}</span>
     <span><button type="button" class="btn ghost small" data-action="editMerchItem" data-id="${i.id}">Edit</button>
     <button type="button" class="btn ghost small" style="margin-left:8px" data-action="removeMerchItem" data-id="${i.id}">Remove</button></span></div>`).join('');
+  return `${opts.title !== false ? '<h4 class="sh">Items</h4>' : ''}
+    <p class="small muted" style="margin-top:0">${opts.note || 'Add the things this drop sells. Price them per order in the Claims tab, once the order exists.'}</p>
+    ${catRows || '<p class="small muted" style="margin:0">No items yet -- add one below.</p>'}
+    <form data-form="merchItem" class="panel-mini" style="margin-top:14px">
+      <input type="hidden" name="drop_id" value="${esc(dropId)}">
+      <input type="hidden" name="id" value="${editingCat ? esc(editingCat.id) : ''}">
+      <div class="fgrid">
+        <div class="field"><label for="miName">Item name</label><input id="miName" name="name" value="${editingCat ? esc(editingCat.name) : ''}" required></div>
+        <div class="field" style="align-self:end"><label class="check"><input type="checkbox" name="member_options" ${editingCat && editingCat.member_options ? 'checked' : ''}> Comes in a version per member</label></div>
+      </div>
+      <div class="formacts"><button class="btn">${editingCat ? 'Save changes' : 'Add item'}</button>${editingCat ? '<button type="button" class="btn ghost" data-action="cancelMerchItem">Cancel</button>' : ''}</div>
+    </form>`;
+}
+function merchItemsPanel(go) {
+  const catalog = (A.data.merch_items || []).filter(i => i.drop_id === go.drop_id).sort((a, b) => (a.position - b.position) || a.name.localeCompare(b.name));
+  const pricing = new Map((A.data.go_merch_items || []).filter(x => x.group_order_id === go.id).map(x => [x.merch_item_id, x]));
   const priced = catalog.filter(i => pricing.has(i.id));
   const priceRows = priced.map(i => { const p = pricing.get(i.id);
     return `<div class="mine-row"><span>${esc(i.name)} — ${money(p.price)}${p.max_purchase != null ? `, max ${p.max_purchase}` : ''}</span>
@@ -2154,16 +2216,8 @@ function merchItemsPanel(go) {
   const editingPrice = A.editGoMerchItem && catalog.find(i => i.id === A.editGoMerchItem);
   const editingPriceRow = editingPrice && pricing.get(editingPrice.id);
   return `<section class="panel"><h2>Merch items</h2>
-    <p class="small muted" style="margin-top:0">Items belong to the drop, so the same items can be sold across more than one order. Set this order's price for each below. Joiners can't claim anything until at least one item is priced here.</p>
-    ${catRows || '<p class="small muted" style="margin:0">No items on this drop yet -- add one below.</p>'}
-    <form data-form="merchItem" class="panel-mini" style="margin-top:14px">
-      <input type="hidden" name="id" value="${editingCat ? esc(editingCat.id) : ''}">
-      <div class="fgrid">
-        <div class="field"><label for="miName">Item name</label><input id="miName" name="name" value="${editingCat ? esc(editingCat.name) : ''}" required></div>
-        <div class="field" style="align-self:end"><label class="check"><input type="checkbox" name="member_options" ${editingCat && editingCat.member_options ? 'checked' : ''}> Comes in a version per member</label></div>
-      </div>
-      <div class="formacts"><button class="btn">${editingCat ? 'Save changes' : 'Add item'}</button>${editingCat ? '<button type="button" class="btn ghost" data-action="cancelMerchItem">Cancel</button>' : ''}</div>
-    </form>
+    <p class="small muted" style="margin-top:0">Items belong to the drop (add or edit the list itself in the Drops tab), so the same items can be sold across more than one order. Set this order's price for each below. Joiners can't claim anything until at least one item is priced here.</p>
+    ${catalog.length ? catalog.map(i => `<div class="mine-row"><span>${esc(i.name)}${i.member_options ? ' <span class="pill">Per member</span>' : ''}</span></div>`).join('') : '<p class="small muted" style="margin:0">This drop has no items yet -- add some in the Drops tab.</p>'}
     <h4 class="sh" style="margin-top:18px">This order's prices</h4>
     ${priceRows || '<p class="small muted" style="margin:0">No items priced for this order yet.</p>'}
     ${unpriced.length || editingPrice ? `<form data-form="goMerchItem" class="panel-mini" style="margin-top:14px">
@@ -2602,13 +2656,13 @@ const actions = {
 };
 const forms = {
   async merchItem(f) {
-    const go = A.data.group_orders.find(g => g.id === A.goId); if (!go) return;
-    const fd = new FormData(f), id = fd.get('id') || '', name = (fd.get('name') || '').trim(), memberOptions = fd.has('member_options');
+    const fd = new FormData(f), dropId = fd.get('drop_id'), id = fd.get('id') || '', name = (fd.get('name') || '').trim(), memberOptions = fd.has('member_options');
+    if (!dropId) return;
     if (!name) throw new Error('Give the item a name.');
-    const catalog = (A.data.merch_items || []).filter(i => i.drop_id === go.drop_id);
+    const catalog = (A.data.merch_items || []).filter(i => i.drop_id === dropId);
     const dup = catalog.some(i => i.name === name && i.id !== id);
     if (dup) throw new Error(`"${name}" is already an item on this drop. Edit it instead, or use a different name.`);
-    const row = {drop_id:go.drop_id, name, member_options:memberOptions};
+    const row = {drop_id:dropId, name, member_options:memberOptions};
     if (id) row.id = id; else row.position = catalog.length;
     await api.save('merch_items', row);
     invalidate('merch_items', 'group_orders'); await refreshPublic();
@@ -2762,6 +2816,7 @@ app.addEventListener('input', e => {
 });
 app.addEventListener('change', e => {
   const t = e.target;
+  if ((t.name === 'type' || t.name === 'drop_id') && t.closest('form[data-form="crud"]')) updateFormSections(t.closest('form'));
   if (t.name === 'comeback_id' && t.closest('form[data-key="drops"]')) { autoRound(t.closest('form')); return; }
   if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; $('#dropList').innerHTML = dropList(); return; }
   if (t.matches('[data-imgfile]')) { guard(addPhotos, t); return; }
