@@ -365,12 +365,15 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 @media(max-width:860px){.gocard.wide{grid-template-columns:minmax(0,1fr)}}
 .sh{font:600 15px/1.3 var(--display);margin:0 0 8px}
 .gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
-table.av{border-collapse:collapse}
-table.av th,table.av td{padding:3px 4px;text-align:center;font-variant-numeric:tabular-nums;width:36px;height:36px}
+table.av{border-collapse:collapse;table-layout:fixed;width:100%}
+table.av th,table.av td{padding:3px 4px;text-align:center;font-variant-numeric:tabular-nums;width:44px;height:36px;overflow:hidden;text-overflow:ellipsis}
 table.av thead th{font-size:12px;color:var(--muted);font-weight:600;background:var(--panel-2);height:auto;padding:7px 4px}
+table.av thead th:first-child{width:52px}
 table.av tbody th{text-align:left;font-size:14px;font-weight:600;padding-left:10px;background:var(--panel-2);width:52px}
 table.av td{font-size:19px;line-height:1;border-top:1px solid var(--line)}
 table.av .wl1{border-left:2px dashed var(--muted)}
+/* the last column takes whatever width is left over, with its content kept at the same spot a normal column's would be */
+table.av tr th:last-child,table.av tr td:last-child{width:auto;text-align:left}
 table.av tr.setrow td{font-size:12px;font-weight:600;color:var(--muted);height:auto;padding:6px 4px;border-top:1px solid var(--line)}
 table.av tr.setrow th{height:auto;font-size:12px;color:var(--muted);padding:6px 4px 6px 10px;text-align:left;font-weight:600;background:var(--panel-2);border-top:1px solid var(--line)}
 table.av tr.setrow .k-in{color:var(--sea)} table.av tr.setrow .k-risk{color:var(--coral)}
@@ -388,7 +391,7 @@ table.av tr.ot8row td .muted{letter-spacing:0}
 .qty .qb:hover{border-color:var(--sea)}
 .mchip.q .qty input{position:static;inset:auto;opacity:1;cursor:text;width:38px;flex:none;height:30px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:inherit;font:inherit;-moz-appearance:textfield;padding:0}
 .mchip.q .qty input::-webkit-outer-spin-button,.mchip.q .qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-@media (max-width:520px){table.av th,table.av td{width:30px;height:32px;padding:2px 2px}table.av td{font-size:17px}table.av tbody th{width:40px;padding-left:6px}}
+@media (max-width:520px){table.av th,table.av td{width:36px;height:32px;padding:2px 2px}table.av td{font-size:17px}table.av tbody th,table.av thead th:first-child{width:40px;padding-left:6px}}
 ul.setnotes,ul.rules{margin:10px 0 0;padding-left:18px;font-size:14px;color:var(--muted)}
 ul.rules{color:var(--text);margin-top:0} ul.rules li,ul.setnotes li{margin:5px 0}
 .sumline{display:flex;flex-wrap:wrap;gap:8px}
@@ -414,7 +417,7 @@ details.mini-fold>summary,details.setdet>summary{cursor:pointer;font:600 14.5px/
 details.mini-fold[open]>summary{margin-bottom:14px}
 table.av td.wl,table.av th.wl{background:var(--panel-2)}
 table.av td.wl{opacity:.85}
-table.av tfoot td{white-space:nowrap}
+table.av tr.setrow td{white-space:nowrap}
 .mine-row .chip{margin:0 6px 0 0}
 .gc-r h4.sh{margin:0 0 8px}
 .gc-r .panel-mini .field label{font-size:13px}
@@ -1416,7 +1419,7 @@ function joinerKeyList(g) {
   if (!here.length) return '';
   const rows = here.slice().sort((a, b) => (firstAt.get(normEmoji(effEmoji(a))) || '').localeCompare(firstAt.get(normEmoji(effEmoji(b))) || ''))
     .map(j => `<div class="mine-row compact"><span>${esc(em(effEmoji(j)))} @${esc(j.name)}</span></div>`).join('');
-  return `<details class="setdet" open><summary>Joiner key (${here.length})</summary><div class="stack" style="margin-top:8px">${rows}</div></details>`;
+  return `<details class="setdet" open><summary>Joiner key (${here.length})</summary><div style="margin-top:6px">${rows}</div></details>`;
 }
 function goPhotos(g) {
   const key = 'go:' + g.id, items = galleryItems(key); if (!items.length) return '';
