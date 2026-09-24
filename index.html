@@ -222,6 +222,26 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .fsection{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
 .fsh{font:700 14px var(--display);color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:0 0 12px}
 .formacts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+/* modal form popups (Drops, Group orders) */
+.modal-back{position:fixed;inset:0;background:rgba(5,10,16,.6);display:grid;place-items:center;padding:20px;z-index:60;overflow-y:auto}
+.modal{background:var(--panel);border-radius:16px;max-width:640px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);margin:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 22px 0}
+.modal-head h2{margin:0}
+.modal-x{background:transparent;border:0;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:6px;border-radius:8px}
+.modal-x:hover{background:var(--panel-2);color:var(--text)}
+.modal-body{padding:18px 22px 22px}
+.modal-body form{margin:0}
+.addbar{margin-bottom:16px}
+/* richer admin cards for Drops / Group orders */
+.acard{border-top:1px solid var(--line);padding:14px 16px;display:flex;gap:14px}
+.acard:first-child{border-top:0}
+.acard-main{flex:1;min-width:0}
+.acard-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.acard-title strong{font-weight:700;font-size:15.5px}
+.acard-meta{display:flex;flex-wrap:wrap;gap:6px 10px;color:var(--muted);font-size:13.5px;margin-bottom:4px}
+.acard-meta b{color:var(--text);font-weight:600}
+.acard-notes{color:var(--muted);font-size:13px;margin-top:4px;font-style:italic}
+.acard-acts{display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end}
 .arow{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
 .arow:first-child{border-top:0}
 .arow small{display:block;color:var(--muted);font-size:13.5px}
@@ -1214,7 +1234,7 @@ try { api = DEMO ? demoApi() : supabaseApi(); } catch (e) { api = null; window._
    6. State
    ===================================================================== */
 const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, loadError:null};
-const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null, editMerchItem:null, editGoMerchItem:null, editBonusItem:null, editRaffle:null};
+const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, adding:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null, editMerchItem:null, editGoMerchItem:null, editBonusItem:null, editRaffle:null};
 const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, announce:true, event:true}, past:false};
 const goById = id => S.pub.gos.find(g => g.id === id);
 const seatsOf = id => S.pub.seats.filter(x => x.group_order_id === id);
@@ -1829,7 +1849,7 @@ async function pageMe() {
 const F = (k, l, t = 'text', o = {}) => ({k, l, t, ...o});
 const opts = list => list.map(o => Array.isArray(o) ? o : [o, o]);
 const CFG = {
-  drops: {table:'drops', need:['drops','comebacks','merch_items'], title:'Drop', add:'Add drop',
+  drops: {table:'drops', need:['drops','comebacks','merch_items'], title:'Drop', add:'Add drop', modalForm:true, card:dropCard,
     fields:[F('name','Name','text',{req:1,wide:1}), F('type','Type','select',{req:1,opts:[['PC','PC'],['Merch','Merch']]}),
       F('store','Store','combo',{options:() => distinctVals('drops','store')}),
       F('comeback_id','Comeback','ref',{ref:'comebacks',hint:'Used to work out the next round for this store. Add a new comeback from the Comeback list tab first if you need one.'}),
@@ -1847,7 +1867,7 @@ const CFG = {
     label:r => r.name, sub:r => [r.store, r.type, r.type === 'PC' ? r.pc_type : r.category, fmtDate(r.announced_on), (r.images || []).length ? `${r.images.length} ${r.images.length === 1 ? 'photo' : 'photos'}` : 'no photos yet'].filter(Boolean).join(', '),
     thumb:r => (r.images && r.images[0] && (r.images[0].thumb || r.images[0].src)) || '',
     sort:(a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')},
-  group_orders: {table:'group_orders', need:['group_orders','shipments','drops','comebacks'], title:'Group order', add:'Add group order',
+  group_orders: {table:'group_orders', need:['group_orders','shipments','drops','comebacks'], title:'Group order', add:'Add group order', modalForm:true, card:goCardAdmin,
     fields:[F('name','Name','text',{req:1,wide:1}), F('drop_id','Drop','ref',{ref:'drops',req:1,hint:'Which drop this order is for. A new drop creates its first order for you automatically; add more here for extra rounds.'}),
       F('emoji','Emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}), F('platform_link','Platform link','text',{wide:1}),
       F('kaddy','Kaddy','select',{req:1,opts:KADDY_OPTS}), F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
@@ -1999,6 +2019,60 @@ function nextRound(store, comebackId) {
   return nums.length ? (Math.floor(Math.max(...nums)) + 1).toFixed(1) : '';
 }
 
+// Richer list cards for Drops and Group orders (used instead of the plain one-line arow)
+function dropCard(r) {
+  const cb = r.comeback_id && (A.data.comebacks || []).find(c => c.id === r.comeback_id);
+  const meta = [r.store, r.type, r.type === 'PC' ? [r.pc_type, r.album_type, r.solo_unit].filter(Boolean).join(' \u00b7 ') : r.category, r.round ? `Round ${r.round}` : '', cb ? cb.name : ''].filter(Boolean);
+  const T = EVT_NAME[r.event_type];
+  const dates = [
+    r.announced_on ? `Announced ${fmtDate(r.announced_on)}` : '',
+    r.deadline ? `Order by ${fmtDate(r.deadline)}${r.deadline_time ? ', ' + r.deadline_time : ''}` : '',
+    r.event_type !== 'none' && r.event_on ? `${T} ${fmtDate(r.event_on)}` : '',
+    r.event_type !== 'none' && r.winners_on ? `Winners ${fmtDate(r.winners_on)}${r.winners_time ? ', ' + r.winners_time : ''}` : '',
+  ].filter(Boolean);
+  const photoCount = (r.images || []).length;
+  return `<div class="acard">
+    ${r.images && r.images[0] ? `<img class="mini" src="${esc(r.images[0].thumb || r.images[0].src)}" alt="">` : ''}
+    <div class="acard-main">
+      <div class="acard-title"><strong>${esc(r.name)}</strong></div>
+      ${meta.length ? `<div class="acard-meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div>` : ''}
+      ${dates.length ? `<div class="acard-meta">${dates.map(d => `<b>${esc(d)}</b>`).join(' \u00b7 ')}</div>` : ''}
+      ${photoCount ? `<div class="acard-meta"><span>${photoCount} photo${photoCount === 1 ? '' : 's'}</span></div>` : ''}
+      ${r.notes ? `<div class="acard-notes">${esc(r.notes)}</div>` : ''}
+    </div>
+    <div class="acard-acts">
+      <button class="btn ghost small" data-action="edit" data-key="drops" data-id="${r.id}">Edit</button>
+      <button class="btn danger small" data-action="del" data-key="drops" data-id="${r.id}">Delete</button>
+    </div>
+  </div>`;
+}
+function goCardAdmin(r) {
+  const meta = [r.drop ? r.drop.name : '(drop missing)', r.platform === 'threads' ? 'Threads' : 'Instagram', r.kaddy !== 'None' ? r.kaddy : ''].filter(Boolean);
+  const priceLine = isMerch(r) ? merchPriceLine(r) : (r.price_per_pc != null ? `${money(r.price_per_pc)} per ${isUnitGO(r) ? 'unit' : 'PC'}` : '');
+  const dl = r.drop && r.drop.deadline ? `Order by ${fmtDate(r.drop.deadline)}${r.drop.deadline_time ? ', ' + r.drop.deadline_time : ''}` : '';
+  const ship = r.shipment_id && (A.data.shipments || []).find(s => s.id === r.shipment_id);
+  const facts = [priceLine, rulesShort(r), r.number_of_raffles ? `${r.number_of_raffles} raffle${r.number_of_raffles === 1 ? '' : 's'}` : ''].filter(Boolean);
+  return `<div class="acard">
+    <div class="acard-main">
+      <div class="acard-title"><span aria-hidden="true">${esc(r.emoji || '📦')}</span><strong>${esc(r.name)}</strong>${goPill(r.status)}</div>
+      <div class="acard-meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div>
+      ${facts.length ? `<div class="acard-meta">${facts.map(f => `<b>${esc(f)}</b>`).join(' \u00b7 ')}</div>` : ''}
+      ${dl ? `<div class="acard-meta"><span>${esc(dl)}</span></div>` : ''}
+      ${ship ? `<div class="acard-meta"><span>Kaddy box ${ship.number}</span></div>` : ''}
+      ${r.host_note ? `<div class="acard-notes">${esc(r.host_note)}</div>` : ''}
+    </div>
+    <div class="acard-acts">
+      <button class="btn ghost small" data-action="edit" data-key="group_orders" data-id="${r.id}">Edit</button>
+      <button class="btn danger small" data-action="del" data-key="group_orders" data-id="${r.id}">Delete</button>
+    </div>
+  </div>`;
+}
+const modalWrap = (key, title, bodyHTML) => `<div class="modal-back" data-modal-key="${key}">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="modal-head"><h2>${esc(title)}</h2><button type="button" class="modal-x" data-action="closeModal" data-key="${key}" aria-label="Close">\u2715</button></div>
+    <div class="modal-body">${bodyHTML}</div>
+  </div>
+</div>`;
 const SECTION_LABEL = {pc:'PC details', merch:'Merch details', rules:'Set rules'};
 // Group a form's fields by their (optional) section, and work out which sections should start hidden --
 // a "pc"/"merch" section on the drops form goes by its own Type field; on the group orders form, by the
@@ -2032,30 +2106,39 @@ async function crudTab(key) {
   let rows = A.data[cfg.table].slice().sort(cfg.sort);
   const total = rows.length; if (cfg.limit) rows = rows.slice(0, cfg.limit);
   const editing = A.edit[key] && A.data[cfg.table].find(r => r.id === A.edit[key]);
+  const adding = !editing && !!A.adding[key];
+  const showForm = cfg.modalForm ? (editing || adding) : true;
   const vals = editing
     ? (key === 'joiners' ? {...editing, handles:handlesOf(editing.id).join(', ')} : editing)
     : (cfg.defaults || {});
-  const sections = fieldSections(key, cfg.fields, vals);
-  const fieldsHTML = sections.map(sec => {
-    const body = `<div class="fgrid">${sec.fields.map(f => fieldHTML(f, vals[f.k])).join('')}</div>`;
-    return sec.section
-      ? `<div class="fsection" data-section="${sec.section}" style="${sec.visible ? '' : 'display:none'}"><h3 class="fsh">${esc(SECTION_LABEL[sec.section] || sec.section)}</h3>${body}</div>`
-      : body;
-  }).join('');
-  const merchCatalog = key === 'drops' && editing && editing.type === 'Merch'
-    ? `<div class="fsection" data-section="merch"><h3 class="fsh">Items</h3>${merchCatalogPanel(editing.id, {title:false})}</div>` : '';
-  return `<div class="split">
-    <form class="panel" data-form="crud" data-key="${key}"><h2>${editing ? 'Edit ' + esc(cfg.title.toLowerCase()) : esc(cfg.add)}</h2>
+  let formPart = '';
+  if (showForm) {
+    const sections = fieldSections(key, cfg.fields, vals);
+    const fieldsHTML = sections.map(sec => {
+      const body = `<div class="fgrid">${sec.fields.map(f => fieldHTML(f, vals[f.k])).join('')}</div>`;
+      return sec.section
+        ? `<div class="fsection" data-section="${sec.section}" style="${sec.visible ? '' : 'display:none'}"><h3 class="fsh">${esc(SECTION_LABEL[sec.section] || sec.section)}</h3>${body}</div>`
+        : body;
+    }).join('');
+    const merchCatalog = key === 'drops' && editing && editing.type === 'Merch'
+      ? `<div class="fsection" data-section="merch"><h3 class="fsh">Items</h3>${merchCatalogPanel(editing.id, {title:false})}</div>` : '';
+    const title = editing ? 'Edit ' + cfg.title.toLowerCase() : cfg.add;
+    const formInner = `<form class="${cfg.modalForm ? '' : 'panel'}" data-form="crud" data-key="${key}">${cfg.modalForm ? '' : `<h2>${esc(title)}</h2>`}
       ${fieldsHTML}
-      <div class="formacts"><button class="btn">${editing ? 'Save changes' : esc(cfg.add)}</button>${editing ? `<button type="button" class="btn ghost" data-action="cancelEdit" data-key="${key}">Cancel</button>` : ''}</div>
-    </form>
-    ${merchCatalog}
-    <div class="list">${rows.length ? rows.map(r => `<div class="arow"><div class="arow-l">${cfg.thumb && cfg.thumb(r) ? `<img class="mini" src="${esc(cfg.thumb(r))}" alt="">` : ''}<div><strong>${esc(cfg.label(r))}</strong><small>${esc(cfg.sub(r))}</small></div></div>
+      <div class="formacts"><button class="btn">${editing ? 'Save changes' : esc(cfg.add)}</button><button type="button" class="btn ghost" data-action="cancelEdit" data-key="${key}">Cancel</button></div>
+    </form>${merchCatalog}`;
+    formPart = cfg.modalForm ? modalWrap(key, title, formInner) : formInner;
+  }
+  const cardsHTML = rows.length ? rows.map(r => cfg.card ? cfg.card(r)
+    : `<div class="arow"><div class="arow-l">${cfg.thumb && cfg.thumb(r) ? `<img class="mini" src="${esc(cfg.thumb(r))}" alt="">` : ''}<div><strong>${esc(cfg.label(r))}</strong><small>${esc(cfg.sub(r))}</small></div></div>
       <div class="acts">${cfg.pin ? `<button class="btn ghost small" data-action="pin" data-id="${r.id}">Set PIN</button>` : ''}
       <button class="btn ghost small" data-action="edit" data-key="${key}" data-id="${r.id}">Edit</button>
-      <button class="btn danger small" data-action="del" data-key="${key}" data-id="${r.id}">Delete</button></div></div>`).join('') : '<p class="pad muted">Nothing here yet.</p>'}
-      ${total > rows.length ? `<p class="pad muted small" style="margin:0;border-top:1px solid var(--line)">Showing the latest ${rows.length} of ${total}.</p>` : ''}</div>
-  </div>`;
+      <button class="btn danger small" data-action="del" data-key="${key}" data-id="${r.id}">Delete</button></div></div>`).join('') : '<p class="pad muted">Nothing here yet.</p>';
+  const listHTML = `<div class="list">${cardsHTML}${total > rows.length ? `<p class="pad muted small" style="margin:0;border-top:1px solid var(--line)">Showing the latest ${rows.length} of ${total}.</p>` : ''}</div>`;
+  if (cfg.modalForm) {
+    return `<div class="addbar"><button type="button" class="btn" data-action="addNew" data-key="${key}">${esc(cfg.add)}</button></div>${listHTML}${formPart}`;
+  }
+  return `<div class="split">${formPart}${listHTML}</div>`;
 }
 
 /* --- photo upload: resize in the browser, then store --- */
@@ -2499,8 +2582,12 @@ const actions = {
   clearFilters() { S.filters = {q:'', store:'', type:'', status:''}; render(); },
   async adminOut() { await api.adminSignOut(); A.is = false; A.data = {}; render(); },
   tab(b) { A.tab = b.dataset.tab; A.preview = null; render(); },
-  async edit(b) { A.edit[b.dataset.key] = b.dataset.id; await render(); const f = $(`form[data-key="${b.dataset.key}"]`); if (f) f.scrollIntoView({block:'center'}); },
-  cancelEdit(b) { delete A.edit[b.dataset.key]; render(); },
+  async edit(b) { delete A.adding[b.dataset.key]; A.edit[b.dataset.key] = b.dataset.id; await render();
+    if (CFG[b.dataset.key].modalForm) { const back = $('.modal-back'); if (back) back.scrollTop = 0; return; }
+    const f = $(`form[data-key="${b.dataset.key}"]`); if (f) f.scrollIntoView({block:'center'}); },
+  cancelEdit(b) { delete A.edit[b.dataset.key]; delete A.adding[b.dataset.key]; render(); },
+  addNew(b) { delete A.edit[b.dataset.key]; A.adding[b.dataset.key] = true; render(); },
+  closeModal(b) { delete A.edit[b.dataset.key]; delete A.adding[b.dataset.key]; render(); },
   async del(b) {
     const cfg = CFG[b.dataset.key], row = A.data[cfg.table].find(r => r.id === b.dataset.id);
     const ok = await ask({title:`Delete "${cfg.label(row)}"?`, html:'<p>This can\'t be undone.' + (cfg.table === 'joiners' ? ' Their claims, fees, and payments are deleted too.' : '') + '</p>', ok:'Delete', danger:true});
@@ -2784,7 +2871,7 @@ const forms = {
     }
     if (handles) await api.setHandles(saved.id || editId, handles);
     if (key === 'drops') { const gone = oldImgs.filter(o => !(row.images || []).some(n => n.src === o.src)); if (gone.length) api.removeImages(gone).catch(() => {}); }
-    delete A.edit[key]; invalidate(cfg.table, 'joiner_accounts'); await refreshPublic();
+    delete A.edit[key]; delete A.adding[key]; invalidate(cfg.table, 'joiner_accounts'); await refreshPublic();
     if (!(key === 'group_orders' && row.status === 'Cancelled')) toast(['Saved', ...notes].join('. '));
     render();
   },
@@ -2793,8 +2880,14 @@ const refocus = sel => { const el = $(sel); if (el) el.focus(); };
 async function guard(fn, ...args) { try { await fn(...args); } catch (e) { toast(e.message || String(e), true); } }
 
 app.addEventListener('click', e => {
+  if (e.target.classList && e.target.classList.contains('modal-back')) { actions.closeModal({dataset:{key:e.target.dataset.modalKey}}); return; }
   const b = e.target.closest('[data-action]'); if (!b || !actions[b.dataset.action]) return;
   e.preventDefault(); guard(actions[b.dataset.action], b);
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const back = $('.modal-back'); if (!back) return;
+  actions.closeModal({dataset:{key:back.dataset.modalKey}});
 });
 app.addEventListener('submit', e => {
   const f = e.target.closest('form[data-form]'); if (!f || !forms[f.dataset.form]) return;
