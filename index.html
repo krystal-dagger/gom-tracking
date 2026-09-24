@@ -365,31 +365,30 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 @media(max-width:860px){.gocard.wide{grid-template-columns:minmax(0,1fr)}}
 .sh{font:600 15px/1.3 var(--display);margin:0 0 8px}
 .gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
-table.av{border-collapse:collapse;width:100%}
-table.av th,table.av td{padding:3px 4px;text-align:center;font-variant-numeric:tabular-nums;min-width:36px;height:36px}
+table.av{border-collapse:collapse}
+table.av th,table.av td{padding:3px 4px;text-align:center;font-variant-numeric:tabular-nums;width:36px;height:36px}
 table.av thead th{font-size:12px;color:var(--muted);font-weight:600;background:var(--panel-2);height:auto;padding:7px 4px}
-table.av tbody th{text-align:left;font-size:14px;font-weight:600;padding-left:10px;background:var(--panel-2);min-width:52px}
+table.av tbody th{text-align:left;font-size:14px;font-weight:600;padding-left:10px;background:var(--panel-2);width:52px}
 table.av td{font-size:19px;line-height:1;border-top:1px solid var(--line)}
 table.av .wl1{border-left:2px dashed var(--muted)}
-table.av td.mine{box-shadow:inset 0 0 0 2px var(--gold);border-radius:6px}
-table.av tfoot td{font-size:12px;font-weight:600;color:var(--muted);height:auto;padding:6px 4px;border-top:1px solid var(--line)}
-table.av tfoot th{height:auto;font-size:12px;color:var(--muted);padding:6px 4px 6px 10px;text-align:left;font-weight:600;background:var(--panel-2)}
-table.av tfoot .k-in{color:var(--sea)} table.av tfoot .k-risk{color:var(--coral)}
-table.av tr.ot8row td{text-align:left;padding:4px 10px;font-size:19px;letter-spacing:4px;border-top:2px solid var(--line);height:auto}
-table.av tr.ot8row th{border-top:2px solid var(--line)}
+table.av tr.setrow td{font-size:12px;font-weight:600;color:var(--muted);height:auto;padding:6px 4px;border-top:1px solid var(--line)}
+table.av tr.setrow th{height:auto;font-size:12px;color:var(--muted);padding:6px 4px 6px 10px;text-align:left;font-weight:600;background:var(--panel-2);border-top:1px solid var(--line)}
+table.av tr.setrow .k-in{color:var(--sea)} table.av tr.setrow .k-risk{color:var(--coral)}
+table.av tr.ot8row td{text-align:left;padding:8px 10px;font-size:19px;letter-spacing:4px;border-top:3px solid var(--text);height:auto;background:var(--panel-2)}
+table.av tr.ot8row th{border-top:3px solid var(--text);background:var(--panel-2)}
 table.av tr.ot8row td .muted{letter-spacing:0}
-.ot8e{display:inline-block;padding:0 2px;border-radius:6px}
-.ot8e.mine{box-shadow:inset 0 0 0 2px var(--gold)}
-.mchips:has(.q){display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
-.mchip.q{cursor:default;min-width:0;padding:8px 6px 10px;justify-content:space-between}
+.ot8e,.gride{display:inline-block;padding:3px 5px;border-radius:6px}
+.ot8e.mine,.gride.mine{box-shadow:inset 0 0 0 2px var(--gold)}
+.mchips:has(.q){display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}
+.mchip.q{cursor:default;min-width:0;padding:10px 12px 12px;justify-content:space-between}
 .mchip.q.on{border-color:var(--sea);box-shadow:inset 0 0 0 1px var(--sea)}
 .mchip.q small{text-align:center}
-.qty{display:flex;align-items:center;gap:4px;margin-top:4px}
-.qty .qb{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:inherit;font-size:18px;line-height:1;cursor:pointer;padding:0}
+.qty{display:flex;align-items:center;gap:6px;margin-top:4px}
+.qty .qb{width:30px;height:30px;flex:none;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:inherit;font-size:18px;line-height:1;cursor:pointer;padding:0}
 .qty .qb:hover{border-color:var(--sea)}
-.mchip.q .qty input{position:static;inset:auto;opacity:1;cursor:text;width:38px;height:30px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:inherit;font:inherit;-moz-appearance:textfield;padding:0}
+.mchip.q .qty input{position:static;inset:auto;opacity:1;cursor:text;width:38px;flex:none;height:30px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:inherit;font:inherit;-moz-appearance:textfield;padding:0}
 .mchip.q .qty input::-webkit-outer-spin-button,.mchip.q .qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-@media (max-width:520px){table.av th,table.av td{min-width:30px;height:32px;padding:2px 2px}table.av td{font-size:17px}table.av tbody th{min-width:40px;padding-left:6px}}
+@media (max-width:520px){table.av th,table.av td{width:30px;height:32px;padding:2px 2px}table.av td{font-size:17px}table.av tbody th{width:40px;padding-left:6px}}
 ul.setnotes,ul.rules{margin:10px 0 0;padding-left:18px;font-size:14px;color:var(--muted)}
 ul.rules{color:var(--text);margin-top:0} ul.rules li,ul.setnotes li{margin:5px 0}
 .sumline{display:flex;flex-wrap:wrap;gap:8px}
@@ -402,6 +401,7 @@ ul.rules{color:var(--text);margin-top:0} ul.rules li,ul.setnotes li{margin:5px 0
 .mchip:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}
 .mchip small{font-size:11.5px;opacity:.85}
 .mine-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.mine-row.compact{border-top:0;padding:3px 0}
 .mine-row:first-of-type{border-top:0}
 .chip.wait{border:1px dashed var(--muted);background:transparent}
 .chip.risk{color:var(--coral);background:var(--coral-bg)}
@@ -1409,12 +1409,14 @@ function joinerKeyList(g) {
   const list = S.pub.joiners || []; if (!list.length) return '';
   const cbId = g.drop && g.drop.comeback_id;
   const effEmoji = j => { if (cbId) { const ov = (S.pub.cbEmojis || []).find(e => e.comeback_id === cbId && e.joiner_id === j.id); if (ov) return ov.emoji; } return j.emoji; };
-  const claimed = new Set(seatClaims(g).map(c => normEmoji(c.emoji || '')).filter(Boolean));
-  const here = list.filter(j => claimed.has(normEmoji(effEmoji(j))));
+  const claims = seatClaims(g);
+  const firstAt = new Map();
+  claims.forEach(c => { const e = normEmoji(c.emoji || ''); if (!e) return; if (!firstAt.has(e) || c.created_at < firstAt.get(e)) firstAt.set(e, c.created_at); });
+  const here = list.filter(j => firstAt.has(normEmoji(effEmoji(j))));
   if (!here.length) return '';
-  const rows = here.slice().sort((a, b) => a.name.localeCompare(b.name))
-    .map(j => `<div class="mine-row"><span>${esc(em(effEmoji(j)))} @${esc(j.name)}</span></div>`).join('');
-  return `<details class="setdet"><summary>Joiner key (${here.length})</summary><div class="stack" style="margin-top:8px">${rows}</div></details>`;
+  const rows = here.slice().sort((a, b) => (firstAt.get(normEmoji(effEmoji(a))) || '').localeCompare(firstAt.get(normEmoji(effEmoji(b))) || ''))
+    .map(j => `<div class="mine-row compact"><span>${esc(em(effEmoji(j)))} @${esc(j.name)}</span></div>`).join('');
+  return `<details class="setdet" open><summary>Joiner key (${here.length})</summary><div class="stack" style="margin-top:8px">${rows}</div></details>`;
 }
 function goPhotos(g) {
   const key = 'go:' + g.id, items = galleryItems(key); if (!items.length) return '';
@@ -1440,7 +1442,7 @@ const cred = () => { try { return JSON.parse(session.get('jo')); } catch { retur
 async function keepScroll(fn) { const y = window.scrollY; await fn(); window.scrollTo(0, y); }
 
 const FOOT = (x, an) => x.status === 'full' ? ['✓', 'k-in', 'Full, going through']
-  : x.status === 'go' ? [x.extra ? '+' + money(x.extra) : '✓', 'k-in', an.mode === 'sort' ? 'Going through' : `Going through${x.extra ? `, +${money(x.extra)} each` : ''}`]
+  : x.status === 'go' ? [x.extra ? '+' + money(x.extra) : '✓', 'k-in', `Going through${x.extra ? `, +${money(x.extra)} each` : ''}`]
   : x.status === 'wait' ? ['wait', '', `Waitlist. Needs ${x.need} more to be ordered`]
   : x.status === 'dropped' ? ['✗', 'k-risk', 'Not ordered, not enough claims'] : ['', '', ''];
 
@@ -1452,22 +1454,20 @@ function availGrid(an, mine = new Set()) {
   const body = R.map(r => `<tr><th scope="row">${esc(r)}</th>${sets.map(x => {
     const n = x.n, seat = x.cells[r];
     return seat
-      ? `<td class="${cls(n)}${mine.has(seat.claim.id) ? ' mine' : ''}" title="${esc(`${em(seat.claim.emoji)} ${r}: ${seatLabel(seat, an)}`)}">${esc(em(seat.claim.emoji))}</td>`
+      ? `<td class="${cls(n)}" title="${esc(`${em(seat.claim.emoji)} ${r}: ${seatLabel(seat, an)}`)}">${mine.has(seat.claim.id) ? `<span class="gride mine">${esc(em(seat.claim.emoji))}</span>` : esc(em(seat.claim.emoji))}</td>`
       : `<td class="${cls(n)}" title="${n > N ? 'Waitlist spot open' : 'Open spot'}">✅</td>`;
   }).join('')}</tr>`).join('');
+  const setRow = `<tr class="setrow"><th scope="row">Set</th>${sets.map(x => { const [t, k, title] = FOOT(x, an); return `<td class="${cls(x.n)} ${k}" title="${esc(title)}">${esc(t)}</td>`; }).join('')}</tr>`;
   const full = fullCode(an.go);
   const ot8 = full ? `<tr class="ot8row"><th scope="row">${esc(full)}</th><td colspan="${ncols}">${an.ot8.length
     ? an.ot8.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(full)}, always ordered">${esc(em(c.emoji))}</span>`).join('')
     : '<span class="muted small">None yet</span>'}</td></tr>` : '';
-  const foot = `<tr><th scope="row">Set</th>${sets.map(x => { const [t, k, title] = FOOT(x, an); return `<td class="${cls(x.n)} ${k}" title="${esc(title)}">${esc(t)}</td>`; }).join('')}</tr>`;
-  return `<div class="gridwrap"><table class="av" aria-label="Availability by ${wName(an)} and set"><thead>${head}</thead><tbody>${body}${ot8}</tbody><tfoot>${foot}</tfoot></table></div>
+  return `<div class="gridwrap"><table class="av" aria-label="Availability by ${wName(an)} and set"><thead>${head}</thead><tbody>${body}${setRow}${ot8}</tbody></table></div>
     <p class="small muted" style="margin:8px 0 0">Each column is a set. ✅ is an open spot.${an.gated ? ' Dashed columns are the waitlist, which starts right after the last set that goes through.' : ''}${full ? ` ${esc(full)} claims have their own row and are always ordered.` : ''}${mine.size ? ' Your claims are outlined.' : ''}</p>`;
 }
 function sumLine(an) {
   const P = (t, c = '') => `<span class="pill ${c}">${esc(t)}</span>`, n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
-  const out = an.mode === 'sort'
-    ? [P(n(an.items, 'item', 'items') + ' to order', an.items ? 'sea' : '')]
-    : [P(n(an.going, 'set', 'sets') + ' going through', an.going ? 'sea' : ''), P(n(an.items, 'item', 'items') + ' to order')];
+  const out = [P(n(an.going, 'set', 'sets') + ' going through', an.going ? 'sea' : ''), P(n(an.items, 'item', 'items') + ' to order')];
   if (an.ot8.length) out.push(P(`${an.ot8.length} ${fullCode(an.go)}, always ordered`));
   if (an.unclaimed) out.push(P(`${an.unclaimed} unclaimed`));
   if (an.waitlisted) out.push(P(`${an.waitlisted} waitlisted`, 'gold'));
