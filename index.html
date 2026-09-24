@@ -888,8 +888,8 @@ function seedDemo() {
   const jjmuze = makeGo('jj','jjmuze','JJMuze Caolan (FC)','🎁',{status:'Shipped to Joiners', price_per_pc:12, ot8_price:96, shipment_id:'s1'});
   const book   = makeGo('book','book','Seonghwa Before Sleep Book','📘',{status:'On Hand', price_per_pc:37, shipment_id:'s3'});
   const mk4    = makeGo('mk4','mk4','Makestar 4.0','🐹',{status:'On Hand', price_per_pc:6, ot8_price:45, shipment_id:'s5', roster_required:false});
-  const sw     = makeGo('sw','sw','Soundwave 5.0 FC','🍉',{status:'Ordered', price_per_pc:14, ot8_price:112, roster_required:false});
-  const mk7    = makeGo('mk7','mk7','Makestar 7.0 FS','🥕',{status:'Ordered', price_per_pc:8, ot8_price:64, roster_required:false});
+  const sw     = makeGo('sw','sw','Soundwave 5.0 FC','🍉',{status:'Ordered', price_per_pc:14, ot8_price:112, roster_required:false, payment_deadline:off(-3)});
+  const mk7    = makeGo('mk7','mk7','Makestar 7.0 FS','🥕',{status:'Ordered', price_per_pc:8, ot8_price:64, roster_required:false, payment_deadline:off(6)});
   const music  = makeGo('music','music','Musicart Caolan (FC)','🎵',{status:'At Kaddy', price_per_pc:12.5, shipment_id:'s6', roster_required:false});
   const mex    = makeGo('mex','mex','Makestar Mexico','🐱',{status:'Ordered', price_per_pc:28});
   const kong   = makeGo('kong','kong','Whosfan Kongsoonteez LD','🐶',{status:'Claims Open', price_per_pc:14, min_members:6, split_cost:true, sort_threshold:2, number_of_raffles:1});
@@ -1585,6 +1585,7 @@ function goCard(g) {
   const an = anOf(g), wide = g.status === 'Claims Open';
   const facts = [
     ['Order deadline', d && d.deadline ? `${esc(fmtDate(d.deadline) + (d.deadline_time ? ', ' + d.deadline_time : ''))} ${deadlineChip(g)}` : ''],
+    ['Payment deadline', g.payment_deadline ? esc(fmtDate(g.payment_deadline)) : ''],
     ['Winners announced', d && d.event_type !== 'none' && d.winners_on ? esc(fmtDate(d.winners_on) + (d.winners_time ? ', ' + d.winners_time : '')) : ''],
     [d && d.event_type !== 'none' && d.event_on ? `${EVT_NAME[d.event_type] || 'Event'} date` : '', d && d.event_type !== 'none' && d.event_on ? esc(fmtDate(d.event_on)) : ''],
     ['Price', isMerch(g) ? esc(merchPriceLine(g)) : (g.price_per_pc != null ? esc(`${money(g.price_per_pc)} per ${isUnitGO(g) ? 'unit' : 'PC'}${g.ot8_price != null && fullCode(g) ? `, ${fullCode(g)} ${money(g.ot8_price)}` : ''}`) : '')],
@@ -1813,10 +1814,12 @@ function meView(d) {
     const total = r2(initials + ems + customs + doms + other);
     const owed = g.status === 'Cancelled' ? 0 : r2(total - paidHere);
     const part = d.participation.find(p => p.group_order_id === g.id);
+    const overdue = g.payment_deadline && owed > 0.005 && today() > g.payment_deadline;
     return `<div class="ocard">
       <div class="ocard-head"><div class="nm"><span aria-hidden="true">${esc(g.emoji || '📦')}</span> ${esc(goDisplayName(g))}</div>${goPill(g.status)}</div>
       <div class="ocard-claims">${chipsMe(cs, m.infoOf)}</div>
       <div class="ocard-costs">${cat('Initials', initials)}${cat('EMS', ems)}${cat('Customs', customs)}${cat('DOMs', doms)}${cat('Other', other)}</div>
+      ${g.payment_deadline ? `<p class="small ${overdue ? 'err' : 'muted'}" style="margin:8px 0 0">${overdue ? 'Payment was due' : 'Pay by'} ${esc(fmtDate(g.payment_deadline))}</p>` : ''}
       <div class="ocard-foot"><span>${shipCell(g, part)}</span>${g.status === 'Cancelled' ? '<span class="muted">Refund</span>'
         : `<span class="owed${owed > 0.005 ? '' : ' clear'}">${owed > 0.005 ? `Owed ${money(owed)}` : paidHere > 0.005 || total > 0.005 ? 'Paid in full' : 'Nothing due'}</span>`}</div>
       ${notDueHere > 0.005 ? `<p class="small muted" style="margin:8px 0 0">+${money(notDueHere)} not due yet</p>` : ''}
@@ -1903,6 +1906,7 @@ const CFG = {
     fields:[F('drop_id','Drop','ref',{ref:'drops',req:1,wide:1,hint:'Which drop this order is for. A new drop creates its first order for you automatically; add more here for extra rounds. The order\'s name is worked out from the drop -- a second order for the same drop is labeled "Batch 2" automatically.'}),
       F('emoji','Emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}), F('platform_link','Platform link','text',{wide:1}),
       F('kaddy','Kaddy','select',{req:1,opts:KADDY_OPTS}), F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
+      F('payment_deadline','Payment deadline','date',{hint:'When joiners need to have paid by. Separate from the claim deadline, which is on the drop.'}),
       F('public_note','Notes (visible to joiners)','text',{wide:1}), F('host_note','Notes (host only)','text',{wide:1}),
       F('roster_required','Add fixed and soft claimers automatically','bool',{hint:'Only when the drop has a comeback. GOM goes first, then fixed claimers, then soft claimers, in list order.'}),
       F('number_of_raffles','Number of raffles','number',{hint:'Add the raffles themselves in the Claims tab once you have a count.'}),
