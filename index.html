@@ -188,20 +188,21 @@ details.fold{margin-top:10px} details.fold>summary{cursor:pointer;font:600 20px/
 .pay>div{flex:1;min-width:220px} .pay strong{font:700 20px var(--display);color:var(--coral)}
 .pay p{margin:4px 0 0;color:var(--text);font-size:14.5px}
 h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
-.orow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) 96px minmax(0,1.3fr) minmax(0,1.4fr);gap:14px;padding:14px 20px;border-top:1px solid var(--line);align-items:center}
-.orow:first-child{border-top:0}
-.orow.hd{color:var(--muted);font-size:13px;font-weight:600;background:var(--panel-2)}
-.orow .r{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
-.orow .nm{font-weight:600}
+.ocard{padding:14px 20px;border-top:1px solid var(--line)}
+.ocard:first-child{border-top:0}
+.ocard-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ocard-head .nm{font-weight:600}
+.ocard-claims{margin-top:8px}
+.ocard-costs{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:13.5px}
+.ocard-costs b{font-variant-numeric:tabular-nums;font-weight:700}
+.ocard-costs .muted{color:var(--muted)}
+.ocard-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;font-size:13.5px}
+.ocard-foot .owed{font-weight:700;color:var(--coral)}
+.ocard-foot .owed.clear{color:var(--sea)}
 .prow2{display:grid;grid-template-columns:90px minmax(0,1fr) 110px 100px;gap:14px;padding:12px 20px;border-top:1px solid var(--line);align-items:center}
 .prow2:first-child{border-top:0}
 .prow2 .r{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
 @media(max-width:820px){
-  .orow{grid-template-columns:1fr 1fr;row-gap:10px}
-  .orow.hd{display:none}
-  .orow .nm{grid-column:1/-1}
-  .orow .r{text-align:left}
-  .orow>div[data-l]::before{content:attr(data-l);display:block;color:var(--muted);font-size:12px;font-weight:500}
   .prow2{grid-template-columns:1fr auto}
   .prow2>:nth-child(2){grid-column:1/-1;order:3}
 }
@@ -1722,7 +1723,8 @@ function loginView() {
 function computeMe(d) {
   const anC = new Map(), anFor = g => { if (!anC.has(g.id)) anC.set(g.id, anOf(g)); return anC.get(g.id); };
   const live = d.claims.filter(c => { const g = goById(c.group_order_id); return g && g.status !== 'Cancelled'; });
-  const filled = live.filter(c => c.status === 'filled'), dropped = live.filter(c => c.status === 'dropped');
+  // "Dropped" here means a guaranteed (fixed/soft) spot was taken away, not just an ordinary claim being removed
+  const filled = live.filter(c => c.status === 'filled'), dropped = live.filter(c => c.status === 'dropped' && (c.source === 'fixed' || c.source === 'soft'));
   const infoOf = new Map(filled.map(c => { const g = goById(c.group_order_id); return [c.id, claimInfo(g, c, anFor(g))]; }));
   const share = (c, k) => { const i = infoOf.get(c.id); return i.seats.length ? c.items * i.seats.filter(s => s.state === k).length / i.total : (k === 'in' ? c.items : 0); };
   const liveCharges = d.charges.filter(c => { const g = c.group_order_id && goById(c.group_order_id); return !g || g.status !== 'Cancelled'; });
@@ -1752,34 +1754,36 @@ const chipsMe = (cs, infoOf) => cs.map(c => {
   return `<span class="chip ${cls}" ${c.status === 'dropped' ? 'title="Dropped"' : ''}>${esc(c.member_code)}${note ? `<small>${esc(note)}</small>` : ''}</span>`;
 }).join('');
 
-// Comeback panel: which list the joiner is on, and for soft claimers how many drops they have joined
+// The comeback panel shown on My account: only the most recently created comeback, and only if this
+// joiner actually holds a fixed or soft spot in it (a waitlisted soft spot counts too).
 function comebackPanels(d, m) {
-  const by = new Map(); (d.roster || []).forEach(r => { if (!by.has(r.comeback_id)) by.set(r.comeback_id, []); by.get(r.comeback_id).push(r); });
-  return [...by].map(([cid, rows]) => {
-    const cb = S.pub.comebacks.find(c => c.id === cid); if (!cb) return '';
-    const emoji = (d.emojis.find(e => e.comeback_id === cid) || {}).emoji;
-    const fixed = rows.filter(r => r.tier === 'fixed'), soft = rows.filter(r => r.tier === 'soft' && !r.waitlist), wl = rows.filter(r => r.waitlist);
-    const list = a => [...new Set(a.map(r => r.member_code))].join(', ');
-    const orders = S.pub.gos.filter(g => g.drop && g.drop.comeback_id === cid && g.status !== 'Cancelled').sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
-    const stateOf = g => joinState(g, anOf(g), d.claims.filter(c => c.group_order_id === g.id));
-    const rowsHTML = orders.map(g => {
-      const s = stateOf(g), open = claimsOpen(g);
-      const pill = s === 'joined' ? '<span class="pill sea">Joined</span>' : s === 'wait' ? '<span class="pill gold">Waitlisted</span>' : s === 'dropped' ? '<span class="pill coral">Dropped</span>' : `<span class="pill">${open ? 'Not joined yet' : 'Not joined'}</span>`;
-      return `<div class="mine-row"><span>${esc(g.emoji || '📦')} ${esc(goDisplayName(g))}</span><span>${pill}${s !== 'joined' && s !== 'wait' && open ? ` <button type="button" class="small linklike" data-action="openGo" data-id="${esc(g.id)}">Claim</button>` : ''}</span></div>`;
-    }).join('');
-    const isSoft = soft.length > 0, joined = orders.filter(g => stateOf(g) === 'joined').length, min = num(cb.soft_min_orders);
-    const openLeft = orders.filter(g => claimsOpen(g) && stateOf(g) !== 'joined' && stateOf(g) !== 'wait').length;
-    const pct = min ? Math.min(100, Math.round(joined / min * 100)) : 100;
-    const progress = isSoft ? `<div style="margin:14px 0 4px"><div class="metric"><b>${joined} of ${min}</b><span class="muted">drops joined. Soft claimers need at least ${min}.</span></div>
-      <div class="track" role="img" aria-label="${joined} of ${min} drops joined"><div class="fill" style="width:${pct}%"></div></div>
-      <p class="small muted" style="margin:8px 0 0">${joined >= min ? 'You have joined enough drops. Nice.' : `${min - joined} more to go. ${openLeft ? `${openLeft} open ${openLeft === 1 ? 'order' : 'orders'} you have not joined.` : 'No open orders are left to join right now.'}`}</p></div>` : '';
-    return `<section class="panel cbpanel"><h2>${esc(cb.name)}${emoji ? ` <span class="em2" aria-hidden="true">${esc(emoji)}</span>` : ''}</h2>
-      <p style="margin:0">${[fixed.length ? `<b>Fixed claim:</b> ${esc(list(fixed))}` : '', soft.length ? `<b>Soft claim:</b> ${esc(list(soft))}` : '', wl.length ? `<b>Waitlist:</b> ${esc(list(wl))}` : ''].filter(Boolean).join('. ')}.</p>
-      ${!isSoft && fixed.length ? '<p class="small muted" style="margin:6px 0 0">Fixed claimers are added to every order in the comeback automatically.</p>' : ''}
-      ${wl.length ? '<p class="small muted" style="margin:6px 0 0">Waitlisted claims move into a spot when a soft claimer drops.</p>' : ''}
-      ${progress}
-      ${rowsHTML ? `<div style="margin-top:10px">${rowsHTML}</div>` : '<p class="small muted" style="margin:10px 0 0">No orders in this comeback yet.</p>'}</section>`;
+  const cb = S.pub.comebacks.slice().sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))[0];
+  if (!cb) return '';
+  const rows = (d.roster || []).filter(r => r.comeback_id === cb.id);
+  if (!rows.length) return '';
+  const cid = cb.id;
+  const emoji = (d.emojis.find(e => e.comeback_id === cid) || {}).emoji;
+  const fixed = rows.filter(r => r.tier === 'fixed'), soft = rows.filter(r => r.tier === 'soft' && !r.waitlist), wl = rows.filter(r => r.waitlist);
+  const list = a => [...new Set(a.map(r => r.member_code))].join(', ');
+  const orders = S.pub.gos.filter(g => g.drop && g.drop.comeback_id === cid && g.status !== 'Cancelled').sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+  const stateOf = g => joinState(g, anOf(g), d.claims.filter(c => c.group_order_id === g.id));
+  const rowsHTML = orders.map(g => {
+    const s = stateOf(g), open = claimsOpen(g);
+    const pill = s === 'joined' ? '<span class="pill sea">Joined</span>' : s === 'wait' ? '<span class="pill gold">Waitlisted</span>' : s === 'dropped' ? '<span class="pill coral">Dropped</span>' : `<span class="pill">${open ? 'Not joined yet' : 'Not joined'}</span>`;
+    return `<div class="mine-row"><span>${esc(g.emoji || '📦')} ${esc(goDisplayName(g))}</span><span>${pill}${s !== 'joined' && s !== 'wait' && open ? ` <button type="button" class="small linklike" data-action="openGo" data-id="${esc(g.id)}">Claim</button>` : ''}</span></div>`;
   }).join('');
+  const isSoft = soft.length > 0, joined = orders.filter(g => stateOf(g) === 'joined').length, min = num(cb.soft_min_orders);
+  const openLeft = orders.filter(g => claimsOpen(g) && stateOf(g) !== 'joined' && stateOf(g) !== 'wait').length;
+  const pct = min ? Math.min(100, Math.round(joined / min * 100)) : 100;
+  const progress = isSoft ? `<div style="margin:14px 0 4px"><div class="metric"><b>${joined} of ${min}</b><span class="muted">drops joined. Soft claimers need at least ${min}.</span></div>
+    <div class="track" role="img" aria-label="${joined} of ${min} drops joined"><div class="fill" style="width:${pct}%"></div></div>
+    <p class="small muted" style="margin:8px 0 0">${joined >= min ? 'You have joined enough drops. Nice.' : `${min - joined} more to go. ${openLeft ? `${openLeft} open ${openLeft === 1 ? 'order' : 'orders'} you have not joined.` : 'No open orders are left to join right now.'}`}</p></div>` : '';
+  return `<section class="panel cbpanel"><h2>${esc(cb.name)}${emoji ? ` <span class="em2" aria-hidden="true">${esc(emoji)}</span>` : ''} <span class="pill">Most recent comeback</span></h2>
+    <p style="margin:0">${[fixed.length ? `<b>Fixed claim:</b> ${esc(list(fixed))}` : '', soft.length ? `<b>Soft claim:</b> ${esc(list(soft))}` : '', wl.length ? `<b>Waitlist:</b> ${esc(list(wl))}` : ''].filter(Boolean).join('. ')}.</p>
+    ${!isSoft && fixed.length ? '<p class="small muted" style="margin:6px 0 0">Fixed claimers are added to every order in the comeback automatically.</p>' : ''}
+    ${wl.length ? '<p class="small muted" style="margin:6px 0 0">Waitlisted claims move into a spot when a soft claimer drops.</p>' : ''}
+    ${progress}
+    ${rowsHTML ? `<div style="margin-top:10px">${rowsHTML}</div>` : '<p class="small muted" style="margin:10px 0 0">No orders in this comeback yet.</p>'}</section>`;
 }
 function shipCell(g, p) {
   if (g.status === 'Cancelled') return '<span class="muted">Cancelled</span>';
@@ -1796,21 +1800,33 @@ function meView(d) {
 
   const orders = [...new Set(d.claims.map(c => c.group_order_id))].map(goById).filter(Boolean)
     .sort((a, b) => (a.status === 'Shipped to Joiners') - (b.status === 'Shipped to Joiners') || byNewest(a, b));
+  const cat = (label, amt) => amt > 0.005 ? `<span>${esc(label)} <b>${money(amt)}</b></span>` : `<span class="muted">${esc(label)} —</span>`;
   const orderRows = orders.map(g => {
     const cs = d.claims.filter(c => c.group_order_id === g.id);
-    const cost = r2(sum(cs.filter(c => c.status === 'filled' && m.infoOf.has(c.id)), c => m.infoOf.get(c.id).amount) + sum(d.charges.filter(c => c.group_order_id === g.id && c.due), c => c.amount));
+    const chargesHere = d.charges.filter(c => c.group_order_id === g.id);
+    const initials = r2(sum(cs.filter(c => c.status === 'filled' && m.infoOf.has(c.id)), c => m.infoOf.get(c.id).amount));
+    const dueAmt = kind => r2(sum(chargesHere.filter(c => c.kind === kind && c.due), c => c.amount));
+    const ems = dueAmt('ems'), customs = dueAmt('customs'), doms = dueAmt('doms');
+    const other = r2(sum(chargesHere.filter(c => (c.kind === 'other' || c.kind === 'fee') && c.due), c => c.amount));
+    const notDueHere = r2(sum(chargesHere.filter(c => !c.due), c => c.amount));
+    const paidHere = r2(sum(d.payments.filter(p => p.group_order_id === g.id), p => p.amount));
+    const total = r2(initials + ems + customs + doms + other);
+    const owed = g.status === 'Cancelled' ? 0 : r2(total - paidHere);
     const part = d.participation.find(p => p.group_order_id === g.id);
-    return `<div class="orow">
-      <div class="nm"><span aria-hidden="true">${esc(g.emoji || '📦')}</span> ${esc(goDisplayName(g))}</div>
-      <div data-l="Your claims">${chipsMe(cs, m.infoOf)}</div>
-      <div class="r" data-l="Cost">${g.status === 'Cancelled' ? '<span class="muted">Refund</span>' : money(cost)}</div>
-      <div data-l="Order status">${goPill(g.status)}</div>
-      <div data-l="Shipping">${shipCell(g, part)}</div>
+    return `<div class="ocard">
+      <div class="ocard-head"><div class="nm"><span aria-hidden="true">${esc(g.emoji || '📦')}</span> ${esc(goDisplayName(g))}</div>${goPill(g.status)}</div>
+      <div class="ocard-claims">${chipsMe(cs, m.infoOf)}</div>
+      <div class="ocard-costs">${cat('Initials', initials)}${cat('EMS', ems)}${cat('Customs', customs)}${cat('DOMs', doms)}${cat('Other', other)}</div>
+      <div class="ocard-foot"><span>${shipCell(g, part)}</span>${g.status === 'Cancelled' ? '<span class="muted">Refund</span>'
+        : `<span class="owed${owed > 0.005 ? '' : ' clear'}">${owed > 0.005 ? `Owed ${money(owed)}` : paidHere > 0.005 || total > 0.005 ? 'Paid in full' : 'Nothing due'}</span>`}</div>
+      ${notDueHere > 0.005 ? `<p class="small muted" style="margin:8px 0 0">+${money(notDueHere)} not due yet</p>` : ''}
     </div>`;
   }).join('');
 
   const pays = d.payments.slice().sort((a, b) => (b.paid_on || '').localeCompare(a.paid_on || '')).map(p =>
     `<div class="prow2"><div class="muted small">${esc(fmtDate(p.paid_on))}</div><div>${esc(p.note || (p.amount < 0 ? 'Refund' : 'Payment'))} <span class="muted small">${esc(p.method || '')}</span></div><div class="r">${money(p.amount)}</div><div></div></div>`).join('');
+
+  const cbHTML = comebackPanels(d, m);
 
   return `<div class="me-head">
       <div class="sticker" aria-hidden="true">${esc(j.emoji || '💎')}</div>
@@ -1819,16 +1835,17 @@ function meView(d) {
     </div>
 
     <section class="ledger" aria-label="Account summary">
-      <div><div class="k">Total due</div><div class="v">${money(m.totalDue)}</div><div class="s">${m.pendingCost > 0.005 ? `Plus ${money(m.pendingCost)} if waiting sets go through` : 'Claims plus fees due now'}</div></div>
+      <div><div class="k">Total due</div><div class="v">${money(m.totalDue)}</div><div class="s">Claims plus fees due now</div></div>
+      <div><div class="k">Pending</div><div class="v">${money(m.pendingCost)}</div><div class="s">If waitlisted sets go through</div></div>
       <div><div class="k">Paid</div><div class="v">${money(m.paid)}</div><div class="s">${d.payments.length} ${d.payments.length === 1 ? 'payment' : 'payments'} recorded</div></div>
       <div class="${balClass}"><div class="k">Balance</div><div class="v">${money(Math.abs(m.balance))}</div><div class="s">${balSub}</div></div>
       <div><div class="k">Claim participation</div><div class="v">${m.pct}%</div><div class="track" role="img" aria-label="${m.pct} percent"><div class="fill" style="width:${m.pct}%"></div></div><div class="s">${m.joined} of ${m.active} active orders</div></div>
     </section>
 
-    ${m.balance > 0.005 ? `<div class="pay"><div><strong>${money(m.balance)} to send</strong><p>Pay by PayPal or Venmo (friends and family), then DM @${esc(CONFIG.INSTAGRAM)} so it can be recorded. This page updates once the host has logged it.</p></div>
-      <a class="btn" href="${esc(CONFIG.PAYPAL)}" target="_blank" rel="noopener">PayPal</a><a class="btn ghost" href="${esc(CONFIG.VENMO)}" target="_blank" rel="noopener">Venmo</a></div>` : ''}
+    ${m.balance > 0.005 ? `<div class="pay"><div><strong>${money(m.balance)} to send</strong><p>Pay by PayPal, Venmo (friends and family) or Wise, then DM @${esc(CONFIG.INSTAGRAM)} so it can be recorded. This page updates once the host has logged it.</p></div>
+      <a class="btn" href="${esc(CONFIG.PAYPAL)}" target="_blank" rel="noopener">PayPal</a><a class="btn ghost" href="${esc(CONFIG.VENMO)}" target="_blank" rel="noopener">Venmo</a>${CONFIG.WISE ? `<a class="btn ghost" href="${esc(CONFIG.WISE)}" target="_blank" rel="noopener">Wise</a>` : ''}</div>` : ''}
 
-    ${comebackPanels(d, m)}
+    ${cbHTML || `<section class="panel"><p style="margin:0">You've been part of <b>${orders.length}</b> group ${orders.length === 1 ? 'order' : 'orders'} total.</p></section>`}
 
     <div class="two">
       <section class="panel"><h2>Claim summary</h2>
@@ -1837,7 +1854,7 @@ function meView(d) {
           <div class="tile"><b>${m.itemsWaiting}</b><span>waiting</span></div>
           <div class="tile dropped"><b>${m.itemsDropped}</b><span>dropped</span></div>
         </div>
-        <p class="muted small" style="margin:14px 0 0">Only claims going through are charged. Waiting means waitlisted or in a set that needs more members. Items count every physical PC: OT8 (or OT4 for a unit album) counts as every PC it covers, and a unit claim is 1 since it's a single PC.</p></section>
+        <p class="muted small" style="margin:14px 0 0">Only claims going through are charged. Waiting means waitlisted or in a set that needs more members. Items count every physical PC: OT8 (or OT4 for a unit album) counts as every PC it covers, and a unit claim is 1 since it's a single PC. "Dropped" only counts a fixed or soft claim the host removed -- an ordinary claim you or the host deleted isn't counted here.</p></section>
       <section class="panel"><h2>Album type totals</h2>
         ${m.byAlbum.length ? m.byAlbum.map(a => `<div class="kv"><span>${esc(a.type)}</span><span class="n">${a.items} ${a.items === 1 ? 'item' : 'items'}</span><span class="p">${money(a.cost)}</span></div>`).join('') : '<p class="muted small" style="margin:0">No claims yet.</p>'}
       </section>
@@ -1848,7 +1865,7 @@ function meView(d) {
       <p class="muted small" style="margin:10px 0 0">These get added to your balance once the order is on hand and ready to ship.</p></section>` : ''}
 
     <h2 class="blk">Your orders</h2>
-    ${orders.length ? `<div class="list"><div class="orow hd"><div>Order</div><div>Claims</div><div class="r">Cost</div><div>Status</div><div>Shipping</div></div>${orderRows}</div>` : '<p class="muted">No claims yet. Watch the Drops page for new orders.</p>'}
+    ${orders.length ? `<div class="list">${orderRows}</div>` : '<p class="muted">No claims yet. Watch the Drops page for new orders.</p>'}
 
     ${pays ? `<h2 class="blk">Payments</h2><div class="list">${pays}</div>` : ''}`;
 }
