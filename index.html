@@ -125,6 +125,10 @@ a.pl{text-decoration:none}
 .drop{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:16px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line)}
 .drop-date{font-weight:600;font-size:14px;color:var(--muted);white-space:nowrap}
 .drop h3{font-weight:600;font-size:17px;line-height:1.3}
+.evmode{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13.5px;line-height:1.3;padding:5px 11px;border-radius:999px;background:var(--plum-bg);color:var(--plum);margin:6px 6px 0 0}
+.evbanner{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:12px 14px;border-radius:12px;background:var(--plum-bg);color:var(--plum);font-weight:700;font-size:15.5px;line-height:1.35}
+.evbanner .ic{font-size:22px}
+.evbanner small{display:block;font-weight:500;font-size:13px;opacity:.9}
 .meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:5px 0 0;color:var(--muted);font-size:14px}
 .drop-r{display:flex;align-items:center;gap:12px}
 @media(max-width:640px){.drop{grid-template-columns:1fr;gap:6px}}
@@ -543,6 +547,8 @@ const SHIPPING_TYPES = ['US Stamped','US Tracked','WW Tracked','WW Stamped','Loc
 const IMG_BUCKET = 'drop-images', MAX_IMGS = 12;
 const KADDY_OPTS = [['None','None'],['Kfriday','Kfriday'],['Paysable','Paysable']];
 const EVT_NAME = {fancall:'Fancall', fansign:'Fansign', 'fancall & fansign':'Fancall & fansign'};
+// For an order whose drop has a fancall/fansign: who the entry is for
+const EVENT_MODES = [['raffle','Raffle among joiners'], ['personal','Personal attempt for the GOM'], ['hosting','Hosting for someone else']];
 const EVT_SHORT = {fancall:'Call', fansign:'Sign', 'fancall & fansign':'Call & sign'};
 const KIND_ORDER = ['deadline', 'payment', 'announce', 'event'];
 const KINDS = {deadline:{label:'Order deadlines', pill:'coral'}, payment:{label:'Your payment deadlines', pill:'plum'}, announce:{label:'Winner announcements', pill:'gold'}, event:{label:'Fancall and fansign dates', pill:'sea'}};
@@ -1111,6 +1117,8 @@ function seedDemo() {
   D.joiners.push({id:'j-octo.tiny', name:'octo.tiny', emoji:'🐙', pin_hash:'demo', notes:null});
   D.joiner_accounts.push({handle:'octo.tiny', joiner_id:'j-octo.tiny', platform:'instagram'});
   addClaim('j-octo.tiny', wm, 'Bread Keychain'); addClaim('j-octo.tiny', kong, 'SN');
+  // fancall/fansign entries: one of each kind
+  Object.assign(kong, {event_mode:'raffle'}); Object.assign(mex, {event_mode:'personal'}); Object.assign(music, {event_mode:'hosting', event_for_joiner:'j-starlit_atiny'});
   return D;
 }
 
@@ -1548,6 +1556,19 @@ function openLightbox(key, start) {
 /* =====================================================================
    8. PAGE: Drops
    ===================================================================== */
+// What kind of fancall/fansign entry an order is: a raffle among joiners, the GOM's own attempt, or hosting for a
+// joiner. Null when the drop has no event or the host hasn't said. `joiners` defaults to the public joiner list.
+function eventModeInfo(g, joiners) {
+  const d = g && g.drop; if (!d || !d.event_type || d.event_type === 'none' || !g.event_mode) return null;
+  const T = EVT_NAME[d.event_type] || 'Event', t = T.toLowerCase();
+  if (g.event_mode === 'raffle') return {icon:'🎟️', text:`${T} raffle`, sub:'The entry is raffled among joiners.'};
+  if (g.event_mode === 'personal') return {icon:'💎', text:`Personal ${t} attempt for the GOM`, sub:'This entry is for the GOM, not raffled.'};
+  if (g.event_mode === 'hosting') {
+    const j = g.event_for_joiner && (joiners || S.pub.joiners || []).find(x => x.id === g.event_for_joiner);
+    return {icon:'🤝', text:j ? `Hosting ${t} for @${j.name}` : `Hosting ${t} for a joiner`, sub:'This entry is for them, not raffled.'};
+  }
+  return null;
+}
 // Claims open if any of the drop's orders is open; completed once every order is completed or cancelled;
 // anything else is in progress.
 const DONE_STATUSES = new Set(['Completed', 'Cancelled']);
@@ -1570,6 +1591,8 @@ function dropRow(d, anyPics) {
   const items = galleryItems('drop:' + d.id);
   const thumb = items.length ? pcCover('drop:' + d.id, items, dropDisplayName(d)) : (anyPics ? '<span class="pc-sp" aria-hidden="true"></span>' : '');
   const dl = effDeadline(d), T = EVT_NAME[d.event_type];
+  const evTexts = [...new Map(gos.map(g => eventModeInfo(g)).filter(Boolean).map(x => [x.text, x])).values()];
+  const evModes = evTexts.map(x => `<span class="evmode"><span aria-hidden="true">${x.icon}</span>${esc(x.text)}</span>`).join('');
   const dates = [
     dl ? ['Order by', fmtWhen(dl.date, dl.time)] : null,
     d.event_type !== 'none' && d.winners_on ? [`${T} winners`, fmtWhen(d.winners_on, d.winners_time)] : null,
@@ -1577,7 +1600,7 @@ function dropRow(d, anyPics) {
   ].filter(Boolean);
   return `<article class="drop">
     <div class="drop-date">${esc(fmtDate(d.announced_on)) || 'TBD'}${isNew ? '<span class="new">New</span>' : ''}</div>
-    <div class="drop-main">${thumb}<div><h3>${esc(dropDisplayName(d))}</h3><p class="meta">
+    <div class="drop-main">${thumb}<div><h3>${esc(dropDisplayName(d))}</h3>${evModes}<p class="meta">
       ${d.store ? `<span>${esc(d.store)}</span>` : ''}
       <span class="tag">${d.type === 'Merch' ? 'Merch' : 'PC'}</span>
       ${d.type === 'Merch' ? (d.category ? `<span>${esc(d.category)}</span>` : '') : (d.pc_type ? `<span>${esc(d.pc_type)}</span>` : '')}
@@ -1871,7 +1894,9 @@ function goCard(g) {
     ['Joiners', esc(st.joiners || '')], ['Items claimed', esc(st.items || '')],
     ['Kaddy box', ship ? esc(`#${ship.number}, ${SHIP_LABEL[ship.status].toLowerCase()}`) : ''],
   ].filter(x => x[1] !== '');
+  const ev = eventModeInfo(g);
   const info = `<div class="gohead"><h3><span class="em" aria-hidden="true">${esc(g.emoji || '📦')}</span>${esc(goDisplayName(g))}</h3>${goPill(g.status)}</div>
+    ${ev ? `<div class="evbanner"><span class="ic" aria-hidden="true">${ev.icon}</span><div>${esc(ev.text)}<small>${esc(ev.sub)}</small></div></div>` : ''}
     ${stepper(g.status)}
     <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
     ${g.public_note ? `<p class="small muted" style="margin:0">${esc(g.public_note)}</p>` : ''}
@@ -2342,7 +2367,7 @@ const CFG = {
     label:r => dropDisplayName(r), sub:r => [r.store, r.type, r.type === 'PC' ? r.pc_type : r.category, fmtDate(r.announced_on), (r.images || []).length ? `${r.images.length} ${r.images.length === 1 ? 'photo' : 'photos'}` : 'no photos yet'].filter(Boolean).join(', '),
     thumb:r => (r.images && r.images[0] && (r.images[0].thumb || r.images[0].src)) || '',
     sort:(a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')},
-  group_orders: {table:'group_orders', need:['group_orders','shipments','drops','comebacks'], title:'Group order', add:'Add group order', modalForm:true, card:goCardAdmin,
+  group_orders: {table:'group_orders', need:['group_orders','shipments','drops','comebacks','joiners'], title:'Group order', add:'Add group order', modalForm:true, card:goCardAdmin,
     fields:[F('drop_id','Drop','ref',{ref:'drops',req:1,wide:1,hint:'Which drop this order is for. A new drop creates its first order for you automatically; add more here for extra rounds. The order\'s name is worked out from the drop -- a second order for the same drop is labeled "Batch 2" automatically.'}),
       F('emoji','Emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}), F('platform_link','Platform link','text',{wide:1}),
       F('kaddy','Kaddy','select',{req:1,opts:KADDY_OPTS}), F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
@@ -2357,7 +2382,9 @@ const CFG = {
       F('split_cost','Split cost of unclaimed set members and raffle extras','bool',{hint:'Only used when members needed is more than 0.',section:'rules'}),
       F('sort_threshold','If split cost is above $, order exact claims and sort that set instead','number',{hint:'Leave empty to always split, however high the share gets.',section:'rules'}),
       F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair.',section:'pc'}), F('ot8_price','OT8 / OT4 price','number',{hint:'Leave empty to use the per-item price times the number of items.',section:'pc'}),
-      F('max_sets','Max # of sets to purchase','number',{hint:'Leave empty for no cap.',section:'pc'})],
+      F('max_sets','Max # of sets to purchase','number',{hint:'Leave empty for no cap.',section:'pc'}),
+      F('event_mode','This order\'s entry is','select',{opts:EVENT_MODES,section:'event',hint:'Shown on the drop list and the order.'}),
+      F('event_for_joiner','Hosting for','ref',{ref:'joiners',section:'event',hint:'Only when hosting for someone else.'})],
     defaults:{platform:'instagram', kaddy:'None', status:'Claims Open', roster_required:true, min_members:0, split_cost:false, number_of_raffles:0},
     label:r => goName(r, A.data.group_orders), sub:r => rulesShort(r), sort:byNewest},
   comebacks: {table:'comebacks', need:['comebacks'], title:'Comeback', add:'Add comeback',
@@ -2543,7 +2570,7 @@ function goCardAdmin(r) {
   const priceLine = isMerch(r) ? merchPriceLine(r) : (r.price_per_pc != null ? `${money(r.price_per_pc)} per ${isUnitGO(r) ? 'unit' : 'PC'}` : '');
   const dl = r.drop && r.drop.deadline ? `Order by ${fmtWhen(r.drop.deadline, r.drop.deadline_time)}` : '';
   const ship = r.shipment_id && (A.data.shipments || []).find(s => s.id === r.shipment_id);
-  const pdl = payDeadlines(r, A.data.shipments || []);
+  const pdl = payDeadlines(r, A.data.shipments || []), ev = eventModeInfo(r, A.data.joiners || []);
   const facts = [priceLine, rulesShort(r), r.number_of_raffles ? `${r.number_of_raffles} raffle${r.number_of_raffles === 1 ? '' : 's'}` : ''].filter(Boolean);
   const img = r.drop && r.drop.images && r.drop.images[0];
   return `<div class="acard">
@@ -2554,6 +2581,7 @@ function goCardAdmin(r) {
       ${facts.length ? `<div class="acard-meta">${facts.map(f => `<b>${esc(f)}</b>`).join(' \u00b7 ')}</div>` : ''}
       ${dl ? `<div class="acard-meta"><span>${esc(dl)}</span></div>` : ''}
       ${ship ? `<div class="acard-meta"><span>Kaddy box ${ship.number}</span></div>` : ''}
+      ${ev ? `<div class="acard-meta"><span class="evmode" style="margin:0">${ev.icon} ${esc(ev.text)}</span></div>` : ''}
       ${pdl.length ? `<div class="acard-meta">${pdl.map(x => `<span>${esc(x.label)} due ${esc(fmtWhen(x.date, x.time))}</span>`).join('')}</div>` : ''}
       ${r.host_note ? `<div class="acard-notes">${esc(r.host_note)}</div>` : ''}
     </div>
@@ -2569,7 +2597,7 @@ const modalWrap = (key, title, bodyHTML) => `<div class="modal-back" data-modal-
     <div class="modal-body">${bodyHTML}</div>
   </div>
 </div>`;
-const SECTION_LABEL = {pc:'PC details', merch:'Merch details', rules:'Set rules'};
+const SECTION_LABEL = {pc:'PC details', merch:'Merch details', rules:'Set rules', event:'Fancall / fansign'};
 // Group a form's fields by their (optional) section, and work out which sections should start hidden --
 // a "pc"/"merch" section on the drops form goes by its own Type field; on the group orders form, by the
 // type of drop it's linked to (shown by default until a drop is picked).
@@ -2579,20 +2607,26 @@ function fieldSections(key, fields, vals) {
   const dropType = key === 'drops' ? (vals.type || 'PC')
     : key === 'group_orders' ? ((A.data.drops || []).find(d => d.id === vals.drop_id) || {}).type
     : null;
+  const hasEvent = key === 'group_orders' && dropHasEvent((A.data.drops || []).find(d => d.id === vals.drop_id));
   const visible = s => {
+    if (s === 'event') return hasEvent;
     if (key === 'drops') { if (s === 'pc') return dropType === 'PC'; if (s === 'merch') return dropType === 'Merch'; }
     if (key === 'group_orders' && (s === 'pc' || s === 'rules')) return !dropType || dropType === 'PC';
     return true;
   };
   return [...groups.entries()].map(([s, fs]) => ({section:s, fields:fs, visible:visible(s)}));
 }
+const dropHasEvent = d => !!(d && d.event_type && d.event_type !== 'none');
 function updateFormSections(form) {
   const key = form.dataset.key; if (key !== 'drops' && key !== 'group_orders') return;
-  const dropType = key === 'drops' ? (form.querySelector('[name=type]') || {}).value
-    : ((A.data.drops || []).find(d => d.id === (form.querySelector('[name=drop_id]') || {}).value) || {}).type;
+  const drop = key === 'group_orders' ? (A.data.drops || []).find(d => d.id === (form.querySelector('[name=drop_id]') || {}).value) : null;
+  const dropType = key === 'drops' ? (form.querySelector('[name=type]') || {}).value : (drop || {}).type;
+  // "Hosting for" only matters when hosting for someone else
+  const mode = form.querySelector('[name=event_mode]'), forJ = form.querySelector('[name=event_for_joiner]');
+  if (mode && forJ) forJ.closest('.field').style.display = mode.value === 'hosting' ? '' : 'none';
   form.querySelectorAll('[data-section]').forEach(el => {
     const s = el.dataset.section;
-    const show = key === 'drops' ? (s === 'pc' ? dropType === 'PC' : s === 'merch' ? dropType === 'Merch' : true)
+    const show = s === 'event' ? key === 'group_orders' && dropHasEvent(drop) : key === 'drops' ? (s === 'pc' ? dropType === 'PC' : s === 'merch' ? dropType === 'Merch' : true)
       : ((s === 'pc' || s === 'rules') ? (!dropType || dropType === 'PC') : true);
     el.style.display = show ? '' : 'none';
   });
@@ -3218,6 +3252,7 @@ async function render() {
     // Lock the page behind a popup from scrolling too -- on mobile, letting both scroll at once is what
     // causes a fixed-position overlay to visibly flicker/detach for a frame while the page moves under it.
     document.body.style.overflow = $('.modal-back') ? 'hidden' : '';
+    document.querySelectorAll('form[data-form="crud"]').forEach(updateFormSections);
   }
 }
 
@@ -3619,6 +3654,9 @@ const forms = {
       const merch = drop && drop.type === 'Merch', rowsN = drop && !merch && drop.solo_unit === 'Unit' ? 4 : 8;
       // Merch is bought individually, not in sets -- the set-rules fields are hidden for it, so force them clean.
       if (merch) { row.min_members = 0; row.split_cost = false; row.sort_threshold = null; }
+      if (!dropHasEvent(drop)) { row.event_mode = null; row.event_for_joiner = null; }
+      else if (row.event_mode !== 'hosting') row.event_for_joiner = null;
+      else if (!row.event_for_joiner) throw new Error('Pick the joiner you\'re hosting this entry for.');
       if (row.min_members != null && !(Number.isInteger(row.min_members) && row.min_members >= 0 && (merch || row.min_members <= rowsN))) throw new Error(merch ? 'Members needed for a set must be a whole number of 0 or more.' : `Members needed for a set must be a whole number from 0 to ${rowsN}.`);
       if (row.sort_threshold != null && !(row.sort_threshold >= 0)) throw new Error('The sort threshold must be 0 or more.');
       if (row.max_sets != null && !(Number.isInteger(row.max_sets) && row.max_sets >= 1)) throw new Error('Max # of sets must be a whole number of 1 or more, or left empty.');
@@ -3712,7 +3750,7 @@ app.addEventListener('change', e => {
     $('#payNoteBox').hidden = t.value === 'wise'; $('#payWiseBox').hidden = t.value !== 'wise';
     return;
   }
-  if ((t.name === 'type' || t.name === 'drop_id') && t.closest('form[data-form="crud"]')) updateFormSections(t.closest('form'));
+  if ((t.name === 'type' || t.name === 'drop_id' || t.name === 'event_mode') && t.closest('form[data-form="crud"]')) updateFormSections(t.closest('form'));
   if (t.name === 'comeback_id' && t.closest('form[data-key="drops"]')) { autoRound(t.closest('form')); return; }
   if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; $('#dropList').innerHTML = dropList(); return; }
   if (t.dataset.mefilter) { S.meFilters[t.dataset.mefilter] = t.value; $('#myOrders').innerHTML = myOrdersList(); return; }
