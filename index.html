@@ -1518,9 +1518,9 @@ function availGridMerch(an, mine = new Set()) {
     const mi = merchItem(an.go, r), cap = mi && mi.max_purchase != null ? mi.max_purchase : null;
     const label = r.includes('::') ? `${(mi || {}).name || r.split('::')[0]}: ${r.split('::')[1]}` : r;
     const soldOut = cap != null && claims.length >= cap;
-    return `<tr class="ot8row"><th scope="row">${esc(label)}</th><td>${claims.length
-      ? claims.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(`${em(c.emoji)} ${label}`)}">${esc(em(c.emoji))}</span>`).join('')
-      : '<span class="muted small">None yet</span>'}${cap != null ? ` <span class="pill${soldOut ? ' coral' : ''}">${soldOut ? '\u274c capped' : '\u2705'}</span>` : ''}</td></tr>`;
+    const claimedHTML = claims.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(`${em(c.emoji)} ${label}`)}">${esc(em(c.emoji))}</span>`).join('');
+    const openHTML = cap != null ? '<span class="ot8e" title="Open spot">\u2705</span>'.repeat(Math.max(0, cap - claims.length)) : '';
+    return `<tr class="ot8row"><th scope="row">${esc(label)}</th><td>${claimedHTML}${openHTML}${soldOut ? ` <span class="pill coral">\u274c capped</span>` : ''}</td></tr>`;
   }).join('');
   return `<div class="gridwrap"><table class="av merch" aria-label="Claims by item"><tbody>${rowsHTML}</tbody></table></div>
     <p class="small muted" style="margin:8px 0 0">Each item is bought individually, not in sets.${mine.size ? ' Your claims are outlined.' : ''}</p>`;
