@@ -283,9 +283,12 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .arow strong{font-weight:600}
 .acts{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .pad{padding:18px}
-.prow{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto minmax(0,1fr);gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
+.prow{display:grid;grid-template-columns:minmax(0,1.5fr) 76px minmax(0,1fr) auto minmax(0,1fr);gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
 .prow:first-child{border-top:0}
-@media(max-width:820px){.prow{grid-template-columns:1fr 1fr}.prow>:first-child{grid-column:1/-1}}
+@media(max-width:820px){.prow{grid-template-columns:76px 1fr 1fr}.prow>:first-child{grid-column:1/-1}}
+.emoji-in{text-align:center;font-size:18px;padding:6px 8px}
+.emoji-in.missing{border-color:var(--coral);background:var(--coral-bg)}
+.chip.emo{background:transparent;font-size:16px;padding-left:0}
 .cap{white-space:pre-wrap;font:16px/1.7 var(--body);background:var(--panel-2);border-radius:12px;padding:16px;margin:0;overflow-x:auto}
 table.pv{width:100%;border-collapse:collapse;font-size:14.5px}
 table.pv th,table.pv td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
@@ -1065,7 +1068,6 @@ function seedDemo() {
   addClaim(me, sw, 'OT8');
   addClaim(me, music, 'SN'); addClaim(me, music, 'WY');
   addClaim(me, mex, 'SH');
-  addClaim(me, wm, 'Bread Keychain'); addClaim(me, wm, `Squish Kitten Plush::HJ`);
   const ch = (go, kind, label, amount, due) => D.charges.push({id:uid(), joiner_id:me, group_order_id:go.id, kind, label, amount, due});
   ch(fromm,'doms','US Tracked shipping (Fromm 2.0)',4.00,true);
   ch(mini,'doms','US Stamped shipping (Mini Fanmeet)',2.00,true);
@@ -1096,11 +1098,26 @@ function seedDemo() {
   // a bonus item already assigned, to show the panel with something in it
   const swClaims = D.claims.filter(c => c.group_order_id === sw.id && c.status === 'filled');
   if (swClaims.length) D.bonus_claims.push({id:uid(), group_order_id:sw.id, bonus_item_id:'bi-sw1', joiner_id:swClaims[0].joiner_id, status:'filled', created_at:'2026-07-15T00:00:00Z'});
+  // Another joiner whose usual emoji is also 🐙. They got to Squish Kitten Bread first, so the demo joiner has to pick a
+  // different emoji there. On Kongsoonteez the demo joiner was first, so this joiner shows up for the host as needing one.
+  D.joiners.push({id:'j-octo.tiny', name:'octo.tiny', emoji:'🐙', pin_hash:'demo', notes:null});
+  D.joiner_accounts.push({handle:'octo.tiny', joiner_id:'j-octo.tiny', platform:'instagram'});
+  addClaim('j-octo.tiny', wm, 'Bread Keychain'); addClaim('j-octo.tiny', kong, 'SN');
   return D;
 }
 
 function demoApi() {
   const db = seedDemo(); let admin = false;
+  // Same rules as the database: a joiner's emoji on an order starts as their comeback/default emoji when it's free there
+  const defEmoji = (goId, jid) => { const g = db.group_orders.find(x => x.id === goId), d = g && db.drops.find(x => x.id === g.drop_id);
+    const ce = d && db.comeback_emojis.find(e => e.comeback_id === d.comeback_id && e.joiner_id === jid); return (ce && ce.emoji) || (db.joiners.find(x => x.id === jid) || {}).emoji || null; };
+  const emojiFree = (goId, jid, e) => { const k = normEmoji(e || '').trim(), g = db.group_orders.find(x => x.id === goId);
+    return !!k && normEmoji(g && g.emoji || '').trim() !== k && !db.participants.some(p => p.group_order_id === goId && p.joiner_id !== jid && p.emoji && normEmoji(p.emoji).trim() === k); };
+  const ensurePart = (goId, jid) => { if (db.participants.some(p => p.group_order_id === goId && p.joiner_id === jid)) return;
+    const e = defEmoji(goId, jid); db.participants.push({group_order_id:goId, joiner_id:jid, emoji:e && emojiFree(goId, jid, e) ? e : null, shipping_type:null, shipped:false, tracking:null, note:null}); };
+  const firstAt = p => db.claims.filter(c => c.group_order_id === p.group_order_id && c.joiner_id === p.joiner_id).map(c => c.created_at).sort()[0] || '';
+  db.participants.slice().sort((a, b) => a.group_order_id.localeCompare(b.group_order_id) || firstAt(a).localeCompare(firstAt(b))).forEach(p => {
+    const e = defEmoji(p.group_order_id, p.joiner_id); p.emoji = e && emojiFree(p.group_order_id, p.joiner_id, e) ? e : null; });
   const clone = x => JSON.parse(JSON.stringify(x));
   // Mirrors the SQL _auto_assign_bonus function: give this joiner every bonus their own claims on this
   // order now qualify them for, without handing out more than the order as a whole has earned so far.
@@ -1128,7 +1145,8 @@ function demoApi() {
   const seatList = () => db.claims.filter(c => c.status === 'filled').map(c => {
     const g = db.group_orders.find(x => x.id === c.group_order_id), d = g && db.drops.find(x => x.id === g.drop_id), j = db.joiners.find(x => x.id === c.joiner_id);
     const ce = d && db.comeback_emojis.find(e => e.joiner_id === c.joiner_id && e.comeback_id === d.comeback_id);
-    return {id:c.id, group_order_id:c.group_order_id, member_code:c.member_code, items:c.items, source:c.source, roster_pos:c.roster_pos, created_at:c.created_at, emoji:(ce && ce.emoji) || (j && j.emoji) || null};
+    const p = db.participants.find(x => x.group_order_id === c.group_order_id && x.joiner_id === c.joiner_id);
+    return {id:c.id, group_order_id:c.group_order_id, member_code:c.member_code, items:c.items, source:c.source, roster_pos:c.roster_pos, created_at:c.created_at, emoji:p ? p.emoji || null : (ce && ce.emoji) || (j && j.emoji) || null};
   });
   const demoAuth = (handle, pin) => { const a = db.joiner_accounts.find(x => x.handle === normHandle(handle)); return a && pin === '1234' ? a.joiner_id : null; };
   const withDrop = g => { if (g && !g.drop) g.drop = db.drops.find(x => x.id === g.drop_id) || null; return g; };
@@ -1141,7 +1159,8 @@ function demoApi() {
           ({id,number,kaddy,status,paid_on,shipped_on,delivered_on,ems_deadline,ems_deadline_time,customs_deadline,customs_deadline_time})),
         stats: statsMap(), comebacks: db.comebacks, seats: seatList(),
         joiners: db.joiners.map(({id,name,emoji}) => ({id,name,emoji})),
-        cbEmojis: db.comeback_emojis, merchItems: db.merch_items, goMerchItems: db.go_merch_items, bonusItems: db.bonus_items});
+        cbEmojis: db.comeback_emojis, merchItems: db.merch_items, goMerchItems: db.go_merch_items, bonusItems: db.bonus_items,
+        orderEmojis: db.participants.filter(p => p.emoji).map(({group_order_id, joiner_id, emoji}) => ({group_order_id, joiner_id, emoji}))});
     },
     async login(handle, pin) {
       const a = db.joiner_accounts.find(x => x.handle === normHandle(handle));
@@ -1172,6 +1191,7 @@ function demoApi() {
         if (i >= 0) list[i] = {...list[i], ...row}; else list.push(row); return row;
       }
       if (t === 'participants') {
+        if (row.emoji && !emojiFree(row.group_order_id, row.joiner_id, row.emoji)) throw new Error('duplicate key value violates unique constraint "participants_order_emoji_key"');
         const i = list.findIndex(x => x.group_order_id === row.group_order_id && x.joiner_id === row.joiner_id);
         if (i >= 0) list[i] = {...list[i], ...row}; else list.push(row); return row;
       }
@@ -1183,8 +1203,7 @@ function demoApi() {
       row.id = row.id || uid(); row.created_at = row.created_at || new Date().toISOString();
       if (t === 'joiners') row.pin_hash = row.pin_hash || null;
       list.push(row);
-      if (t === 'claims' && !db.participants.some(p => p.group_order_id === row.group_order_id && p.joiner_id === row.joiner_id))
-        db.participants.push({group_order_id:row.group_order_id, joiner_id:row.joiner_id, shipping_type:null, shipped:false, tracking:null, note:null});
+      if (t === 'claims') ensurePart(row.group_order_id, row.joiner_id);
       return clone(row);
     },
     async saveMany(t, rows) { for (const r of rows) await this.save(t, r); },
@@ -1212,7 +1231,7 @@ function demoApi() {
     },
     async removeImages() {},
     async clearRoster(cbId) { ['comeback_roster','comeback_emojis'].forEach(k => { db[k] = db[k].filter(x => x.comeback_id !== cbId); }); },
-    async joinerClaim(handle, pin, goId, members) {     // same rules as the joiner_claim function in schema.sql
+    async joinerClaim(handle, pin, goId, members, emoji) {     // same rules as the joiner_claim function in schema.sql
       const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
       const g = withDrop(db.group_orders.find(x => x.id === goId));
       if (!g || g.status !== 'Claims Open') return {error:'closed'};
@@ -1237,6 +1256,14 @@ function demoApi() {
           if (n >= g.max_sets) return {error:'sold_out', detail:c};
         }
       }
+      const part = db.participants.find(p => p.group_order_id === goId && p.joiner_id === jid);
+      if (!(part && part.emoji)) {
+        const want = String(emoji || '').trim() || defEmoji(goId, jid);
+        if (!want) return {error:'emoji_needed'};
+        if (want.length > 16 || /[\p{L}\p{N}\s]/u.test(want)) return {error:'bad_emoji'};
+        if (!emojiFree(goId, jid, want)) return {error:'emoji_taken', detail:want};
+        if (part) part.emoji = want; else db.participants.push({group_order_id:goId, joiner_id:jid, emoji:want, shipping_type:null, shipped:false, tracking:null, note:null});
+      }
       const j = db.joiners.find(x => x.id === jid);
       const roster = g.drop && g.drop.comeback_id && g.roster_required ? db.comeback_roster.filter(r => r.comeback_id === g.drop.comeback_id) : [];
       const onList = roster.some(r => r.joiner_id === jid);
@@ -1249,7 +1276,6 @@ function demoApi() {
           source: claimSourceFor(g, {isHost:!!(j && j.is_host), onList, spots, haveStanding, code:c}), roster_pos:null,
           created_at:new Date(Date.now() + k++).toISOString()});
       });
-      if (!db.participants.some(p => p.group_order_id === goId && p.joiner_id === jid)) db.participants.push({group_order_id:goId, joiner_id:jid, shipping_type:null, shipped:false, tracking:null, note:null});
       if (!merch && codes.length) autoAssignBonusDemo(goId, jid);
       return {ok:true, added:codes.length};
     },
@@ -1320,10 +1346,10 @@ function supabaseApi() {
     demo: false,
     async loadPublic() {
       const soft = pr => pr.catch(() => []);     // an older database without the newer upgrades still loads
-      const [drops, gos, shipments, st, comebacks, seats, joiners, cbEmojis, merchItems, goMerchItems, bonusItems] = await Promise.all([
+      const [drops, gos, shipments, st, comebacks, seats, joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis] = await Promise.all([
         all('drops'), all('group_orders'), all('public_shipments'), all('go_stats'),
-        soft(all('comebacks')), soft(all('order_seats')), soft(all('public_joiners')), soft(all('comeback_emojis')), soft(all('merch_items')), soft(all('go_merch_items')), soft(all('bonus_items'))]);
-      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})), joiners, cbEmojis, merchItems, goMerchItems, bonusItems,
+        soft(all('comebacks')), soft(all('order_seats')), soft(all('public_joiners')), soft(all('comeback_emojis')), soft(all('merch_items')), soft(all('go_merch_items')), soft(all('bonus_items')), soft(all('public_order_emojis'))]);
+      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})), joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis,
         stats: Object.fromEntries(st.map(s => [s.group_order_id, {joiners:s.joiners, items:s.items}]))};
     },
     async login(handle, pin) {
@@ -1372,8 +1398,9 @@ function supabaseApi() {
           ? 'Picture upload is not set up yet, or you are signed out. Run upgrade-photos-calendar.sql in Supabase, then sign in again.' : m);
       }
     },
-    async joinerClaim(handle, pin, goId, members) {
-      const {data, error} = await sb.rpc('joiner_claim', {p_handle:handle, p_pin:pin, p_order:goId, p_members:members}); if (error) fail(error); return data;
+    async joinerClaim(handle, pin, goId, members, emoji) {
+      const args = {p_handle:handle, p_pin:pin, p_order:goId, p_members:members}; if (emoji) args.p_emoji = emoji;
+      const {data, error} = await sb.rpc('joiner_claim', args); if (error) fail(error); return data;
     },
     async joinerUnclaim(handle, pin, claimId) {
       const {data, error} = await sb.rpc('joiner_unclaim', {p_handle:handle, p_pin:pin, p_claim:claimId}); if (error) fail(error); return data;
@@ -1587,21 +1614,17 @@ function deadlineChip(g) {
   const n = daysFromNow(localDateOf(dl, g.drop.deadline_time));
   return `<span class="pill ${n <= 3 ? 'coral' : ''}">${n === 0 ? 'Last day' : n === 1 ? '1 day left' : n + ' days left'}</span>`;
 }
-// Who each claim emoji belongs to, for this order (a comeback order uses that comeback's emoji, if set)
-// Only the joiners with a live claim on this order, matched by their resolved emoji (comeback override, if any,
-// else their default). If two joiners share an emoji here, only one of them will show -- see the caption tab's
-// duplicate-emoji warning.
+// Everyone's emoji on one order (each joiner can have a different one per order), from the public order emoji list
+const orderEmojiRows = g => (S.pub.orderEmojis || []).filter(e => e.group_order_id === g.id);
+// Who each claim emoji belongs to on this order: only the joiners with a live claim here, first claimer first.
 function joinerKeyList(g) {
-  const list = S.pub.joiners || []; if (!list.length) return '';
-  const cbId = g.drop && g.drop.comeback_id;
-  const effEmoji = j => { if (cbId) { const ov = (S.pub.cbEmojis || []).find(e => e.comeback_id === cbId && e.joiner_id === j.id); if (ov) return ov.emoji; } return j.emoji; };
-  const claims = seatClaims(g);
+  const names = new Map((S.pub.joiners || []).map(j => [j.id, j.name]));
   const firstAt = new Map();
-  claims.forEach(c => { const e = normEmoji(c.emoji || ''); if (!e) return; if (!firstAt.has(e) || c.created_at < firstAt.get(e)) firstAt.set(e, c.created_at); });
-  const here = list.filter(j => firstAt.has(normEmoji(effEmoji(j))));
+  seatClaims(g).forEach(c => { const e = normEmoji(c.emoji || ''); if (!e) return; if (!firstAt.has(e) || c.created_at < firstAt.get(e)) firstAt.set(e, c.created_at); });
+  const here = orderEmojiRows(g).filter(e => firstAt.has(normEmoji(e.emoji)) && names.has(e.joiner_id));
   if (!here.length) return '';
-  const rows = here.slice().sort((a, b) => (firstAt.get(normEmoji(effEmoji(a))) || '').localeCompare(firstAt.get(normEmoji(effEmoji(b))) || ''))
-    .map(j => `<div class="mine-row compact"><span>${esc(em(effEmoji(j)))} @${esc(j.name)}</span></div>`).join('');
+  const rows = here.slice().sort((a, b) => (firstAt.get(normEmoji(a.emoji)) || '').localeCompare(firstAt.get(normEmoji(b.emoji)) || ''))
+    .map(e => `<div class="mine-row compact"><span>${esc(em(e.emoji))} @${esc(names.get(e.joiner_id))}</span></div>`).join('');
   return `<details class="setdet" open><summary>Joiner key (${here.length})</summary><div style="margin-top:6px">${rows}</div></details>`;
 }
 function goPhotos(g) {
@@ -1708,6 +1731,8 @@ const claimError = (r, go) => ({
   closed:'Claims are closed for this order.', deadline:'The deadline for this order has passed.', no_price:'This order has no price yet, so claiming is not open.',
   nothing:'Pick at least one member.', too_many:'That is too many at once. Claim up to 40 at a time.', bad_member:`${r.detail || 'That'} is not a member of this order.`,
   not_found:'That claim was not found.',
+  emoji_needed:'Pick an emoji to use on this order.', bad_emoji:'Your emoji for this order should be a single emoji, with no letters or numbers.',
+  emoji_taken:`${r.detail || 'That emoji'} is already taken on this order. Pick another one.`,
   sold_out:`${r.detail || 'That'} is sold out.`,
   fixed:`A fixed claim stays unless you switch to ${go ? fullCode(go) : 'OT8'} (claim one first) or the host drops it. DM @${CONFIG.INSTAGRAM}.`,
 }[r.error] || 'Something went wrong. Try again.');
@@ -1716,8 +1741,15 @@ const claimError = (r, go) => ({
 const EMPTY_AN = null;
 function joinerCtx(g) {
   const me = S.me, cb = cbOf(g), roster = (me.roster || []).filter(r => cb && r.comeback_id === cb.id);
-  const emoji = ((me.emojis || []).find(e => cb && e.comeback_id === cb.id) || {}).emoji || me.joiner.emoji;
-  return {isHost: !!me.joiner.is_host, onList: !!(cb && g.roster_required && roster.length), roster, emoji,
+  // Their emoji on this order: the one they already have here, else their usual one (comeback, then default) if
+  // it's free here. If it isn't, the claim form asks them to pick another.
+  const part = (me.participation || []).find(p => p.group_order_id === g.id);
+  const usual = ((me.emojis || []).find(e => cb && e.comeback_id === cb.id) || {}).emoji || me.joiner.emoji || null;
+  const others = orderEmojiRows(g).filter(e => e.joiner_id !== me.joiner.id).map(e => e.emoji), taken = [...others, ...(g.emoji ? [g.emoji] : [])];
+  const takenKeys = new Set(taken.map(e => normEmoji(e).trim()));
+  const locked = !!(part && part.emoji), needPick = !locked && (!usual || takenKeys.has(normEmoji(usual).trim()));
+  const emoji = locked ? part.emoji : needPick ? null : usual;
+  return {isHost: !!me.joiner.is_host, onList: !!(cb && g.roster_required && roster.length), roster, emoji, usual, locked, needPick, others, takenKeys,
     mine: me.claims.filter(c => c.group_order_id === g.id && c.status === 'filled')};
 }
 function hypoClaims(g, codes) {
@@ -1769,7 +1801,12 @@ function claimPanel(g, an) {
   const fullChip = full ? qty(full, full, claimPrice(g, full), `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(claimPrice(g, full))}, always ordered`) : '';
   const fixedHere = [...new Set(mineLive.filter(c => c.source === 'fixed').map(c => c.member_code))];
   const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim' : 'claims'} (${esc(fixedHere.join(', '))}) stay on this order${full ? (heldOf(full) ? `. You have a ${esc(full)}, so you can drop them below.` : ` unless you switch to ${esc(full)}: claim a ${esc(full)} and you can drop them. You can add and drop other ${w1}s any time.`) : ` unless I drop them. You can add and drop other ${w1}s any time.`}</p>` : '';
-  return `<form class="panel-mini" data-form="claim" data-go="${g.id}"><h4 class="sh" style="margin:0">Claim as ${esc(em(ctx.emoji))} ${esc(me.joiner.name)}</h4>
+  const emojiPick = ctx.needPick ? `<div class="field"><label for="ce-${g.id}">Your emoji for this order</label>
+      <input id="ce-${g.id}" name="emoji" class="emoji-in" required maxlength="16" autocomplete="off" spellcheck="false" placeholder="Pick an emoji">
+      <small>${ctx.usual ? `Your usual ${esc(ctx.usual)} is already taken on this order, so pick another one.` : 'Pick an emoji to be on this order.'}
+      ${ctx.others.length ? `Taken here: ${esc(ctx.others.join(' '))}${g.emoji ? `, plus ${esc(g.emoji)} for the order itself` : ''}.` : g.emoji ? `You can't use ${esc(g.emoji)}, the order's own emoji.` : ''} It stays yours on this order.</small></div>` : '';
+  return `<form class="panel-mini" data-form="claim" data-go="${g.id}"><h4 class="sh" style="margin:0">Claim as ${ctx.emoji ? esc(ctx.emoji) + ' ' : ''}${esc(me.joiner.name)}</h4>
+    ${emojiPick}
     <div class="mchips" role="group" aria-label="Choose how many of each to claim">${chips}${fullChip}</div>
     ${fixedNote}
     <p class="small muted" style="margin:0" data-claimnote role="status">Use + to pick a ${w1}.${R.length > 1 ? ' Pick the same one twice to claim it twice.' : ''}</p>
@@ -2125,7 +2162,7 @@ function myOrderRow(d, m, g) {
     ${thumb}
     <div class="ocard-body">
     <div class="ocard-head"><div class="nm">${esc(g.emoji || '📦')} ${esc(goDisplayName(g))}</div>${goPill(g.status)}</div>
-    <div class="ocard-claims">${chipsMe(st.cs, m.infoOf)}</div>
+    <div class="ocard-claims">${part && part.emoji ? `<span class="chip emo" title="Your emoji on this order">${esc(part.emoji)}</span>` : ''}${chipsMe(st.cs, m.infoOf)}</div>
     ${myBonusLine(d, g)}
     <div class="ocard-costs">${cat('Initials', st.initials)}${cat('EMS', st.ems)}${cat('Customs', st.customs)}${cat('DOMs', st.doms)}${cat('Other', st.other)}</div>
     ${myPayDue(g, st)}
@@ -2290,7 +2327,7 @@ const CFG = {
       F('shipped_on','Shipped','date'), F('delivered_on','Arrived','date'), F('tracking','Tracking','text',{wide:1}), F('notes','Notes','text',{wide:1})],
     defaults:{status:'pending', kaddy:'Kfriday'}, label:r => `Box ${r.number}`, sub:r => `${SHIP_LABEL[r.status]}${r.kaddy ? ', ' + r.kaddy : ''}`, sort:(a, b) => b.number - a.number},
   joiners: {table:'joiners', need:['joiners','joiner_accounts'], title:'Joiner', add:'Add joiner',
-    fields:[F('name','Main handle','text',{req:1}), F('emoji','Claim emoji'), F('handles','All handles','text',{wide:1,hint:'Comma-separated, no @. Include alts. Any of them can sign in.'}),
+    fields:[F('name','Main handle','text',{req:1}), F('emoji','Default emoji',{hint:'Used on each new order they join, unless someone there already has it. Then they pick another for that order.'}), F('handles','All handles','text',{wide:1,hint:'Comma-separated, no @. Include alts. Any of them can sign in.'}),
       F('is_host','This is me (GOM)','bool',{hint:'Your claims go first in every line. Only one joiner can be GOM. It is set for you when you save a comeback list.'}), F('notes','Notes (private)','text',{wide:1})],
     defaults:{}, label:r => `${r.emoji || ''} ${r.name}`.trim(),
     sub:r => `${handlesOf(r.id).map(h => '@' + h).join(', ')}, ${r.pin_hash ? 'PIN set' : 'no PIN yet'}`, sort:(a, b) => a.name.localeCompare(b.name), pin:true},
@@ -2833,6 +2870,21 @@ function rafflesPanel(go, raffles) {
     </form>
   </section>`;
 }
+// Each joiner's emoji on one order: their participants row for it (null = they still need one), falling back to their
+// comeback/default emoji only when there's no row at all.
+function orderEmojiOf(parts, ce, jById) {
+  const pm = new Map(parts.map(p => [p.joiner_id, p.emoji || null])), cm = new Map((ce || []).map(e => [e.joiner_id, e.emoji]));
+  return jid => pm.has(jid) ? pm.get(jid) : cm.get(jid) || (jById.get(jid) || {}).emoji || null;
+}
+// Is this emoji OK for a joiner on an order? '' if so, else why not.
+function orderEmojiProblem(go, parts, jid, emoji) {
+  const k = normEmoji(emoji || '').trim(); if (!k) return '';
+  if (emoji.length > 16 || /[\p{L}\p{N}\s]/u.test(emoji)) return 'An emoji can\'t have letters, numbers or spaces.';
+  if (go && normEmoji(go.emoji || '').trim() === k) return `${emoji} is this order's own emoji.`;
+  const other = parts.find(p => p.joiner_id !== jid && p.emoji && normEmoji(p.emoji).trim() === k);
+  if (other) { const j = (A.data.joiners || []).find(x => x.id === other.joiner_id); return `${emoji} is already ${j ? '@' + j.name + '\'s' : 'someone\'s'} emoji on this order.`; }
+  return '';
+}
 async function claimsTab() {
   await need('group_orders', 'joiners', 'joiner_accounts', 'comebacks');
   const picker = goPicker();
@@ -2844,8 +2896,9 @@ async function claimsTab() {
     !isMerch(go) ? api.list('bonus_claims', {group_order_id:go.id}).catch(() => []) : [],
     api.list('raffles', {group_order_id:go.id}).catch(() => [])]);
   const jById = new Map(A.data.joiners.map(j => [j.id, j])), cbA = A.data.comebacks.find(c => c.id === cbId) || null;
-  const ceMap = new Map(ce.map(e => [e.joiner_id, e.emoji])), emo = jid => ceMap.get(jid) || (jById.get(jid) || {}).emoji || null;
+  const emo = orderEmojiOf(parts, ce, jById);
   const an = analyze(go, claims.map(c => ({...c, emoji:emo(c.joiner_id)})), cbA);
+  const noEmoji = parts.filter(p => !p.emoji && claims.some(c => c.joiner_id === p.joiner_id && c.status === 'filled'));
   const info = c => claimInfo(go, c, an);
   const pv = A.preview;
   const newCount = pv ? pv.rows.filter(r => !r.joinerId).length : 0;
@@ -2854,7 +2907,8 @@ async function claimsTab() {
   const partRows = parts.slice().sort((a, b) => nameOf(a.joiner_id).localeCompare(nameOf(b.joiner_id))).map(p => {
     const j = jById.get(p.joiner_id) || {name:'Unknown'};
     const cs = claims.filter(c => c.joiner_id === p.joiner_id);
-    return `<div class="prow"><div><strong>${esc(`${emo(p.joiner_id) || j.emoji || ''} ${j.name}`.trim())}</strong><div>${chips(cs)}</div></div>
+    return `<div class="prow"><div><strong>${esc(`${p.emoji || ''} ${j.name}`.trim())}</strong><div>${chips(cs)}</div></div>
+      <input type="text" class="emoji-in${p.emoji ? '' : ' missing'}" data-part data-joiner="${p.joiner_id}" data-field="emoji" value="${esc(p.emoji || '')}" placeholder="Emoji" maxlength="16" autocomplete="off" aria-label="${esc(j.name)}'s emoji on this order">
       <select data-part data-joiner="${p.joiner_id}" data-field="shipping_type" aria-label="Shipping type"><option value="">Shipping type</option>${SHIPPING_TYPES.map(t => `<option ${t === p.shipping_type ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
       <label class="check"><input type="checkbox" data-part data-joiner="${p.joiner_id}" data-field="shipped" ${p.shipped ? 'checked' : ''}> Shipped</label>
       <input type="text" data-part data-joiner="${p.joiner_id}" data-field="tracking" placeholder="Tracking" value="${esc(p.tracking || '')}" aria-label="Tracking"></div>`;
@@ -2892,7 +2946,9 @@ async function claimsTab() {
         ${pv.issues.length ? `<ul class="issues">${pv.issues.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
         ${claimCount ? `<div class="formacts"><button class="btn" data-action="commitClaims">Add ${claimCount} ${claimCount === 1 ? 'claim' : 'claims'}${newCount ? ` and create ${newCount} new ${newCount === 1 ? 'joiner' : 'joiners'}` : ''}</button></div>` : ''}</div>` : ''}
     </section>
-    <h2 class="blk" style="margin-top:8px">Shipping for this order</h2>
+    <h2 class="blk" style="margin-top:8px">Joiners on this order</h2>
+    <p class="small muted" style="margin:-4px 0 10px">Each joiner's emoji here is theirs for this order only. No two joiners can share one, and none can match the order's own emoji${go.emoji ? ` (${esc(go.emoji)})` : ''}.</p>
+    ${noEmoji.length ? `<p class="err" style="margin:0 0 10px">${noEmoji.length === 1 ? '1 joiner needs' : noEmoji.length + ' joiners need'} an emoji on this order: ${noEmoji.map(p => '@' + esc(nameOf(p.joiner_id))).join(', ')}. Their usual one was already taken here. They show as ❔ until you give them one.</p>` : ''}
     <div class="list">${partRows || '<p class="pad muted">No joiners yet. Add claims above.</p>'}</div>
     <h2 class="blk">All claims (${claims.length})</h2>
     <div class="list">${claimRows || '<p class="pad muted">No claims yet.</p>'}</div>`;
@@ -2925,17 +2981,20 @@ async function captionTab() {
   const go = A.data.group_orders.find(g => g.id === A.goId);
   if (!go) return picker + '<p class="muted">Pick an order to build its caption grid.</p>';
   const cbId = go.drop && go.drop.comeback_id;
-  const [claims, ce] = await Promise.all([api.list('claims', {group_order_id:go.id}), cbId ? api.list('comeback_emojis', {comeback_id:cbId}).catch(() => []) : []]);
-  const jById = new Map(A.data.joiners.map(j => [j.id, j])), ceMap = new Map(ce.map(e => [e.joiner_id, e.emoji]));
+  const [claims, ce, parts] = await Promise.all([api.list('claims', {group_order_id:go.id}), cbId ? api.list('comeback_emojis', {comeback_id:cbId}).catch(() => []) : [],
+    api.list('participants', {group_order_id:go.id})]);
+  const jById = new Map(A.data.joiners.map(j => [j.id, j])), emo = orderEmojiOf(parts, ce, jById);
   const cb = A.data.comebacks.find(c => c.id === cbId) || null;
-  const text = buildCaption(go, claims, jid => (jById.get(jid) || {}).name || 'unknown', jid => ceMap.get(jid) || (jById.get(jid) || {}).emoji || null, cb);
-  const seen = new Map(); [...new Set(claims.filter(c => c.status !== 'dropped').map(c => c.joiner_id))].forEach(id => {
-    const e = ceMap.get(id) || (jById.get(id) || {}).emoji; if (e) seen.set(normEmoji(e), [...(seen.get(normEmoji(e)) || []), (jById.get(id) || {}).name || '?']); });
+  const text = buildCaption(go, claims, jid => (jById.get(jid) || {}).name || 'unknown', emo, cb);
+  const seen = new Map(), missing = []; [...new Set(claims.filter(c => c.status !== 'dropped').map(c => c.joiner_id))].forEach(id => {
+    const e = emo(id), nm = (jById.get(id) || {}).name || '?';
+    if (!e) { missing.push(nm); return; } seen.set(normEmoji(e), [...(seen.get(normEmoji(e)) || []), nm]); });
   const dupes = [...seen.entries()].filter(([, v]) => v.length > 1);
-  const dupeNote = dupes.length ? `<p class="err" style="margin:0 0 12px">Two joiners share an emoji here: ${dupes.map(([e, v]) => `${esc(e)} (${v.map(esc).join(' and ')})`).join('; ')}. Give one of them a different emoji in the Joiners tab${cbId ? ' or the comeback list' : ''} so the grid is readable.</p>` : '';
+  const dupeNote = (dupes.length ? `<p class="err" style="margin:0 0 12px">Two joiners share an emoji here: ${dupes.map(([e, v]) => `${esc(e)} (${v.map(esc).join(' and ')})`).join('; ')}. Give one of them a different emoji for this order in Claims and shipping.</p>` : '')
+    + (missing.length ? `<p class="err" style="margin:0 0 12px">No emoji yet on this order for ${missing.map(n => '@' + esc(n)).join(', ')} (shown as ❔). Give ${missing.length === 1 ? 'them' : 'each'} one in Claims and shipping.</p>` : '');
   return picker + `<section class="panel"><h2>Caption grid</h2>${dupeNote}<pre class="cap" id="capText">${esc(text)}</pre>
     <div class="formacts"><button class="btn" data-action="copyCaption">Copy caption</button></div>
-    <p class="small muted" style="margin:14px 0 0">✅ is an open spot. Each row shows the sets going through in order, then a | and the waitlist, which starts right after the last set that goes through.${fullCode(go) ? ` ${esc(fullCode(go))} claims have their own row.` : ''} The key lists each joiner's emoji${cbId ? ' for this comeback' : ''}.</p></section>`;
+    <p class="small muted" style="margin:14px 0 0">✅ is an open spot. Each row shows the sets going through in order, then a | and the waitlist, which starts right after the last set that goes through.${fullCode(go) ? ` ${esc(fullCode(go))} claims have their own row.` : ''} The key lists each joiner's emoji on this order.</p></section>`;
 }
 
 async function comebackTab() {
@@ -2946,13 +3005,14 @@ async function comebackTab() {
   if (!cbs.some(c => c.id === A.cbId)) A.cbId = cbs[0].id;
   const cb = cbs.find(c => c.id === A.cbId);
   const orders = A.data.group_orders.filter(g => g.drop && g.drop.comeback_id === cb.id && g.status !== 'Cancelled').sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
-  const [roster, emojis, claimsAll] = await Promise.all([api.list('comeback_roster', {comeback_id:cb.id}), api.list('comeback_emojis', {comeback_id:cb.id}), api.list('claims')]);
+  const [roster, emojis, claimsAll, partsAll] = await Promise.all([api.list('comeback_roster', {comeback_id:cb.id}), api.list('comeback_emojis', {comeback_id:cb.id}), api.list('claims'), api.list('participants')]);
   const jById = new Map(A.data.joiners.map(j => [j.id, j])), emoOf = new Map(emojis.map(e => [e.joiner_id, e.emoji]));
   const saved = roster.length ? rosterToText(cb, roster, emojis, A.data.joiners, CONFIG.INSTAGRAM) : '';
   const text = A.rosterText || saved, pv = A.rosterPv;
 
   // soft claimers: how many drops each has joined
-  const per = new Map(orders.map(g => { const cs = claimsAll.filter(c => c.group_order_id === g.id).map(c => ({...c, emoji:emoOf.get(c.joiner_id) || (jById.get(c.joiner_id) || {}).emoji}));
+  const per = new Map(orders.map(g => { const emo = orderEmojiOf(partsAll.filter(p => p.group_order_id === g.id), emojis, jById);
+    const cs = claimsAll.filter(c => c.group_order_id === g.id).map(c => ({...c, emoji:emo(c.joiner_id)}));
     return [g.id, {an:anOf2(g, cs, cb), cs}]; }));
   const stateFor = (g, jid) => { const x = per.get(g.id); return joinState(g, x.an, x.cs.filter(c => c.joiner_id === jid)); };
   const softIds = [...new Set(roster.filter(r => r.tier === 'soft').map(r => r.joiner_id))].filter(id => jById.has(id));
@@ -3385,10 +3445,20 @@ const forms = {
     const members = []; f.querySelectorAll('input[name="q"]').forEach(i => { const cap = i.max === '' ? 10 : Number(i.max); const k = Math.max(0, Math.min(cap, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) members.push(i.dataset.code); });
     if (!members.length) { err.textContent = 'Pick at least one member.'; return; }
     const c = cred(); if (!c) { S.me = null; render(); return; }
-    const res = await api.joinerClaim(c.h, c.p, goId, members);
+    const emojiIn = $('input[name="emoji"]', f), emoji = emojiIn ? emojiIn.value.trim() : '';
+    if (emojiIn) {
+      const ctx = joinerCtx(goById(goId));
+      if (!emoji) { err.textContent = claimError({error:'emoji_needed'}); return; }
+      if (emoji.length > 16 || /[\p{L}\p{N}\s]/u.test(emoji)) { err.textContent = claimError({error:'bad_emoji'}); return; }
+      if (ctx.takenKeys.has(normEmoji(emoji).trim())) { err.textContent = claimError({error:'emoji_taken', detail:emoji}); return; }
+    }
+    const res = await api.joinerClaim(c.h, c.p, goId, members, emoji || null);
     if (res.error) {
-      err.textContent = claimError(res, goById(goId));
+      const msg = claimError(res, goById(goId));
       if (res.error === 'invalid' || res.error === 'locked') { S.me = null; session.del('jo'); }
+      // someone may have just taken the emoji: reload so the form shows the emoji picker with the current list
+      if (res.error === 'emoji_taken' || res.error === 'emoji_needed') { await refreshPublic(); await keepScroll(render); toast(msg, true); return; }
+      err.textContent = msg;
       return;
     }
     await refreshPublic(); await doLogin(c.h, c.p, true);
@@ -3428,6 +3498,11 @@ const forms = {
       if (row.number_of_raffles != null && !(Number.isInteger(row.number_of_raffles) && row.number_of_raffles >= 0)) throw new Error('Number of raffles must be a whole number of 0 or more.');
     }
     const oldGo = key === 'group_orders' && editId ? A.data.group_orders.find(r => r.id === editId) : null;
+    if (oldGo && row.emoji && normEmoji(row.emoji).trim() !== normEmoji(oldGo.emoji || '').trim()) {
+      const clash = (await api.list('participants', {group_order_id:editId})).find(p => p.emoji && normEmoji(p.emoji).trim() === normEmoji(row.emoji).trim());
+      if (clash) { const j = A.data.joiners && A.data.joiners.find(x => x.id === clash.joiner_id);
+        throw new Error(`${row.emoji} is ${j ? '@' + j.name + '\'s' : 'a joiner\'s'} emoji on this order. Pick a different order emoji, or change theirs in Claims and shipping first.`); }
+    }
     if (key === 'group_orders' && row.status === 'Cancelled') toast('Tip: mark that order\'s claims as dropped or refund them so balances stay right.');
     const saved = await api.save(cfg.table, row);
     const notes = [];
@@ -3528,10 +3603,18 @@ app.addEventListener('change', e => {
   if (t.hasAttribute('data-part')) {
     const row = t.closest('.prow'), jid = t.dataset.joiner;
     guard(async () => {
-      await api.save('participants', {group_order_id:A.goId, joiner_id:jid,
+      const emoji = $('[data-field="emoji"]', row).value.trim() || null;
+      if (t.dataset.field === 'emoji') {
+        const go = (A.data.group_orders || []).find(g => g.id === A.goId);
+        const parts = [...document.querySelectorAll('[data-field="emoji"]')].map(i => ({joiner_id:i.dataset.joiner, emoji:i.value.trim()}));
+        const bad = orderEmojiProblem(go, parts, jid, emoji);
+        if (bad) throw new Error(bad);
+      }
+      await api.save('participants', {group_order_id:A.goId, joiner_id:jid, emoji,
         shipping_type:$('[data-field="shipping_type"]', row).value || null,
         shipped:$('[data-field="shipped"]', row).checked,
         tracking:$('[data-field="tracking"]', row).value.trim() || null});
+      if (t.dataset.field === 'emoji') { await refreshPublic(); await keepScroll(render); }
       toast('Saved');
     });
   }
