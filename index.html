@@ -593,8 +593,10 @@ const fmtTimeOf = (date, time) => { const ms = whenMs(date, time); return ms != 
 // "Oct 3" or "Oct 3, 10:59 AM EDT"
 const fmtWhen = (date, time) => { if (!date) return ''; const ms = whenMs(date, time), t = fmtTimeOf(date, time);
   return (ms != null ? fmtDate(ymd(new Date(ms))) : fmtDate(date)) + (t ? ', ' + t : ''); };
-// Past a date + optional time? With no time, it runs through the end of that day.
-const isPastDue = (date, time) => { if (!date) return false; const ms = whenMs(date, time); return ms != null ? Date.now() > ms : today() > String(date).slice(0, 10); };
+// Past a date + optional time? With no time, it runs through the end of that day in KST. Same rule as drop_due_at()
+// in the database, which is what actually accepts or refuses a claim.
+const dueMs = (date, time) => whenMs(date, time) ?? whenMs(addDays(date, 1), '00:00 ' + DEFAULT_TZ);
+const isPastDue = (date, time) => !!date && Date.now() > dueMs(date, time);
 const dropPastDue = d => !!(d && isPastDue(d.deadline, d.deadline_time));
 const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now();
 const normHandle = h => String(h || '').trim().replace(/^@/, '').toLowerCase();
@@ -2199,7 +2201,7 @@ const CFG = {
       F('set_name','Set name','text',{hint:'Optional. For a member-set version this store sells separately, like "Rabbit Version" or "Glasses".',section:'pc'}),
       F('category','Category','combo',{options:() => distinctVals('drops','category'),section:'merch'}),
       F('images','Photocard previews','images',{wide:1}),
-      F('deadline','Order deadline','date',{hint:'The date in the time zone picked for the time.'}), F('deadline_time','Deadline time','time',{hint:'Optional. Shown to everyone in their own time zone.'}),
+      F('deadline','Order deadline','date',{hint:'The date in the time zone picked for the time. With no time, claims close at the end of this day in KST.'}), F('deadline_time','Deadline time','time',{hint:'Optional. Shown to everyone in their own time zone.'}),
       F('event_type','Event type','select',{req:1,opts:EVENT_TYPES}),
       F('event_on','Event date','date',{hint:'Only if there\'s an event.'}),
       F('winners_on','Winner announcement date','date',{hint:'Only if there\'s an event. The date in the time zone picked for the time.'}), F('winners_time','Winner announcement time','time',{hint:'Optional. Shown to everyone in their own time zone.'}),
