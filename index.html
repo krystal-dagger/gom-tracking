@@ -2723,9 +2723,13 @@ async function repriceClaims(oldGo, go) {
 }
 
 /* --- claim text parsing (\"@handle: HJ, SH, YS/WY\") --- */
-function buildPreview(text, go) {
+// Pasted claims come in two shapes. A caption grid (member rows of emojis plus an emoji key, see parseClaimGrid)
+// is recognised by its key lines, which start with an emoji. Anything else is read as "@handle: HJ, SH" lines.
+const isClaimGrid = text => text.split(/\r?\n/).some(l => { const t = l.trim(), f = GRAPHEMES(t)[0]; return f && !/^[A-Za-z0-9@|:,.\-]/.test(f) && t.slice(f.length).trim(); });
+function buildPreview(text, go, existing = [], parts = []) {
+  if (isClaimGrid(text)) return parseClaimGrid(text, go, existing, parts);
   const accounts = new Map(A.data.joiner_accounts.map(a => [a.handle, a.joiner_id]));
-  const rows = new Map(), issues = [];
+  const rows = new Map(), issues = []; let seq = 0;
   text.split('\n').map(s => s.trim()).filter(Boolean).forEach((line, i) => {
     const m = line.match(/^@?([A-Za-z0-9._]+)\s*[:\-,]?\s*(.*)$/);
     if (!m) { issues.push(`Line ${i + 1}: could not read "${line}"`); return; }
@@ -2737,11 +2741,67 @@ function buildPreview(text, go) {
       const R = rowsOf(go), full = fullCode(go);
       const okCode = code === full || R.includes(code);
       if (!okCode) { issues.push(`Line ${i + 1}: "${raw}" is not ${full ? full + ' or ' : ''}one of ${R.join(', ')} for this order`); return; }
-      row.claims.push({code, items:claimItems(go, code), price:claimPrice(go, code)});
+      row.claims.push({code, items:claimItems(go, code), price:claimPrice(go, code), seq:seq++});
     });
     rows.set(handle, row);
   });
   return {rows:[...rows.values()], issues};
+}
+// Reads an Instagram caption grid like
+//   HJ: 💎🌱🚀        (each emoji is one claim on that member, in line order; ✅ open spots and | are skipped)
+//   OT8: 🫐☀️💜
+//   💎 GOM            (the key: emoji, then the handle, with or without @; GOM is you)
+//   💫 dancefae
+// The key sets each joiner's emoji on this order. Claims already on the order aren't added again, so an updated
+// caption can be pasted over and over: only the new emojis in each row get added.
+function parseClaimGrid(text, go, existing, parts) {
+  const R = rowsOf(go), full = fullCode(go), codes = new Set([...R, ...(full ? [full] : [])]);
+  const accounts = new Map(A.data.joiner_accounts.map(a => [a.handle, a.joiner_id])), host = normHandle(CONFIG.INSTAGRAM);
+  const key = new Map(), byHandle = new Map(), lines = [], issues = [], blockers = [];
+  if (isMerch(go)) return {grid:true, rows:[], issues:['Merch orders can\'t be added from an emoji grid yet. Use @handle: item lines instead.'], block:true};
+  text.split(/\r?\n/).forEach((raw, i) => {
+    const line = raw.trim(); if (!line) return;
+    const m = line.match(/^([A-Za-z0-9/]+)\s*:\s*(.*)$/);
+    if (m) {
+      const code = m[1].toUpperCase();
+      if (!codes.has(code)) { issues.push(`Line ${i + 1}: "${m[1]}" is not ${full ? full + ' or ' : ''}one of ${R.join(', ')} for this order`); return; }
+      lines.push({code, toks:GRAPHEMES(m[2]).filter(t => t !== '|' && t !== ',' && normEmoji(t) !== '✅')}); return;
+    }
+    const first = GRAPHEMES(line)[0], rest = first ? line.slice(first.length).trim() : '';
+    if (first && !/^[A-Za-z0-9@]/.test(first) && rest) {
+      const gom = /^GOM$/i.test(rest), h = gom ? host : normHandle(((rest.match(/^@?([A-Za-z0-9._]+)$/) || [])[1]) || '');
+      if (!h) { issues.push(`Line ${i + 1}: could not find a handle in "${line}"`); return; }
+      const k = normEmoji(first);
+      if (key.has(k) && key.get(k).handle !== h) { blockers.push(`${first} is in the key twice (@${key.get(k).handle} and @${h}). Each emoji can only be one joiner.`); return; }
+      if (byHandle.has(h) && normEmoji(byHandle.get(h)) !== k) { blockers.push(`@${h} is in the key twice (${byHandle.get(h)} and ${first}). A joiner has one emoji per order.`); return; }
+      key.set(k, {emoji:first, handle:h, gom}); byHandle.set(h, first); return;
+    }
+    issues.push(`Line ${i + 1}: could not read "${line}"`);
+  });
+  const jidOf = h => accounts.get(h) || (h === host ? hostId() : null) || null;
+  const have = new Map(); existing.filter(c => c.status === 'filled').forEach(c => { const k = c.joiner_id + '|' + c.member_code; have.set(k, (have.get(k) || 0) + 1); });
+  const seen = new Map(), rows = new Map(), unknown = new Set(), gridCount = new Map(); let seq = 0, already = 0;
+  lines.forEach(({code, toks}) => toks.forEach(tok => {
+    const kk = key.get(normEmoji(tok)); if (!kk) { unknown.add(tok); return; }
+    const jid = jidOf(kk.handle), sk = kk.handle + '|' + code, n = (seen.get(sk) || 0) + 1; seen.set(sk, n);
+    if (jid) gridCount.set(jid + '|' + code, n);
+    const row = rows.get(kk.handle) || {handle:kk.handle, joinerId:jid, emoji:kk.emoji, gom:kk.gom, claims:[], already:0};
+    rows.set(kk.handle, row);
+    if (jid && n <= (have.get(jid + '|' + code) || 0)) { row.already++; already++; return; }
+    row.claims.push({code, items:claimItems(go, code), price:claimPrice(go, code), seq:seq++});
+  }));
+  if (unknown.size) issues.push(`These emojis are in the rows but not in the key, so they were skipped: ${[...unknown].join(' ')}`);
+  // Emoji clashes on this order would break the one-emoji-per-joiner rule, so they stop the import until fixed
+  const used = [...rows.values()], inKey = new Set(used.map(r => r.joinerId).filter(Boolean));
+  const nameOf = id => ((A.data.joiners || []).find(j => j.id === id) || {}).name || 'someone';
+  used.forEach(r => {
+    if (go.emoji && normEmoji(go.emoji).trim() === normEmoji(r.emoji).trim()) blockers.push(`${r.emoji} is this order's own emoji, so @${r.handle} can't have it. Change the order's emoji or the key.`);
+    const holder = parts.find(p => p.emoji && !inKey.has(p.joiner_id) && normEmoji(p.emoji).trim() === normEmoji(r.emoji).trim());
+    if (holder) blockers.push(`${r.emoji} is already @${nameOf(holder.joiner_id)}'s emoji on this order, but the key gives it to @${r.handle}. Change @${nameOf(holder.joiner_id)}'s emoji below first, or fix the key.`);
+  });
+  const extra = [...have].reduce((n, [k, v]) => n + Math.max(0, v - (gridCount.get(k) || 0)), 0);
+  if (extra) issues.push(`${extra} ${extra === 1 ? 'claim that is' : 'claims that are'} already on this order ${extra === 1 ? 'isn\'t' : 'aren\'t'} in this list. Nothing is removed; drop ${extra === 1 ? 'it' : 'them'} below if needed.`);
+  return {grid:true, rows:used, issues:[...blockers, ...issues], block:blockers.length > 0, already};
 }
 
 // The catalog of a drop's merch items (name + member options). Reused by the Drops tab (add/edit items on
@@ -2939,12 +2999,14 @@ async function claimsTab() {
     ${rafflesPanel(go, raffles)}
     ${setsPanelA}
     <section class="panel"><h2>Add claims</h2>
-      <p class="small muted" style="margin-top:0">One joiner per line, like <b>@handle: ${esc(rowsOf(go).slice(0, 2).join(', '))}</b>${fullCode(go) ? ` or <b>@handle: ${esc(fullCode(go))}</b>` : ''}. Lines are added in the order you paste them. Write one twice to claim it twice${fullCode(go) ? ` (like <b>@handle: ${esc(rowsOf(go)[0])}, ${esc(rowsOf(go)[0])}, ${esc(fullCode(go))}, ${esc(fullCode(go))}</b>)` : ''}. Claims by you go first in line, then fixed and soft claimers, then everyone else. ${isMerch(go) ? (merchPriceLine(go) ? `Prices come from each item: ${esc(merchPriceLine(go))}.` : '<b>No items priced yet</b> (add some in the Merch items panel above).') : `Prices come from this order: ${go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit pair' : 'PC'}${go.ot8_price != null && fullCode(go) ? `, ${esc(fullCode(go))} ${money(go.ot8_price)}` : ''}` : '<b>no price set yet</b> (set it in Group orders first)'}.`}</p>
-      <textarea id="claimText" placeholder="@starlit_atiny: ${esc(rowsOf(go).slice(0, 2).join(', '))}${fullCode(go) ? `&#10;@bun.tiny: ${esc(fullCode(go))}` : ''}" aria-label="Claims">${esc(A.claimText)}</textarea>
+      ${!isMerch(go) ? `<p class="small muted" style="margin-top:0">Paste the caption grid from your post: a row per ${isUnitGO(go) ? 'unit' : 'member'} like <b>${esc(rowsOf(go)[0])}: 💎🌱🚀</b>${fullCode(go) ? `, an <b>${esc(fullCode(go))}:</b> row` : ''}, and the emoji key underneath, like <b>💫 dancefae</b> (write <b>💎 GOM</b> for you). Each emoji is one claim, in the order shown. The key sets each joiner's emoji on this order. Anything already on the order isn't added twice, so you can paste an updated caption again later.</p>` : ''}
+      <p class="small muted" style="margin-top:0">${!isMerch(go) ? 'Or write one' : 'One'} joiner per line, like <b>@handle: ${esc(rowsOf(go).slice(0, 2).join(', '))}</b>${fullCode(go) ? ` or <b>@handle: ${esc(fullCode(go))}</b>` : ''}. Lines are added in the order you paste them. Write one twice to claim it twice${fullCode(go) ? ` (like <b>@handle: ${esc(rowsOf(go)[0])}, ${esc(rowsOf(go)[0])}, ${esc(fullCode(go))}, ${esc(fullCode(go))}</b>)` : ''}. Claims by you go first in line, then fixed and soft claimers, then everyone else. ${isMerch(go) ? (merchPriceLine(go) ? `Prices come from each item: ${esc(merchPriceLine(go))}.` : '<b>No items priced yet</b> (add some in the Merch items panel above).') : `Prices come from this order: ${go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit pair' : 'PC'}${go.ot8_price != null && fullCode(go) ? `, ${esc(fullCode(go))} ${money(go.ot8_price)}` : ''}` : '<b>no price set yet</b> (set it in Group orders first)'}.`}</p>
+      <textarea id="claimText" rows="12" placeholder="${isMerch(go) ? `@starlit_atiny: ${esc(rowsOf(go).slice(0, 2).join(', '))}` : `${esc(rowsOf(go)[0])}: 💎🌟🐰&#10;${esc(rowsOf(go)[1])}: 🌟&#10;${fullCode(go) ? `${esc(fullCode(go))}: 🐰&#10;` : ''}&#10;💎 GOM&#10;🌟 starlit_atiny&#10;🐰 bun.tiny`}" aria-label="Claims">${esc(A.claimText)}</textarea>
       <div class="formacts"><button class="btn" data-action="previewClaims">Preview</button></div>
-      ${pv ? `<div style="margin-top:18px">${pv.rows.length ? `<table class="pv"><thead><tr><th>Handle</th><th>Claims</th><th>Total</th><th></th></tr></thead><tbody>${pv.rows.map(r => `<tr><td>@${esc(r.handle)}</td><td>${r.claims.map(c => `<span class="chip">${esc(c.code)}</span>`).join('')}</td><td>${money(sum(r.claims, c => c.price))}</td><td>${r.joinerId ? '<span class="pill sea">Existing</span>' : '<span class="pill gold">New joiner</span>'}</td></tr>`).join('')}</tbody></table>` : ''}
+      ${pv ? `<div style="margin-top:18px">${pv.rows.length ? `<table class="pv"><thead><tr>${pv.grid ? '<th>Emoji</th>' : ''}<th>Handle</th><th>Claims to add</th><th>Total</th><th></th></tr></thead><tbody>${pv.rows.map(r => `<tr>${pv.grid ? `<td style="font-size:18px">${esc(r.emoji)}</td>` : ''}<td>@${esc(r.handle)}${r.gom ? ' <span class="pill">GOM</span>' : ''}</td><td>${r.claims.map(c => `<span class="chip">${esc(c.code)}</span>`).join('') || '<span class="small muted">Nothing new</span>'}${r.already ? `<div class="small muted">${r.already} already on the order</div>` : ''}</td><td>${money(sum(r.claims, c => c.price))}</td><td>${r.joinerId ? '<span class="pill sea">Existing</span>' : '<span class="pill gold">New joiner</span>'}</td></tr>`).join('')}</tbody></table>` : ''}
         ${pv.issues.length ? `<ul class="issues">${pv.issues.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
-        ${claimCount ? `<div class="formacts"><button class="btn" data-action="commitClaims">Add ${claimCount} ${claimCount === 1 ? 'claim' : 'claims'}${newCount ? ` and create ${newCount} new ${newCount === 1 ? 'joiner' : 'joiners'}` : ''}</button></div>` : ''}</div>` : ''}
+        ${pv.block ? '<p class="err" style="margin:10px 0 0">Fix the emoji problems above, then preview again.</p>' : !claimCount && pv.rows.length ? '<p class="small muted" style="margin:10px 0 0">Everything in this list is already on the order.</p>' : ''}
+        ${claimCount && !pv.block ? `<div class="formacts"><button class="btn" data-action="commitClaims">Add ${claimCount} ${claimCount === 1 ? 'claim' : 'claims'}${newCount ? ` and create ${newCount} new ${newCount === 1 ? 'joiner' : 'joiners'}` : ''}</button></div>` : ''}</div>` : ''}
     </section>
     <h2 class="blk" style="margin-top:8px">Joiners on this order</h2>
     <p class="small muted" style="margin:-4px 0 10px">Each joiner's emoji here is theirs for this order only. No two joiners can share one, and none can match the order's own emoji${go.emoji ? ` (${esc(go.emoji)})` : ''}.</p>
@@ -3167,26 +3229,38 @@ const actions = {
     await api.setPin(j.id, r.pin); invalidate('joiners');
     toast(DEMO ? 'Demo mode does not store PINs. Sign in with 1234.' : 'PIN saved'); render();
   },
-  previewClaims() {
+  async previewClaims() {
     const go = A.data.group_orders.find(g => g.id === A.goId);
-    A.claimText = $('#claimText').value; A.preview = buildPreview(A.claimText, go); render();
+    A.claimText = $('#claimText').value;
+    const [existing, parts] = await Promise.all([api.list('claims', {group_order_id:go.id}), api.list('participants', {group_order_id:go.id})]);
+    A.preview = buildPreview(A.claimText, go, existing, parts); render();
   },
   async commitClaims() {
-    const go = A.data.group_orders.find(g => g.id === A.goId), pv = A.preview; if (!pv) return;
+    const go = A.data.group_orders.find(g => g.id === A.goId), pv = A.preview; if (!pv || pv.block) return;
     const newOnes = pv.rows.filter(r => !r.joinerId);
     for (const r of newOnes) {
-      const j = await api.save('joiners', {name:r.handle, emoji:null});
+      // from a grid, a new joiner's key emoji becomes their default emoji too
+      const j = await api.save('joiners', {name:r.handle, emoji:pv.grid ? r.emoji : null, ...(r.gom ? {is_host:true} : {})});
       await api.save('joiner_accounts', {handle:r.handle, joiner_id:j.id, platform:'instagram'});
       r.joinerId = j.id;
     }
     let t = Date.now(); const host = await ensureHost();
-    const rows = pv.rows.flatMap(r => r.claims.map(c => ({group_order_id:go.id, joiner_id:r.joinerId, member_code:c.code, items:c.items, price:c.price, status:'filled', source:r.joinerId === host ? 'gom' : 'joiner', created_at:new Date(t++).toISOString()})));
+    if (pv.grid) {
+      // Give everyone in the key their emoji on this order before their claims go in. Anyone switching emoji is
+      // cleared first, so two joiners swapping emojis doesn't trip the one-emoji-per-order rule halfway through.
+      const cur = new Map((await api.list('participants', {group_order_id:go.id})).map(p => [p.joiner_id, p.emoji || '']));
+      const change = pv.rows.filter(r => normEmoji(cur.get(r.joinerId) || '').trim() !== normEmoji(r.emoji).trim());
+      for (const r of change) if (cur.get(r.joinerId)) await api.save('participants', {group_order_id:go.id, joiner_id:r.joinerId, emoji:null});
+      for (const r of change) await api.save('participants', {group_order_id:go.id, joiner_id:r.joinerId, emoji:r.emoji});
+    }
+    const rows = pv.rows.flatMap(r => r.claims.map(c => ({r, c}))).sort((a, b) => a.c.seq - b.c.seq)
+      .map(({r, c}) => ({group_order_id:go.id, joiner_id:r.joinerId, member_code:c.code, items:c.items, price:c.price, status:'filled', source:r.joinerId === host ? 'gom' : 'joiner', created_at:new Date(t++).toISOString()}));
     await api.saveMany('claims', rows);
     if (go.drop && go.drop.comeback_id && go.roster_required) await syncOrder(go, null, {add:false});      // sort them into fixed, soft and extra
     if (!isMerch(go)) await api.recomputeBonus(go.id).catch(() => {});     // these bypassed joiner_claim, so bonus auto-assignment needs a nudge
-    invalidate('joiners', 'joiner_accounts', 'bonus_claims'); await refreshPublic();
+    invalidate('joiners', 'joiner_accounts', 'bonus_claims', 'participants'); await refreshPublic();
     A.preview = null; A.claimText = '';
-    toast(`Added ${rows.length} claims${newOnes.length ? `. ${newOnes.length} new joiners need a PIN and emoji in the Joiners tab` : ''}`); render();
+    toast(`Added ${rows.length} ${rows.length === 1 ? 'claim' : 'claims'}${newOnes.length ? `. ${newOnes.length} new ${newOnes.length === 1 ? 'joiner needs a PIN' : 'joiners need PINs'}${pv.grid ? '' : ' and emojis'} in the Joiners tab` : ''}`); render();
   },
   async toggleClaim(b) { await api.save('claims', {id:b.dataset.id, status:b.dataset.status === 'filled' ? 'dropped' : 'filled'}); await refreshPublic(); render(); },
   async delClaim(b) {
