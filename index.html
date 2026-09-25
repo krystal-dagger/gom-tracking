@@ -1300,7 +1300,7 @@ try { api = DEMO ? demoApi() : supabaseApi(); } catch (e) { api = null; window._
 /* =====================================================================
    6. State
    ===================================================================== */
-const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, meFilters:{q:'', store:'', status:''}, loadError:null, openGoId:null, paySelection:null};
+const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:'', comeback:''}, meFilters:{q:'', store:'', status:''}, loadError:null, openGoId:null, paySelection:null};
 const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, adding:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null, editMerchItem:null, editGoMerchItem:null, editBonusItem:null, editRaffle:null};
 const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, announce:true, event:true}, past:false};
 const goById = id => S.pub.gos.find(g => g.id === id);
@@ -1312,12 +1312,17 @@ function goBatchOf(g, all) {
   const i = siblings.findIndex(x => x.id === g.id);
   return i < 0 ? 1 : i + 1;
 }
+// A drop's own display name: what's typed in, or (if that's blank) its store and round, plus its set name if it has one.
+function dropDisplayName(d) {
+  if (!d) return 'Deleted drop';
+  const base = d.name || (d.store && d.round ? `${d.store} ${d.round}` : '') || 'Drop';
+  return d.set_name ? `${base} \u2014 ${d.set_name}` : base;
+}
 function goDisplayName(g, all) {
   if (!g) return 'Deleted order';
-  const bits = [(g.drop && g.drop.name) || g.name || 'Order'];
-  if (g.set_name) bits.push(g.set_name);
-  const batch = goBatchOf(g, all);
-  if (batch > 1) bits.push(`Batch ${batch}`);
+  const bits = [g.drop ? dropDisplayName(g.drop) : (g.name || 'Order')];
+  const siblingCount = (all || S.pub.gos || []).filter(x => x.drop_id === g.drop_id).length;
+  if (siblingCount > 1) bits.push(`Batch ${goBatchOf(g, all)}`);
   return bits.join(' \u2014 ');
 }
 const goName = (g, all) => g ? `${g.emoji || ''} ${goDisplayName(g, all)}`.trim() : 'Deleted order';
@@ -1399,8 +1404,8 @@ function effDeadline(d) {
 function dropRow(d, anyPics) {
   const gos = gosOfDrop(d.id).slice().sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
   const st = dropStatus(d);
-  const goButtons = gos.length ? gos.map(g => {
-    const label = g.set_name || (goBatchOf(g, gos) > 1 ? `Batch ${goBatchOf(g, gos)}` : '');
+  const goButtons = gos.length ? gos.map((g, i) => {
+    const label = gos.length > 1 ? `Batch ${i + 1}` : '';
     return `<button type="button" class="pill-btn ${GO_PILL[g.status] || ''}" data-action="openGo" data-id="${g.id}">${label ? esc(label) + ': ' : ''}${esc(STATUS_LABEL[g.status] || g.status)}</button>`;
   }).join('') : `<span class="pill">${esc(DROP_FILTER[st] || st)}</span>`;
   const isNew = d.announced_on && (Date.now() - new Date(d.announced_on + 'T00:00:00')) / 864e5 <= 7;
@@ -1414,7 +1419,7 @@ function dropRow(d, anyPics) {
   ].filter(Boolean);
   return `<article class="drop">
     <div class="drop-date">${esc(fmtDate(d.announced_on)) || 'TBD'}${isNew ? '<span class="new">New</span>' : ''}</div>
-    <div class="drop-main">${thumb}<div><h3>${esc(d.name)}</h3><p class="meta">
+    <div class="drop-main">${thumb}<div><h3>${esc(dropDisplayName(d))}</h3><p class="meta">
       ${d.store ? `<span>${esc(d.store)}</span>` : ''}
       <span class="tag">${d.type === 'Merch' ? 'Merch' : 'PC'}</span>
       ${d.type === 'Merch' ? (d.category ? `<span>${esc(d.category)}</span>` : '') : (d.pc_type ? `<span>${esc(d.pc_type)}</span>` : '')}
@@ -1428,9 +1433,10 @@ function dropRow(d, anyPics) {
 function dropList() {
   const f = S.filters, q = f.q.trim().toLowerCase();
   const list = S.pub.drops.filter(d =>
-    (!q || `${d.name} ${d.store || ''} ${d.pc_type || ''} ${d.category || ''}`.toLowerCase().includes(q)) &&
-    (!f.store || d.store === f.store) && (!f.type || d.pc_type === f.type || d.category === f.type) && (!f.status || dropStatus(d) === f.status)
-  ).sort((a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0') || a.name.localeCompare(b.name));
+    (!q || `${dropDisplayName(d)} ${d.store || ''} ${d.pc_type || ''} ${d.category || ''}`.toLowerCase().includes(q)) &&
+    (!f.store || d.store === f.store) && (!f.type || d.pc_type === f.type || d.category === f.type) && (!f.status || dropStatus(d) === f.status) &&
+    (!f.comeback || (f.comeback === '__none__' ? !d.comeback_id : d.comeback_id === f.comeback))
+  ).sort((a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0') || dropDisplayName(a).localeCompare(dropDisplayName(b)));
   if (!list.length) return `<div class="empty"><p>No drops match those filters.</p><button class="btn ghost" data-action="clearFilters">Clear filters</button></div>`;
   const anyPics = S.pub.drops.some(d => (d.images || []).length);
   return `<div class="dlist">${list.map(d => dropRow(d, anyPics)).join('')}</div>`;
@@ -1439,14 +1445,17 @@ function pageDrops() {
   const d = S.pub.drops, f = S.filters;
   const stores = [...new Set(d.map(x => x.store).filter(Boolean))].sort();
   const types = [...new Set(d.map(x => x.pc_type || x.category).filter(Boolean))];
+  const cbUsed = new Set(d.map(x => x.comeback_id).filter(Boolean));
+  const combacksInUse = S.pub.comebacks.filter(c => cbUsed.has(c.id)).sort((a, b) => a.name.localeCompare(b.name));
   const opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`;
   const open = d.filter(x => dropStatus(x) === 'go_open').length;
-  return head('Comeback drops', `${d.length} drops tracked so far${open ? `, and ${open} ${open === 1 ? 'order is' : 'orders are'} open for claims` : ''}. Tap a status to see that group order.`) + `
+  return head('Drops', `${d.length} drops tracked so far${open ? `, and ${open} ${open === 1 ? 'order is' : 'orders are'} open for claims` : ''}. Tap a status to see that group order.`) + `
     <div class="filters">
       <input type="search" data-filter="q" placeholder="Search sets or stores" value="${esc(f.q)}" aria-label="Search drops">
       <select data-filter="store" aria-label="Store">${opt('', 'All stores', f.store)}${stores.map(s => opt(s, s, f.store)).join('')}</select>
       <select data-filter="type" aria-label="Type">${opt('', 'All types', f.type)}${types.map(s => opt(s, s, f.type)).join('')}</select>
       <select data-filter="status" aria-label="Status">${opt('', 'Any status', f.status)}${Object.entries(DROP_FILTER).map(([k, l]) => opt(k, l, f.status)).join('')}</select>
+      <select data-filter="comeback" aria-label="Comeback">${opt('', 'Any comeback', f.comeback)}${opt('__none__', 'None', f.comeback)}${combacksInUse.map(c => opt(c.id, c.name, f.comeback)).join('')}</select>
     </div>
     <div id="dropList">${dropList()}</div>`;
 }
@@ -2072,12 +2081,13 @@ const F = (k, l, t = 'text', o = {}) => ({k, l, t, ...o});
 const opts = list => list.map(o => Array.isArray(o) ? o : [o, o]);
 const CFG = {
   drops: {table:'drops', need:['drops','comebacks','merch_items'], title:'Drop', add:'Add drop', modalForm:true, card:dropCard,
-    fields:[F('name','Name','text',{req:1,wide:1}), F('type','Type','select',{req:1,opts:[['PC','PC'],['Merch','Merch']]}),
+    fields:[F('name','Name','text',{wide:1,hint:'Optional if Comeback, Store and Round are all set below -- the drop then just displays as "Store Round".'}), F('type','Type','select',{req:1,opts:[['PC','PC'],['Merch','Merch']]}),
       F('store','Store','combo',{options:() => distinctVals('drops','store')}),
       F('comeback_id','Comeback','ref',{ref:'comebacks',hint:'Used to work out the next round for this store. Add a new comeback from the Comeback list tab first if you need one.'}),
       F('round','Round','text',{hint:'Fills in from the store and comeback above once you pick both. You can still edit it.'}),
       F('announced_on','Announced on','date'),
       F('album_type','Album type','select',{opts:DROP_ALBUM_TYPES,section:'pc'}), F('pc_type','PC type','select',{opts:PC_TYPES,section:'pc'}), F('solo_unit','Solo or unit','select',{opts:[['Solo','Solo'],['Unit','Unit']],section:'pc'}),
+      F('set_name','Set name','text',{hint:'Optional. For a member-set version this store sells separately, like "Rabbit Version" or "Glasses".',section:'pc'}),
       F('category','Category','combo',{options:() => distinctVals('drops','category'),section:'merch'}),
       F('images','Photocard previews','images',{wide:1}),
       F('deadline','Order deadline','date',{hint:'In KST.'}), F('deadline_time','Deadline time','text',{hint:'Optional, like 11:59 PM KST'}),
@@ -2086,7 +2096,7 @@ const CFG = {
       F('winners_on','Winner announcement date','date',{hint:'In KST. Only if there\'s an event.'}), F('winners_time','Winner announcement time','text',{hint:'Optional, like 8 PM KST'}),
       F('notes','Notes (host only)','text',{wide:1})],
     defaults:{type:'PC', announced_on:today(), images:[], event_type:'none'},
-    label:r => r.name, sub:r => [r.store, r.type, r.type === 'PC' ? r.pc_type : r.category, fmtDate(r.announced_on), (r.images || []).length ? `${r.images.length} ${r.images.length === 1 ? 'photo' : 'photos'}` : 'no photos yet'].filter(Boolean).join(', '),
+    label:r => dropDisplayName(r), sub:r => [r.store, r.type, r.type === 'PC' ? r.pc_type : r.category, fmtDate(r.announced_on), (r.images || []).length ? `${r.images.length} ${r.images.length === 1 ? 'photo' : 'photos'}` : 'no photos yet'].filter(Boolean).join(', '),
     thumb:r => (r.images && r.images[0] && (r.images[0].thumb || r.images[0].src)) || '',
     sort:(a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')},
   group_orders: {table:'group_orders', need:['group_orders','shipments','drops','comebacks'], title:'Group order', add:'Add group order', modalForm:true, card:goCardAdmin,
@@ -2100,7 +2110,6 @@ const CFG = {
       F('min_members','Members needed for a set to go through','number',{hint:'0 means every claim goes through, uncapped.',section:'rules'}),
       F('split_cost','Split cost of unclaimed set members and raffle extras','bool',{hint:'Only used when members needed is more than 0.',section:'rules'}),
       F('sort_threshold','If split cost is above $, order exact claims and sort that set instead','number',{hint:'Leave empty to always split, however high the share gets.',section:'rules'}),
-      F('set_name','Set name','text',{hint:'Optional. For a member-set version this store sells separately, like "Rabbit Version" or "Glasses".',section:'pc'}),
       F('price_per_pc','Price per PC','number',{hint:'For unit sets, the price per unit pair.',section:'pc'}), F('ot8_price','OT8 / OT4 price','number',{hint:'Leave empty to use the per-item price times the number of items.',section:'pc'}),
       F('max_sets','Max # of sets to purchase','number',{hint:'Leave empty for no cap.',section:'pc'})],
     defaults:{platform:'instagram', kaddy:'None', status:'Claims Open', roster_required:true, min_members:0, split_cost:false, number_of_raffles:0},
@@ -2180,7 +2189,7 @@ const handlesOf = id => (A.data.joiner_accounts || []).filter(a => a.joiner_id =
 function refOptions(ref) {
   const rows = A.data[ref] || [];
   if (ref === 'group_orders') return rows.slice().sort(byNewest).map(g => [g.id, goName(g, rows)]);
-  if (ref === 'drops') return rows.slice().sort((a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')).map(d => [d.id, d.name]);
+  if (ref === 'drops') return rows.slice().sort((a, b) => (b.announced_on || '0').localeCompare(a.announced_on || '0')).map(d => [d.id, dropDisplayName(d)]);
   if (ref === 'joiners') return rows.slice().sort((a, b) => a.name.localeCompare(b.name)).map(j => [j.id, `${j.emoji || ''} ${j.name}`.trim()]);
   if (ref === 'shipments') return rows.slice().sort((a, b) => b.number - a.number).map(s => [s.id, `Box ${s.number}`]);
   if (ref === 'comebacks') return rows.slice().sort(byNewest).map(c => [c.id, c.name]);
@@ -2260,7 +2269,7 @@ function dropCard(r) {
   return `<div class="acard">
     ${r.images && r.images[0] ? `<img class="mini" src="${esc(r.images[0].thumb || r.images[0].src)}" alt="">` : ''}
     <div class="acard-main">
-      <div class="acard-title"><strong>${esc(r.name)}</strong></div>
+      <div class="acard-title"><strong>${esc(dropDisplayName(r))}</strong></div>
       ${meta.length ? `<div class="acard-meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div>` : ''}
       ${dates.length ? `<div class="acard-meta">${dates.map(d => `<b>${esc(d)}</b>`).join(' \u00b7 ')}</div>` : ''}
       ${photoCount ? `<div class="acard-meta"><span>${photoCount} photo${photoCount === 1 ? '' : 's'}</span></div>` : ''}
@@ -2823,7 +2832,7 @@ async function pageAdmin() {
    ===================================================================== */
 const app = $('#app');
 const PAGES = {drops:pageDrops, calendar:pageCalendar, me:pageMe, admin:pageAdmin};
-const TITLES = {drops:'Comeback drops', calendar:'Calendar', me:'My account', admin:'Host tools'};
+const TITLES = {drops:'Drops', calendar:'Calendar', me:'My account', admin:'Host tools'};
 let renderId = 0;
 const routeName = () => { const r = location.hash.replace(/^#\/?/, '').split('/')[0]; return PAGES[r] ? r : 'drops'; };
 
@@ -2849,7 +2858,7 @@ async function render() {
 
 const actions = {
   signout() { S.me = null; session.del('jo'); render(); },
-  clearFilters() { S.filters = {q:'', store:'', type:'', status:''}; render(); },
+  clearFilters() { S.filters = {q:'', store:'', type:'', status:'', comeback:''}; render(); },
   clearMeFilters() { S.meFilters = {q:'', store:'', status:''}; render(); },
   async adminOut() { await api.adminSignOut(); A.is = false; A.data = {}; render(); },
   tab(b) { A.tab = b.dataset.tab; A.preview = null; render(); },
@@ -3183,6 +3192,9 @@ const forms = {
     const key = f.dataset.key, cfg = CFG[key], row = readForm(cfg, f), editId = A.edit[key];
     const oldImgs = key === 'drops' && editId ? ((A.data.drops.find(r => r.id === editId) || {}).images || []) : [];
     if (editId) row.id = editId;
+    if (key === 'drops' && !(row.name || '').trim() && !(row.comeback_id && row.store && row.round)) {
+      throw new Error('Give the drop a name, or set its Comeback, Store and Round so it can display as "Store Round".');
+    }
     let handles = null;
     if (key === 'joiners') { handles = (row.handles || '').split(/[\s,]+/).map(normHandle).filter(Boolean); delete row.handles; if (!handles.length) handles = [normHandle(row.name)]; row.name = row.name.replace(/^@/, ''); }
     let drop = null;
