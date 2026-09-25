@@ -206,9 +206,8 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .ocard-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;font-size:13.5px}
 .ocard-foot .owed{font-weight:700;color:var(--coral)}
 .ocard-foot .owed.clear{color:var(--sea)}
-.orders-wrap{position:relative}
-.paybar{position:sticky;top:calc(100vh - 90px);z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
-  background:var(--text);color:var(--panel);padding:12px 18px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);margin:14px 0}
+.paybar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--text);color:var(--panel);padding:12px 18px;border-radius:12px;margin:14px 0}
 .paybar b{font-variant-numeric:tabular-nums}
 .paybar .btn{background:var(--panel);color:var(--text)}
 .paybar .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -228,6 +227,10 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .field.wide{grid-column:1/-1}
 .field label{font-size:13.5px;font-weight:600;color:var(--muted)}
 .field small{color:var(--muted);font-size:12.5px}
+.field small.err{color:var(--coral)}
+.timepick{display:flex;flex-wrap:wrap;gap:8px}
+.timepick input{flex:1.3 1 130px;min-width:0}
+.timepick select{flex:1 1 110px;min-width:0}
 .check{display:flex;gap:8px;align-items:center;font-size:14.5px}
 .mrefs{max-height:240px;overflow-y:auto;display:grid;gap:6px;border:1px solid var(--line);border-radius:10px;padding:10px}
 .check input{width:auto;min-height:0}
@@ -544,6 +547,55 @@ const isoDaysAgo = n => addDays(today(), -n);
 const fmtLong = d => d ? parseD(d).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}) : '';
 const fmtFull = d => d ? parseD(d).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'}) : '';
 const whenChip = d => { const n = daysFromNow(d); return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday' : n > 1 ? `in ${n} days` : `${-n} days ago`; };
+// Optional times are stored as "HH:MM Area/City" -- the time as the host entered it, in the zone they picked (KST
+// unless they changed it). Older free-text times like "11:59 PM KST" or "9 PM" still read fine. Anything with a
+// time is shown converted to the viewer's own time zone; a date without a time is shown as-is.
+const DEFAULT_TZ = 'Asia/Seoul';
+const TZ_CHOICES = [['Asia/Seoul','KST'], ['Asia/Tokyo','JST'], ['Asia/Shanghai','China'], ['Asia/Taipei','Taiwan'], ['Asia/Hong_Kong','Hong Kong'],
+  ['Asia/Singapore','Singapore'], ['Asia/Manila','Philippines'], ['Asia/Jakarta','Jakarta'], ['Asia/Bangkok','Bangkok'], ['Australia/Sydney','Sydney'],
+  ['Europe/London','UK'], ['Europe/Paris','C. Europe'], ['America/New_York','US East'], ['America/Chicago','US Central'],
+  ['America/Denver','US Mountain'], ['America/Los_Angeles','US West'], ['UTC','UTC']];
+const TZ_ABBR = {KST:'Asia/Seoul', JST:'Asia/Tokyo', CST:'Asia/Shanghai', HKT:'Asia/Hong_Kong', SGT:'Asia/Singapore', PHT:'Asia/Manila',
+  WIB:'Asia/Jakarta', ICT:'Asia/Bangkok', AEST:'Australia/Sydney', AEDT:'Australia/Sydney', GMT:'UTC', UTC:'UTC', BST:'Europe/London',
+  CET:'Europe/Paris', CEST:'Europe/Paris', ET:'America/New_York', EST:'America/New_York', EDT:'America/New_York',
+  PT:'America/Los_Angeles', PST:'America/Los_Angeles', PDT:'America/Los_Angeles', CT:'America/Chicago', CDT:'America/Chicago',
+  MT:'America/Denver', MST:'America/Denver', MDT:'America/Denver'};
+const validTz = z => { try { new Intl.DateTimeFormat('en-US', {timeZone:z}); return true; } catch { return false; } };
+function parseTime(s) {
+  const m = String(s || '').trim().match(/^(\d{1,2})(?:[:.](\d{2}))?(?:\s*([ap])\.?m\.?(?![a-z]))?\s*(.*)$/i);
+  if (!m) return null;
+  let h = Number(m[1]); const mi = Number(m[2] || 0), ap = (m[3] || '').toLowerCase(), z = m[4].trim();
+  if (ap) { if (h < 1 || h > 12) return null; h = h % 12 + (ap === 'p' ? 12 : 0); }
+  if (h > 23 || mi > 59) return null;
+  const tz = !z ? DEFAULT_TZ : TZ_ABBR[z.toUpperCase()] || (validTz(z) ? z : null);
+  return tz ? {h, mi, tz} : null;
+}
+const fmtTimeVal = (h, mi, tz) => `${pad2(h)}:${pad2(mi)} ${tz}`;
+// How far a zone's wall clock is ahead of UTC at a given moment, in ms
+function tzOffset(tz, ms) {
+  const p = {}; new Intl.DateTimeFormat('en-US', {timeZone:tz, hourCycle:'h23', year:'numeric', month:'numeric', day:'numeric', hour:'numeric', minute:'numeric', second:'numeric'})
+    .formatToParts(new Date(ms)).forEach(x => { p[x.type] = x.value; });
+  return Date.UTC(p.year, p.month - 1, p.day, p.hour % 24, p.minute, p.second) - Math.floor(ms / 1000) * 1000;
+}
+// The exact moment a date + optional time points at, or null if there's no (readable) time
+function whenMs(date, time) {
+  const t = date && parseTime(time); if (!t) return null;
+  const [y, mo, d] = String(date).slice(0, 10).split('-').map(Number);
+  const wall = Date.UTC(y, mo - 1, d, t.h, t.mi);
+  let ms = wall - tzOffset(t.tz, wall);
+  return wall - tzOffset(t.tz, ms);
+}
+// The date on the viewer's own calendar (differs from the stored date when a time crosses midnight for them)
+const localDateOf = (date, time) => { const ms = whenMs(date, time); return ms == null ? String(date).slice(0, 10) : ymd(new Date(ms)); };
+const fmtClock = ms => new Date(ms).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZoneName:'short'});
+// Just the time part, in the viewer's zone ('' when there's no time; a time we can't read is shown as typed)
+const fmtTimeOf = (date, time) => { const ms = whenMs(date, time); return ms != null ? fmtClock(ms) : time ? String(time) : ''; };
+// "Oct 3" or "Oct 3, 10:59 AM EDT"
+const fmtWhen = (date, time) => { if (!date) return ''; const ms = whenMs(date, time), t = fmtTimeOf(date, time);
+  return (ms != null ? fmtDate(ymd(new Date(ms))) : fmtDate(date)) + (t ? ', ' + t : ''); };
+// Past a date + optional time? With no time, it runs through the end of that day.
+const isPastDue = (date, time) => { if (!date) return false; const ms = whenMs(date, time); return ms != null ? Date.now() > ms : today() > String(date).slice(0, 10); };
+const dropPastDue = d => !!(d && isPastDue(d.deadline, d.deadline_time));
 const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now();
 const normHandle = h => String(h || '').trim().replace(/^@/, '').toLowerCase();
 const isUnitGO = g => !!(g && g.drop && g.drop.type === 'PC' && g.drop.solo_unit === 'Unit');
@@ -612,7 +664,7 @@ function analyze(go, claims, cb) {
   const min = Math.max(0, Math.min(R.length, num(go.min_members)));
   const capSets = go.max_sets != null ? num(go.max_sets) : Infinity;
   const dl = go.drop && go.drop.deadline;
-  const closed = go.status !== 'Claims Open' || !!(dl && today() > String(dl).slice(0, 10));
+  const closed = go.status !== 'Claims Open' || dropPastDue(go.drop);
   const live = claims.filter(c => c.status !== 'dropped').sort(claimCmp);
   const FULL = fullCode(go);
   const ot8 = live.filter(c => c.member_code === FULL);
@@ -717,7 +769,7 @@ function rulesList(go, cb) {
     ? `Fixed claimers keep their fixed ${W} unless they switch to ${full} or I drop them, and can add or drop other ${W} any time. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`
     : `Fixed claimers keep their fixed ${W} unless I drop them, and can add or drop other ${W} any time. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`);
   const dl = go.drop && go.drop.deadline;
-  if (dl) out.push(`Claim deadline: ${fmtDate(dl)}${go.drop.deadline_time ? ', ' + go.drop.deadline_time : ''}.`);
+  if (dl) out.push(`Claim deadline: ${fmtWhen(dl, go.drop.deadline_time)}.`);
   return out;
 }
 
@@ -1056,7 +1108,7 @@ function demoApi() {
   });
   const demoAuth = (handle, pin) => { const a = db.joiner_accounts.find(x => x.handle === normHandle(handle)); return a && pin === '1234' ? a.joiner_id : null; };
   const withDrop = g => { if (g && !g.drop) g.drop = db.drops.find(x => x.id === g.drop_id) || null; return g; };
-  const isOpen = g => { withDrop(g); return g && g.status === 'Claims Open' && !(g.drop && g.drop.deadline && today() > g.drop.deadline); };
+  const isOpen = g => { withDrop(g); return g && g.status === 'Claims Open' && !dropPastDue(g.drop); };
   return {
     demo: true,
     async loadPublic() {
@@ -1139,7 +1191,7 @@ function demoApi() {
       const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
       const g = withDrop(db.group_orders.find(x => x.id === goId));
       if (!g || g.status !== 'Claims Open') return {error:'closed'};
-      if (g.drop && g.drop.deadline && today() > g.drop.deadline) return {error:'deadline'};
+      if (dropPastDue(g.drop)) return {error:'deadline'};
       attachMerchItems([g], db.merch_items, db.go_merch_items);
       const merch = isMerch(g);
       if (merch ? !g.merchItems.length : g.price_per_pc == null) return {error:'no_price'};
@@ -1453,8 +1505,8 @@ function dropRow(d, anyPics) {
   const thumb = items.length ? pcCover('drop:' + d.id, items, d.name) : (anyPics ? '<span class="pc-sp" aria-hidden="true"></span>' : '');
   const dl = effDeadline(d), T = EVT_NAME[d.event_type];
   const dates = [
-    dl ? ['Order by', `${fmtDate(dl.date)}${dl.time ? ', ' + dl.time : ''}`] : null,
-    d.event_type !== 'none' && d.winners_on ? [`${T} winners`, `${fmtDate(d.winners_on)}${d.winners_time ? ', ' + d.winners_time : ''}`] : null,
+    dl ? ['Order by', fmtWhen(dl.date, dl.time)] : null,
+    d.event_type !== 'none' && d.winners_on ? [`${T} winners`, fmtWhen(d.winners_on, d.winners_time)] : null,
     d.event_type !== 'none' && d.event_on ? [T, fmtDate(d.event_on)] : null,
   ].filter(Boolean);
   return `<article class="drop">
@@ -1506,8 +1558,8 @@ function pageDrops() {
 function deadlineChip(g) {
   const dl = g.drop && g.drop.deadline;
   if (g.status !== 'Claims Open' || !dl) return '';
-  const n = daysFromNow(dl);
-  if (n < 0) return '<span class="pill coral">Deadline passed</span>';
+  if (dropPastDue(g.drop)) return '<span class="pill coral">Deadline passed</span>';
+  const n = daysFromNow(localDateOf(dl, g.drop.deadline_time));
   return `<span class="pill ${n <= 3 ? 'coral' : ''}">${n === 0 ? 'Last day' : n === 1 ? '1 day left' : n + ' days left'}</span>`;
 }
 // Who each claim emoji belongs to, for this order (a comeback order uses that comeback's emoji, if set)
@@ -1543,7 +1595,7 @@ const seatClaims = g => seatsOf(g.id).map(x => ({id:x.id, member_code:x.member_c
 const anOf = g => analyze(g, seatClaims(g), cbOf(g));
 const em = e => e || '❔';
 const myIds = () => new Set(S.me ? S.me.claims.map(c => c.id) : []);
-const claimsOpen = g => g.status === 'Claims Open' && !(g.drop && g.drop.deadline && daysFromNow(g.drop.deadline) < 0);
+const claimsOpen = g => g.status === 'Claims Open' && !dropPastDue(g.drop);
 // "$48.00 per item" if every item is the same price, "$48.00-$60.00 per item" if they differ, '' if there are none yet
 const merchPriceLine = go => {
   const items = (go && go.merchItems) || []; if (!items.length) return '';
@@ -1734,9 +1786,9 @@ function goCard(g) {
   const d = g.drop;
   const an = anOf(g);
   const facts = [
-    ['Order deadline', d && d.deadline ? `${esc(fmtDate(d.deadline) + (d.deadline_time ? ', ' + d.deadline_time : ''))} ${deadlineChip(g)}` : ''],
+    ['Order deadline', d && d.deadline ? `${esc(fmtWhen(d.deadline, d.deadline_time))} ${deadlineChip(g)}` : ''],
     ['Payment deadline', g.payment_deadline ? esc(fmtDate(g.payment_deadline)) : ''],
-    ['Winners announced', d && d.event_type !== 'none' && d.winners_on ? esc(fmtDate(d.winners_on) + (d.winners_time ? ', ' + d.winners_time : '')) : ''],
+    ['Winners announced', d && d.event_type !== 'none' && d.winners_on ? esc(fmtWhen(d.winners_on, d.winners_time)) : ''],
     [d && d.event_type !== 'none' && d.event_on ? `${EVT_NAME[d.event_type] || 'Event'} date` : '', d && d.event_type !== 'none' && d.event_on ? esc(fmtDate(d.event_on)) : ''],
     ['Price', isMerch(g) ? esc(merchPriceLine(g)) : (g.price_per_pc != null ? esc(`${money(g.price_per_pc)} per ${isUnitGO(g) ? 'unit' : 'PC'}${g.ot8_price != null && fullCode(g) ? `, ${fullCode(g)} ${money(g.ot8_price)}` : ''}`) : '')],
     ['Rules', esc(rulesShort(g))],
@@ -1812,8 +1864,8 @@ function calEvents() {
     if (g && g.status === 'Cancelled') return;
     const T = EVT_NAME[d.event_type];
     const base = {title:d.name, sub:d.store || '', emoji:g && g.emoji, goId:g && g.id, imgKey:'drop:' + d.id};
-    if (d.deadline) push({...base, kind:'deadline', date:String(d.deadline).slice(0, 10), label:'Order deadline', short:'Due', note:d.deadline_time || ''});
-    if (d.event_type !== 'none' && d.winners_on) push({...base, kind:'announce', date:String(d.winners_on).slice(0, 10), label:`${T} winners announced`, short:'Winners', note:d.winners_time || ''});
+    if (d.deadline) push({...base, kind:'deadline', date:localDateOf(d.deadline, d.deadline_time), label:'Order deadline', short:'Due', note:fmtTimeOf(d.deadline, d.deadline_time)});
+    if (d.event_type !== 'none' && d.winners_on) push({...base, kind:'announce', date:localDateOf(d.winners_on, d.winners_time), label:`${T} winners announced`, short:'Winners', note:fmtTimeOf(d.winners_on, d.winners_time)});
     if (d.event_type !== 'none' && d.event_on) push({...base, kind:'event', date:String(d.event_on).slice(0, 10), label:`${T} date`, short:EVT_SHORT[d.event_type] || 'Event', note:''});
   });
   ev.forEach(e => { e.past = (e.end || e.date) < t; });
@@ -2147,10 +2199,10 @@ const CFG = {
       F('set_name','Set name','text',{hint:'Optional. For a member-set version this store sells separately, like "Rabbit Version" or "Glasses".',section:'pc'}),
       F('category','Category','combo',{options:() => distinctVals('drops','category'),section:'merch'}),
       F('images','Photocard previews','images',{wide:1}),
-      F('deadline','Order deadline','date',{hint:'In KST.'}), F('deadline_time','Deadline time','text',{hint:'Optional, like 11:59 PM KST'}),
+      F('deadline','Order deadline','date',{hint:'The date in the time zone picked for the time.'}), F('deadline_time','Deadline time','time',{hint:'Optional. Shown to everyone in their own time zone.'}),
       F('event_type','Event type','select',{req:1,opts:EVENT_TYPES}),
       F('event_on','Event date','date',{hint:'Only if there\'s an event.'}),
-      F('winners_on','Winner announcement date','date',{hint:'In KST. Only if there\'s an event.'}), F('winners_time','Winner announcement time','text',{hint:'Optional, like 8 PM KST'}),
+      F('winners_on','Winner announcement date','date',{hint:'Only if there\'s an event. The date in the time zone picked for the time.'}), F('winners_time','Winner announcement time','time',{hint:'Optional. Shown to everyone in their own time zone.'}),
       F('notes','Notes (host only)','text',{wide:1})],
     defaults:{type:'PC', announced_on:today(), images:[], event_type:'none'},
     label:r => dropDisplayName(r), sub:r => [r.store, r.type, r.type === 'PC' ? r.pc_type : r.category, fmtDate(r.announced_on), (r.images || []).length ? `${r.images.length} ${r.images.length === 1 ? 'photo' : 'photos'}` : 'no photos yet'].filter(Boolean).join(', '),
@@ -2281,6 +2333,12 @@ function fieldHTML(f, val) {
     const list = f.t === 'ref' ? refOptions(f.ref) : f.opts;
     input = `<select id="${id}" name="${f.k}" ${req}>${f.req && f.t === 'select' ? '' : '<option value="">None</option>'}${list.map(([ov, ol]) => `<option value="${esc(ov)}" ${String(ov) === String(v) ? 'selected' : ''}>${esc(ol)}</option>`).join('')}</select>`;
   } else if (f.t === 'number') input = `<input id="${id}" name="${f.k}" type="number" step="any" value="${esc(v)}" ${req}>`;
+  else if (f.t === 'time') {
+    const t = parseTime(v), tz = t ? t.tz : DEFAULT_TZ, zones = TZ_CHOICES.some(([z]) => z === tz) ? TZ_CHOICES : [[tz, tz], ...TZ_CHOICES];
+    input = `<div class="timepick"><input id="${id}" name="${f.k}" type="time" value="${t ? pad2(t.h) + ':' + pad2(t.mi) : ''}" ${req}>
+      <select name="${f.k}__tz" aria-label="${esc(f.l)} time zone">${zones.map(([z, l]) => `<option value="${esc(z)}" ${z === tz ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+      ${v && !t ? `<small class="err">Couldn't read the saved time "${esc(v)}". Pick it again.</small>` : ''}`;
+  }
   else if (f.t === 'date') input = `<input id="${id}" name="${f.k}" type="date" value="${esc(String(v).slice(0, 10))}" ${req}>`;
   else if (f.t === 'combo') {
     const opts = (f.options ? f.options() : []).filter(o => o !== v);
@@ -2296,6 +2354,7 @@ function readForm(cfg, form) {
     if (f.t === 'bool') { out[f.k] = fd.has(f.k); continue; }
     if (f.t === 'multiref') { out[f.k] = fd.getAll(f.k); continue; }
     if (f.t === 'images') { try { const v = JSON.parse(fd.get(f.k) || '[]'); out[f.k] = Array.isArray(v) ? v : []; } catch { out[f.k] = []; } continue; }
+    if (f.t === 'time') { const [h, mi] = String(fd.get(f.k) || '').split(':').map(Number); out[f.k] = fd.get(f.k) ? fmtTimeVal(h, mi, fd.get(f.k + '__tz') || DEFAULT_TZ) : null; continue; }
     const raw = fd.get(f.k), v = raw == null ? '' : String(raw).trim();
     out[f.k] = v === '' ? null : f.t === 'number' ? Number(v) : v;
   }
@@ -2318,9 +2377,9 @@ function dropCard(r) {
   const T = EVT_NAME[r.event_type];
   const dates = [
     r.announced_on ? `Announced ${fmtDate(r.announced_on)}` : '',
-    r.deadline ? `Order by ${fmtDate(r.deadline)}${r.deadline_time ? ', ' + r.deadline_time : ''}` : '',
+    r.deadline ? `Order by ${fmtWhen(r.deadline, r.deadline_time)}` : '',
     r.event_type !== 'none' && r.event_on ? `${T} ${fmtDate(r.event_on)}` : '',
-    r.event_type !== 'none' && r.winners_on ? `Winners ${fmtDate(r.winners_on)}${r.winners_time ? ', ' + r.winners_time : ''}` : '',
+    r.event_type !== 'none' && r.winners_on ? `Winners ${fmtWhen(r.winners_on, r.winners_time)}` : '',
   ].filter(Boolean);
   const photoCount = (r.images || []).length;
   return `<div class="acard">
@@ -2341,7 +2400,7 @@ function dropCard(r) {
 function goCardAdmin(r) {
   const meta = [r.platform === 'threads' ? 'Threads' : 'Instagram', r.kaddy !== 'None' ? r.kaddy : ''].filter(Boolean);
   const priceLine = isMerch(r) ? merchPriceLine(r) : (r.price_per_pc != null ? `${money(r.price_per_pc)} per ${isUnitGO(r) ? 'unit' : 'PC'}` : '');
-  const dl = r.drop && r.drop.deadline ? `Order by ${fmtDate(r.drop.deadline)}${r.drop.deadline_time ? ', ' + r.drop.deadline_time : ''}` : '';
+  const dl = r.drop && r.drop.deadline ? `Order by ${fmtWhen(r.drop.deadline, r.drop.deadline_time)}` : '';
   const ship = r.shipment_id && (A.data.shipments || []).find(s => s.id === r.shipment_id);
   const facts = [priceLine, rulesShort(r), r.number_of_raffles ? `${r.number_of_raffles} raffle${r.number_of_raffles === 1 ? '' : 's'}` : ''].filter(Boolean);
   const img = r.drop && r.drop.images && r.drop.images[0];
@@ -2787,7 +2846,7 @@ function buildCaption(go, claims, primary, emo, cb) {
   const full = fullCode(go);
   const price = isMerch(go) ? merchPriceLine(go) : (go.price_per_pc != null ? `${money(go.price_per_pc)} per ${isUnitGO(go) ? 'unit' : 'PC'}${go.ot8_price != null && full ? `, ${full} ${money(go.ot8_price)}` : ''}` : '');
   const dlDate = go.drop && go.drop.deadline;
-  const dl = dlDate ? `Deadline: ${fmtDate(dlDate)}${go.drop.deadline_time ? ', ' + go.drop.deadline_time : ''}` : '';
+  const dl = dlDate ? `Deadline: ${fmtWhen(dlDate, go.drop.deadline_time)}` : '';
   const head = [`${go.emoji || ''} ${goDisplayName(go)}`.trim(), price, dl].filter(Boolean), isHost = jid => normHandle(primary(jid)) === normHandle(CONFIG.INSTAGRAM);
   const who = jid => isHost(jid) ? `${emo(jid) || '💎'} GOM` : `${emo(jid) || '❔'} @${primary(jid)}`;
   const live = claims.filter(c => c.status !== 'dropped').map(c => ({...c, emoji:emo(c.joiner_id)})).sort(claimCmp);
@@ -2931,18 +2990,7 @@ async function render() {
     // Lock the page behind a popup from scrolling too -- on mobile, letting both scroll at once is what
     // causes a fixed-position overlay to visibly flicker/detach for a frame while the page moves under it.
     document.body.style.overflow = $('.modal-back') ? 'hidden' : '';
-    watchPayBar();
   }
-}
-// Sticky's own "release near the end" behavior is unreliable across browsers, so instead just hide the
-// pay bar outright once its section has fully scrolled out of view in either direction.
-let payBarObserver = null;
-function watchPayBar() {
-  if (payBarObserver) { payBarObserver.disconnect(); payBarObserver = null; }
-  const wrap = $('#myOrders'), bar = $('#payBar');
-  if (!wrap || !bar) return;
-  payBarObserver = new IntersectionObserver(([entry]) => { bar.style.visibility = entry.isIntersecting ? '' : 'hidden'; }, {threshold:0});
-  payBarObserver.observe(wrap);
 }
 
 const actions = {
