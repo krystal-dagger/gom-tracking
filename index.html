@@ -20,6 +20,7 @@
   --gold:#8f5a05; --gold-bg:#fbedc9;
   --sea:#0b746a;  --sea-bg:#d6f2ee;
   --coral:#b13a2a; --coral-bg:#fde2dc;
+  --plum:#7a3e9d; --plum-bg:#efe1f7;
   --btn:#12222f; --btn-ink:#ffffff; --focus:#1b64c4;
   --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
   --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -33,6 +34,7 @@
     --gold:#f0bb55; --gold-bg:#3b2d0f;
     --sea:#66d8ca;  --sea-bg:#11373a;
     --coral:#ff9887; --coral-bg:#45231f;
+    --plum:#d3a6f0; --plum-bg:#33213f;
     --btn:#f0bb55; --btn-ink:#201703; --focus:#86b8ff;
     color-scheme:dark;
   }
@@ -43,6 +45,7 @@
   --gold:#f0bb55; --gold-bg:#3b2d0f;
   --sea:#66d8ca;  --sea-bg:#11373a;
   --coral:#ff9887; --coral-bg:#45231f;
+  --plum:#d3a6f0; --plum-bg:#33213f;
   --btn:#f0bb55; --btn-ink:#201703; --focus:#86b8ff;
   color-scheme:dark;
 }
@@ -110,6 +113,7 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .pill.gold{background:var(--gold-bg);color:var(--gold)}
 .pill.sea{background:var(--sea-bg);color:var(--sea)}
 .pill.coral{background:var(--coral-bg);color:var(--coral)}
+.pill.plum{background:var(--plum-bg);color:var(--plum)}
 a.pl{text-decoration:none}
 .chip{display:inline-block;font:600 12px/1 var(--body);padding:5px 7px;border-radius:6px;background:var(--panel-2);margin:0 4px 4px 0}
 .chip.x{text-decoration:line-through;color:var(--muted);opacity:.75}
@@ -206,6 +210,9 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .ocard-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;font-size:13.5px}
 .ocard-foot .owed{font-weight:700;color:var(--coral)}
 .ocard-foot .owed.clear{color:var(--sea)}
+.ocard-due{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:13.5px;color:var(--muted)}
+.ocard-due b{color:var(--text);font-weight:600}
+.ocard-due .late,.ocard-due .late b{color:var(--coral)}
 .paybar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
   background:var(--text);color:var(--panel);padding:12px 18px;border-radius:12px;margin:14px 0}
 .paybar b{font-variant-numeric:tabular-nums}
@@ -315,6 +322,7 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 .k-deadline{--k:var(--coral);--kb:var(--coral-bg)}
 .k-announce{--k:var(--gold);--kb:var(--gold-bg)}
 .k-event{--k:var(--sea);--kb:var(--sea-bg)}
+.k-payment{--k:var(--plum);--kb:var(--plum-bg)}
 .calbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-bottom:12px}
 .calnav{display:flex;align-items:center;gap:8px}
 .calnav h2{font-size:22px;font-weight:700;letter-spacing:-.01em;min-width:9.5ch;text-align:center}
@@ -327,6 +335,7 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 .kchip i{width:10px;height:10px;background:var(--k);border-radius:50%;flex:none}
 .kchip.k-deadline i{border-radius:2px}
 .kchip.k-event i{transform:rotate(45deg);border-radius:1px}
+.kchip.k-payment i,.dots i.k-payment{background:transparent;box-shadow:inset 0 0 0 2.5px var(--k)}
 .kchip[aria-pressed="true"]{background:var(--kb);color:var(--k);border-color:var(--k)}
 .kchip[aria-pressed="false"] i{opacity:.4}
 .month{border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
@@ -524,8 +533,8 @@ const IMG_BUCKET = 'drop-images', MAX_IMGS = 12;
 const KADDY_OPTS = [['None','None'],['Kfriday','Kfriday'],['Paysable','Paysable']];
 const EVT_NAME = {fancall:'Fancall', fansign:'Fansign', 'fancall & fansign':'Fancall & fansign'};
 const EVT_SHORT = {fancall:'Call', fansign:'Sign', 'fancall & fansign':'Call & sign'};
-const KIND_ORDER = ['deadline', 'announce', 'event'];
-const KINDS = {deadline:{label:'Order deadlines', pill:'coral'}, announce:{label:'Winner announcements', pill:'gold'}, event:{label:'Fancall and fansign dates', pill:'sea'}};
+const KIND_ORDER = ['deadline', 'payment', 'announce', 'event'];
+const KINDS = {deadline:{label:'Order deadlines', pill:'coral'}, payment:{label:'Your payment deadlines', pill:'plum'}, announce:{label:'Winner announcements', pill:'gold'}, event:{label:'Fancall and fansign dates', pill:'sea'}};
 
 /* =====================================================================
    3. Small helpers
@@ -598,6 +607,15 @@ const fmtWhen = (date, time) => { if (!date) return ''; const ms = whenMs(date, 
 const dueMs = (date, time) => whenMs(date, time) ?? whenMs(addDays(date, 1), '00:00 ' + DEFAULT_TZ);
 const isPastDue = (date, time) => !!date && Date.now() > dueMs(date, time);
 const dropPastDue = d => !!(d && isPastDue(d.deadline, d.deadline_time));
+// Each kind of payment has its own deadline. Initials and DOMs are set on the group order; EMS and customs are set on
+// the kaddy box, and every order in that box uses them. Pass the host's own box list on the admin side.
+const PAY_KINDS = [['initials','Initials'], ['ems','EMS'], ['customs','Customs'], ['doms','DOMs']];
+function payDeadlines(g, shipments) {
+  const ship = g.shipment_id && (shipments || S.pub.shipments || []).find(x => x.id === g.shipment_id);
+  const at = (o, k) => o && o[k] ? {date:String(o[k]).slice(0, 10), time:o[k + '_time'] || null} : null;
+  const src = {initials:at(g, 'payment_deadline'), doms:at(g, 'doms_deadline'), ems:at(ship, 'ems_deadline'), customs:at(ship, 'customs_deadline')};
+  return PAY_KINDS.filter(([k]) => src[k]).map(([kind, label]) => ({kind, label, ...src[kind]}));
+}
 const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now();
 const normHandle = h => String(h || '').trim().replace(/^@/, '').toLowerCase();
 const isUnitGO = g => !!(g && g.drop && g.drop.type === 'PC' && g.drop.solo_unit === 'Unit');
@@ -915,6 +933,7 @@ function seedDemo() {
    [6,'Kfriday','pending',null,null,null]]
   .forEach(([number,kaddy,status,paid_on,shipped_on,delivered_on]) =>
     D.shipments.push({id:'s'+number, number, kaddy, status, paid_on, shipped_on, delivered_on, tracking:null}));
+  Object.assign(D.shipments.find(s => s.id === 's6'), {ems_deadline:off(12), ems_deadline_time:'23:59 Asia/Seoul', customs_deadline:off(26), customs_deadline_time:null});
 
   D.comebacks.push({id:'cb1', name:'Next ATEEZ comeback', soft_min_orders:6, fixed_slots:2, soft_slots:5, created_at:'2026-08-01T00:00:00Z'});
 
@@ -975,7 +994,7 @@ function seedDemo() {
   const book   = makeGo('book','book','Seonghwa Before Sleep Book','📘',{status:'On Hand', price_per_pc:37, shipment_id:'s3'});
   const mk4    = makeGo('mk4','mk4','Makestar 4.0','🐹',{status:'On Hand', price_per_pc:6, ot8_price:45, shipment_id:'s5', roster_required:false});
   const sw     = makeGo('sw','sw','Soundwave 5.0 FC','🍉',{status:'Ordered', price_per_pc:14, ot8_price:112, roster_required:false, payment_deadline:off(-3)});
-  const mk7    = makeGo('mk7','mk7','Makestar 7.0 FS','🥕',{status:'Ordered', price_per_pc:8, ot8_price:64, roster_required:false, payment_deadline:off(6)});
+  const mk7    = makeGo('mk7','mk7','Makestar 7.0 FS','🥕',{status:'Ordered', price_per_pc:8, ot8_price:64, roster_required:false, payment_deadline:off(6), payment_deadline_time:'20:00 Asia/Seoul'});
   const music  = makeGo('music','music','Musicart Caolan (FC)','🎵',{status:'At Kaddy', price_per_pc:12.5, shipment_id:'s6', roster_required:false});
   const mex    = makeGo('mex','mex','Makestar Mexico','🐱',{status:'Ordered', price_per_pc:28});
   const kong   = makeGo('kong','kong','Whosfan Kongsoonteez LD','🐶',{status:'Claims Open', price_per_pc:14, min_members:6, split_cost:true, sort_threshold:2, number_of_raffles:1});
@@ -1053,6 +1072,9 @@ function seedDemo() {
   ch(jjmuze,'doms','US Stamped shipping (JJMuze)',2.00,true);
   ch(mk4,'doms','US Stamped shipping (Makestar 4.0)',2.00,false);
   ch(book,'doms','US Tracked shipping (Before Sleep Book)',6.50,false);
+  ch(music,'ems','EMS share (box 6)',5.25,true);
+  Object.assign(jjmuze, {doms_deadline:off(4), doms_deadline_time:'21:00 Asia/Seoul'});
+  Object.assign(music, {payment_deadline:off(2), payment_deadline_time:'23:59 Asia/Seoul'});
   D.payments.push({id:uid(), joiner_id:me, group_order_id:null, amount:150, method:'venmo', paid_on:'2026-08-02', note:'Fromm, Mini Fanmeet, Makestar, JJMuze'});
   D.payments.push({id:uid(), joiner_id:me, group_order_id:null, amount:118, method:'paypal', paid_on:'2026-09-05', note:'Soundwave, Musicart, Before Sleep Book'});
 
@@ -1115,7 +1137,8 @@ function demoApi() {
     demo: true,
     async loadPublic() {
       return clone({drops:db.drops, gos:db.group_orders,
-        shipments: db.shipments.map(({id,number,kaddy,status,paid_on,shipped_on,delivered_on}) => ({id,number,kaddy,status,paid_on,shipped_on,delivered_on})),
+        shipments: db.shipments.map(({id,number,kaddy,status,paid_on,shipped_on,delivered_on,ems_deadline,ems_deadline_time,customs_deadline,customs_deadline_time}) =>
+          ({id,number,kaddy,status,paid_on,shipped_on,delivered_on,ems_deadline,ems_deadline_time,customs_deadline,customs_deadline_time})),
         stats: statsMap(), comebacks: db.comebacks, seats: seatList(),
         joiners: db.joiners.map(({id,name,emoji}) => ({id,name,emoji})),
         cbEmojis: db.comeback_emojis, merchItems: db.merch_items, goMerchItems: db.go_merch_items, bonusItems: db.bonus_items});
@@ -1396,7 +1419,7 @@ try { api = DEMO ? demoApi() : supabaseApi(); } catch (e) { api = null; window._
    ===================================================================== */
 const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:'', comeback:''}, meFilters:{q:'', store:'', status:''}, loadError:null, openGoId:null, paySelection:null};
 const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, adding:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null, editMerchItem:null, editGoMerchItem:null, editBonusItem:null, editRaffle:null};
-const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, announce:true, event:true}, past:false};
+const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, payment:true, announce:true, event:true}, past:false};
 const goById = id => S.pub.gos.find(g => g.id === id);
 const seatsOf = id => S.pub.seats.filter(x => x.group_order_id === id);
 // A group order's own name is gone: its display name is the drop's name, plus an optional set name
@@ -1789,7 +1812,7 @@ function goCard(g) {
   const an = anOf(g);
   const facts = [
     ['Order deadline', d && d.deadline ? `${esc(fmtWhen(d.deadline, d.deadline_time))} ${deadlineChip(g)}` : ''],
-    ['Payment deadline', g.payment_deadline ? esc(fmtDate(g.payment_deadline)) : ''],
+    ...payDeadlines(g).map(x => [`${x.label} payment due`, esc(fmtWhen(x.date, x.time))]),
     ['Winners announced', d && d.event_type !== 'none' && d.winners_on ? esc(fmtWhen(d.winners_on, d.winners_time)) : ''],
     [d && d.event_type !== 'none' && d.event_on ? `${EVT_NAME[d.event_type] || 'Event'} date` : '', d && d.event_type !== 'none' && d.event_on ? esc(fmtDate(d.event_on)) : ''],
     ['Price', isMerch(g) ? esc(merchPriceLine(g)) : (g.price_per_pc != null ? esc(`${money(g.price_per_pc)} per ${isUnitGO(g) ? 'unit' : 'PC'}${g.ot8_price != null && fullCode(g) ? `, ${fullCode(g)} ${money(g.ot8_price)}` : ''}`) : '')],
@@ -1870,6 +1893,17 @@ function calEvents() {
     if (d.event_type !== 'none' && d.winners_on) push({...base, kind:'announce', date:localDateOf(d.winners_on, d.winners_time), label:`${T} winners announced`, short:'Winners', note:fmtTimeOf(d.winners_on, d.winners_time)});
     if (d.event_type !== 'none' && d.event_on) push({...base, kind:'event', date:String(d.event_on).slice(0, 10), label:`${T} date`, short:EVT_SHORT[d.event_type] || 'Event', note:''});
   });
+  // Signed-in joiners also see their own payment deadlines, for every order they're in, until they're paid
+  if (S.me) {
+    const m = computeMe(S.me);
+    const ids = new Set([...S.me.claims.map(c => c.group_order_id), ...S.me.charges.map(c => c.group_order_id)]);
+    [...ids].map(goById).filter(Boolean).forEach(g => {
+      const st = myOrderStat(S.me, m, g);
+      myPayDeadlines(g, st).filter(x => !x.paid).forEach(x => push({title:goDisplayName(g), sub:g.drop && g.drop.store || '', emoji:g.emoji, goId:g.id,
+        imgKey:g.drop ? 'drop:' + g.drop.id : '', kind:'payment', date:localDateOf(x.date, x.time), label:`${x.label} payment due`, short:'Pay',
+        note:[fmtTimeOf(x.date, x.time), x.late ? 'Overdue' : st[x.kind] > 0.005 ? `${money(st[x.kind])} ${x.label}` : ''].filter(Boolean).join(', ')}));
+    });
+  }
   ev.forEach(e => { e.past = (e.end || e.date) < t; });
   return ev.sort((a, b) => a.date.localeCompare(b.date) || KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.title.localeCompare(b.title));
 }
@@ -1919,7 +1953,8 @@ function listView(events) {
   return `<div class="evs">${[...groups].map(([d, list]) => `<h3 class="evd">${esc(fmtFull(d))}<span>${esc(whenChip(d))}</span></h3>${list.map(evRow).join('')}`).join('')}</div>`;
 }
 
-function pageCalendar() {
+async function pageCalendar() {
+  if (!S.me && session.get('jo')) { try { const c = JSON.parse(session.get('jo')); await doLogin(c.h, c.p, true); } catch { S.me = null; } }
   const events = calEvents().filter(e => CAL.kinds[e.kind]);
   const [Y, M] = CAL.month.split('-').map(Number);
   const monthName = new Date(Y, M - 1, 1).toLocaleDateString('en-US', {month:'long', year:'numeric'});
@@ -1930,8 +1965,8 @@ function pageCalendar() {
       ? `<div class="calnav"><button type="button" class="icon-btn" data-action="calMove" data-step="-1" aria-label="Previous month">‹</button><h2 aria-live="polite">${esc(monthName)}</h2><button type="button" class="icon-btn" data-action="calMove" data-step="1" aria-label="Next month">›</button><button type="button" class="btn ghost small" data-action="calMove" data-step="today">Today</button></div>`
       : `<label class="check"><input type="checkbox" data-cal="past" ${CAL.past ? 'checked' : ''}> Show past dates</label>`}
   </div>
-  <div class="legend" role="group" aria-label="Show or hide kinds of dates">${KIND_ORDER.map(k => `<button type="button" class="kchip k-${k}" data-action="calKind" data-kind="${k}" aria-pressed="${CAL.kinds[k]}"><i></i>${esc(KINDS[k].label)}</button>`).join('')}</div>`;
-  return head('Calendar', 'Order deadlines, fancall and fansign winner announcements, and event dates. Times are noted on each date when known.') + bar + (CAL.view === 'month' ? monthView(events) : listView(events));
+  <div class="legend" role="group" aria-label="Show or hide kinds of dates">${KIND_ORDER.filter(k => k !== 'payment' || S.me).map(k => `<button type="button" class="kchip k-${k}" data-action="calKind" data-kind="${k}" aria-pressed="${CAL.kinds[k]}"><i></i>${esc(KINDS[k].label)}</button>`).join('')}</div>`;
+  return head('Calendar', `Order deadlines, fancall and fansign winner announcements, and event dates. Times are noted on each date when known, in your own time zone.${S.me ? ' Your own payment deadlines are here too.' : ' Sign in on My account to see your payment deadlines here too.'}`) + bar + (CAL.view === 'month' ? monthView(events) : listView(events));
 }
 
 /* =====================================================================
@@ -2065,10 +2100,22 @@ function myBonusLine(d, g) {
   }).join('');
   return `<div class="ocard-bonuses">${rows}</div>`;
 }
+// This joiner's payment deadlines on one order. A kind counts as paid once they've been charged for it and owe
+// nothing on the order; it's late once its deadline has passed and they still owe on the order.
+function myPayDeadlines(g, st) {
+  if (g.status === 'Cancelled') return [];
+  return payDeadlines(g).map(x => {
+    const charged = st[x.kind] > 0.005, paid = charged && st.owed <= 0.005;
+    return {...x, charged, paid, late:!paid && st.owed > 0.005 && isPastDue(x.date, x.time)};
+  });
+}
+function myPayDue(g, st) {
+  const list = myPayDeadlines(g, st); if (!list.length) return '';
+  return `<div class="ocard-due">${list.map(x => `<span class="${x.late ? 'late' : ''}">${esc(x.label)} ${x.paid ? 'was due' : x.late ? 'overdue since' : 'due'} <b>${esc(fmtWhen(x.date, x.time))}</b>${x.paid ? ' (paid)' : ''}</span>`).join('')}</div>`;
+}
 function myOrderRow(d, m, g) {
   const st = myOrderStat(d, m, g);
   const part = d.participation.find(p => p.group_order_id === g.id);
-  const overdue = g.payment_deadline && st.owed > 0.005 && today() > g.payment_deadline;
   const items = g.drop ? galleryItems('drop:' + g.drop.id) : [];
   const thumb = items.length ? `<img class="ocard-thumb" src="${esc(items[0].thumb || items[0].src)}" alt="">` : '';
   const canPay = st.owed > 0.005 && !st.isPending && g.status !== 'Cancelled';
@@ -2081,7 +2128,7 @@ function myOrderRow(d, m, g) {
     <div class="ocard-claims">${chipsMe(st.cs, m.infoOf)}</div>
     ${myBonusLine(d, g)}
     <div class="ocard-costs">${cat('Initials', st.initials)}${cat('EMS', st.ems)}${cat('Customs', st.customs)}${cat('DOMs', st.doms)}${cat('Other', st.other)}</div>
-    ${g.payment_deadline ? `<p class="small ${overdue ? 'err' : 'muted'}" style="margin:8px 0 0">${overdue ? 'Payment was due' : 'Pay by'} ${esc(fmtDate(g.payment_deadline))}</p>` : ''}
+    ${myPayDue(g, st)}
     <div class="ocard-foot"><span>${shipCell(g, part)}</span>${g.status === 'Cancelled' ? '<span class="muted">Refund</span>'
       : st.isPending ? '<span class="pill gold">Payment pending review</span>'
       : `<span class="owed${st.owed > 0.005 ? '' : ' clear'}">${st.owed > 0.005 ? `Owed ${money(st.owed)}` : PAY_STATUS_LABEL[st.payStatus]}</span>`}</div>
@@ -2214,8 +2261,11 @@ const CFG = {
     fields:[F('drop_id','Drop','ref',{ref:'drops',req:1,wide:1,hint:'Which drop this order is for. A new drop creates its first order for you automatically; add more here for extra rounds. The order\'s name is worked out from the drop -- a second order for the same drop is labeled "Batch 2" automatically.'}),
       F('emoji','Emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}), F('platform_link','Platform link','text',{wide:1}),
       F('kaddy','Kaddy','select',{req:1,opts:KADDY_OPTS}), F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
-      F('payment_deadline','Payment deadline','date',{hint:'When joiners need to have paid by. Separate from the claim deadline, which is on the drop.'}),
       F('public_note','Notes (visible to joiners)','text',{wide:1}), F('host_note','Notes (host only)','text',{wide:1}),
+      F('payment_deadline','Initials payment deadline','date',{hint:'When joiners need to have paid for their claims. Separate from the claim deadline, which is on the drop.'}),
+      F('payment_deadline_time','Initials payment time','time',{hint:'Optional. Shown to everyone in their own time zone.'}),
+      F('doms_deadline','DOMs payment deadline','date',{hint:'When domestic shipping needs to be paid. EMS and customs deadlines come from the kaddy box.'}),
+      F('doms_deadline_time','DOMs payment time','time',{hint:'Optional.'}),
       F('roster_required','Add fixed and soft claimers automatically','bool',{hint:'Only when the drop has a comeback. GOM goes first, then fixed claimers, then soft claimers, in list order.'}),
       F('number_of_raffles','Number of raffles','number',{hint:'Add the raffles themselves in the Claims tab once you have a count.'}),
       F('min_members','Members needed for a set to go through','number',{hint:'0 means every claim goes through, uncapped.',section:'rules'}),
@@ -2234,7 +2284,10 @@ const CFG = {
     fields:[F('number','Box number','number',{req:1}), F('kaddy','Kaddy'), F('status','Status','select',{req:1,opts:SHIP_STATUSES}), F('box_dims','Box size (cm)'),
       F('weight_kg','Weight (kg)','number'), F('cost_krw','Shipping (KRW)','number'), F('cost_usd','Shipping (USD)','number'),
       F('declared_value_usd','Declared value (USD)','number'), F('customs_usd','Customs (USD)','number'),
-      F('paid_on','Shipping paid','date'), F('shipped_on','Shipped','date'), F('delivered_on','Arrived','date'), F('tracking','Tracking','text',{wide:1}), F('notes','Notes','text',{wide:1})],
+      F('paid_on','Shipping paid','date'),
+      F('ems_deadline','EMS payment deadline','date',{hint:'Every group order in this box uses it.'}), F('ems_deadline_time','EMS payment time','time',{hint:'Optional.'}),
+      F('customs_deadline','Customs payment deadline','date',{hint:'Every group order in this box uses it.'}), F('customs_deadline_time','Customs payment time','time',{hint:'Optional.'}),
+      F('shipped_on','Shipped','date'), F('delivered_on','Arrived','date'), F('tracking','Tracking','text',{wide:1}), F('notes','Notes','text',{wide:1})],
     defaults:{status:'pending', kaddy:'Kfriday'}, label:r => `Box ${r.number}`, sub:r => `${SHIP_LABEL[r.status]}${r.kaddy ? ', ' + r.kaddy : ''}`, sort:(a, b) => b.number - a.number},
   joiners: {table:'joiners', need:['joiners','joiner_accounts'], title:'Joiner', add:'Add joiner',
     fields:[F('name','Main handle','text',{req:1}), F('emoji','Claim emoji'), F('handles','All handles','text',{wide:1,hint:'Comma-separated, no @. Include alts. Any of them can sign in.'}),
@@ -2404,6 +2457,7 @@ function goCardAdmin(r) {
   const priceLine = isMerch(r) ? merchPriceLine(r) : (r.price_per_pc != null ? `${money(r.price_per_pc)} per ${isUnitGO(r) ? 'unit' : 'PC'}` : '');
   const dl = r.drop && r.drop.deadline ? `Order by ${fmtWhen(r.drop.deadline, r.drop.deadline_time)}` : '';
   const ship = r.shipment_id && (A.data.shipments || []).find(s => s.id === r.shipment_id);
+  const pdl = payDeadlines(r, A.data.shipments || []);
   const facts = [priceLine, rulesShort(r), r.number_of_raffles ? `${r.number_of_raffles} raffle${r.number_of_raffles === 1 ? '' : 's'}` : ''].filter(Boolean);
   const img = r.drop && r.drop.images && r.drop.images[0];
   return `<div class="acard">
@@ -2414,6 +2468,7 @@ function goCardAdmin(r) {
       ${facts.length ? `<div class="acard-meta">${facts.map(f => `<b>${esc(f)}</b>`).join(' \u00b7 ')}</div>` : ''}
       ${dl ? `<div class="acard-meta"><span>${esc(dl)}</span></div>` : ''}
       ${ship ? `<div class="acard-meta"><span>Kaddy box ${ship.number}</span></div>` : ''}
+      ${pdl.length ? `<div class="acard-meta">${pdl.map(x => `<span>${esc(x.label)} due ${esc(fmtWhen(x.date, x.time))}</span>`).join('')}</div>` : ''}
       ${r.host_note ? `<div class="acard-notes">${esc(r.host_note)}</div>` : ''}
     </div>
     <div class="acard-acts">
