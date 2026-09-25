@@ -369,9 +369,11 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 .arow-l{display:flex;gap:12px;align-items:center;min-width:0}
 
 /* sets: availability grid, rules, claiming */
-.gocard.wide{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:20px 30px;align-items:start}
-.gc-l,.gc-r{display:flex;flex-direction:column;gap:16px;min-width:0}
-@media(max-width:860px){.gocard.wide{grid-template-columns:minmax(0,1fr)}}
+.gc-top{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:16px 24px;align-items:start}
+.gc-photo,.gc-info{min-width:0}
+.gc-info{display:flex;flex-direction:column;gap:14px}
+.gc-grid{display:flex;flex-direction:column;gap:16px;min-width:0;border-top:1px solid var(--line);padding-top:16px}
+@media(max-width:640px){.gc-top{grid-template-columns:1fr}}
 .sh{font:600 15px/1.3 var(--display);margin:0 0 8px}
 .gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 table.av{border-collapse:collapse;table-layout:fixed;width:100%}
@@ -426,15 +428,13 @@ ul.rules{color:var(--text);margin-top:0} ul.rules li,ul.setnotes li{margin:5px 0
 .bar-sm{height:8px;border-radius:4px;background:var(--panel-2);overflow:hidden;margin:8px 0}
 table.pv td .chip{margin-bottom:2px}
 .em2{font-size:22px;vertical-align:-2px}
-details.mini-fold{border-top:1px solid var(--line);padding-top:12px}
-details.mini-fold>summary,details.setdet>summary{cursor:pointer;font:600 14.5px/1.3 var(--body)}
-details.mini-fold[open]>summary{margin-bottom:14px}
+details.setdet>summary{cursor:pointer;font:600 14.5px/1.3 var(--body)}
 table.av td.wl,table.av th.wl{background:var(--panel-2)}
 table.av td.wl{opacity:.85}
 table.av tr.setrow td{white-space:nowrap}
 .mine-row .chip{margin:0 6px 0 0}
-.gc-r h4.sh{margin:0 0 8px}
-.gc-r .panel-mini .field label{font-size:13px}
+.gc-grid h4.sh{margin:0 0 8px}
+.gc-grid .panel-mini .field label{font-size:13px}
 .cbpanel .mine-row .pill{margin-left:8px}
 .metric{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .metric b{font:700 34px/1 var(--display);font-variant-numeric:tabular-nums}
@@ -1648,7 +1648,7 @@ function goCard(g) {
   const st = S.pub.stats[g.id] || {joiners:0, items:0};
   const ship = g.shipment_id && S.pub.shipments.find(s => s.id === g.shipment_id);
   const d = g.drop;
-  const an = anOf(g), wide = g.status === 'Claims Open';
+  const an = anOf(g);
   const facts = [
     ['Order deadline', d && d.deadline ? `${esc(fmtDate(d.deadline) + (d.deadline_time ? ', ' + d.deadline_time : ''))} ${deadlineChip(g)}` : ''],
     ['Payment deadline', g.payment_deadline ? esc(fmtDate(g.payment_deadline)) : ''],
@@ -1659,16 +1659,16 @@ function goCard(g) {
     ['Joiners', esc(st.joiners || '')], ['Items claimed', esc(st.items || '')],
     ['Kaddy box', ship ? esc(`#${ship.number}, ${SHIP_LABEL[ship.status].toLowerCase()}`) : ''],
   ].filter(x => x[1] !== '');
-  const left = `${goPhotos(g)}
-    <div class="gohead"><h3><span class="em" aria-hidden="true">${esc(g.emoji || '📦')}</span>${esc(goDisplayName(g))}</h3>${goPill(g.status)}</div>
+  const info = `<div class="gohead"><h3><span class="em" aria-hidden="true">${esc(g.emoji || '📦')}</span>${esc(goDisplayName(g))}</h3>${goPill(g.status)}</div>
     ${stepper(g.status)}
     <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
     ${g.public_note ? `<p class="small muted" style="margin:0">${esc(g.public_note)}</p>` : ''}
-    ${g.platform_link ? `<a class="small" href="${esc(g.platform_link)}" target="_blank" rel="noopener">See the ${g.platform === 'threads' ? 'Threads' : 'Instagram'} post</a>` : ''}
-    ${joinerKeyList(g)}`;
-  if (wide) return `<article class="gocard wide"><div class="gc-l">${left}</div><div class="gc-r">${setsPanel(g, an)}</div></article>`;
-  const fold = g.status !== 'Cancelled' ? `<details class="mini-fold" open><summary>Sets and availability</summary><div class="stack">${setsPanel(g, an, true)}</div></details>` : '';
-  return `<article class="gocard">${left}${fold}</article>`;
+    ${g.platform_link ? `<a class="small" href="${esc(g.platform_link)}" target="_blank" rel="noopener">See the ${g.platform === 'threads' ? 'Threads' : 'Instagram'} post</a>` : ''}`;
+  return `<article class="gocard">
+    <div class="gc-top"><div class="gc-photo">${goPhotos(g)}</div><div class="gc-info">${info}</div></div>
+    <div class="gc-grid">${setsPanel(g, an)}</div>
+    ${joinerKeyList(g)}
+  </article>`;
 }
 // The order-detail popup, opened from a button on its drop's card (or a calendar/My-account link).
 function goModal() {
