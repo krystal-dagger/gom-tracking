@@ -1206,6 +1206,10 @@ function demoApi() {
       if (!type || !(bi.type_names || []).includes(type)) return {error:'bad_type'};
       bc.type = type; return {ok:true};
     },
+    async recomputeBonus(goId) {
+      const jids = [...new Set(db.claims.filter(c => c.group_order_id === goId && c.status === 'filled').map(c => c.joiner_id))];
+      jids.forEach(jid => autoAssignBonusDemo(goId, jid));
+    },
   };
 }
 
@@ -1315,6 +1319,9 @@ function supabaseApi() {
     async pickBonusType(handle, pin, bonusClaimId, type) {
       const {data, error} = await sb.rpc('joiner_pick_bonus_type', {p_handle:handle, p_pin:pin, p_bonus_claim_id:bonusClaimId, p_type:type});
       if (error) fail(error); return data;
+    },
+    async recomputeBonus(goId) {
+      const {error} = await sb.rpc('admin_recompute_bonus', {p_order:goId}); if (error) fail(error);
     },
     async clearRoster(cbId) {
       for (const t of ['comeback_roster', 'comeback_emojis']) { const {error} = await sb.from(t).delete().eq('comeback_id', cbId); if (error) fail(error); }
@@ -2668,7 +2675,8 @@ function bonusPanel(go, claims, bonusClaims) {
   const tc = editing ? editing.type_count : 1;
   const typeNameFields = Array.from({length:8}, (_, i) => `<div class="field bi-type-name" data-idx="${i}" style="${i < tc ? '' : 'display:none'}"><label for="biType-${i}">Type ${i + 1} name</label><input id="biType-${i}" name="type_name_${i}" value="${esc((editing && editing.type_names && editing.type_names[i]) || '')}" placeholder="Type ${i + 1}"></div>`).join('');
   return `<section class="panel"><h2>Bonus items</h2>
-    <p class="small muted" style="margin-top:0">"Claim N, get 1 [item]" rewards. ${totalItems} ${totalItems === 1 ? 'item is' : 'items are'} claimed so far. As soon as a joiner's own claims cross the threshold, a bonus is assigned to them automatically.</p>
+    <p class="small muted" style="margin-top:0">"Claim N, get 1 [item]" rewards. ${totalItems} ${totalItems === 1 ? 'item is' : 'items are'} claimed so far. As soon as a joiner's own claims cross the threshold, a bonus is assigned to them automatically. Pasted-in claims get this nudged for them automatically too, but if you've edited claims another way and a count here looks off, use this:
+      <button type="button" class="btn ghost small" data-action="recomputeBonus" style="margin-left:6px">Recompute</button></p>
     ${blocks || '<p class="small muted" style="margin:0">No bonus items set up yet.</p>'}
     <form data-form="bonusItem" class="panel-mini" style="margin-top:14px">
       <input type="hidden" name="id" value="${editing ? esc(editing.id) : ''}">
@@ -2995,7 +3003,8 @@ const actions = {
     const rows = pv.rows.flatMap(r => r.claims.map(c => ({group_order_id:go.id, joiner_id:r.joinerId, member_code:c.code, items:c.items, price:c.price, status:'filled', source:r.joinerId === host ? 'gom' : 'joiner', created_at:new Date(t++).toISOString()})));
     await api.saveMany('claims', rows);
     if (go.drop && go.drop.comeback_id && go.roster_required) await syncOrder(go, null, {add:false});      // sort them into fixed, soft and extra
-    invalidate('joiners', 'joiner_accounts'); await refreshPublic();
+    if (!isMerch(go)) await api.recomputeBonus(go.id).catch(() => {});     // these bypassed joiner_claim, so bonus auto-assignment needs a nudge
+    invalidate('joiners', 'joiner_accounts', 'bonus_claims'); await refreshPublic();
     A.preview = null; A.claimText = '';
     toast(`Added ${rows.length} claims${newOnes.length ? `. ${newOnes.length} new joiners need a PIN and emoji in the Joiners tab` : ''}`); render();
   },
@@ -3027,6 +3036,11 @@ const actions = {
   },
   // bonus items and who's claimed them
   editBonusItem(b) { A.editBonusItem = b.dataset.id; render(); },
+  async recomputeBonus() {
+    const go = A.data.group_orders.find(g => g.id === A.goId); if (!go) return;
+    await api.recomputeBonus(go.id);
+    invalidate('bonus_claims'); toast('Bonus assignments recomputed'); render();
+  },
   cancelBonusItem() { A.editBonusItem = null; render(); },
   async removeBonusItem(b) {
     const ok = await ask({title:'Remove this bonus item?', html:'<p>This also removes anyone already assigned it.</p>', ok:'Remove', danger:true});
