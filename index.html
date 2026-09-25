@@ -206,7 +206,8 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .ocard-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;font-size:13.5px}
 .ocard-foot .owed{font-weight:700;color:var(--coral)}
 .ocard-foot .owed.clear{color:var(--sea)}
-.paybar{position:sticky;bottom:12px;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+.orders-wrap{position:relative}
+.paybar{position:sticky;top:calc(100vh - 90px);z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
   background:var(--text);color:var(--panel);padding:12px 18px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);margin:14px 0}
 .paybar b{font-variant-numeric:tabular-nums}
 .paybar .btn{background:var(--panel);color:var(--text)}
@@ -380,7 +381,7 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 .gophotos{position:relative;aspect-ratio:55/85;border-radius:12px;overflow:hidden;background:var(--panel-2);box-shadow:0 0 0 1px var(--line)}
 .gophoto-slide{position:absolute;inset:0;display:none;padding:0;border:0;margin:0;cursor:zoom-in;background:none}
 .gophoto-slide.on{display:block}
-.gophoto-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.gophoto-slide img{width:100%;height:100%;object-fit:contain;display:block}
 .gophoto-nav{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:999px;border:0;background:rgba(9,17,26,.55);color:#fff;font-size:19px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
 .gophoto-nav.prev{left:8px} .gophoto-nav.next{right:8px}
 .gophoto-nav:hover{background:rgba(9,17,26,.78)}
@@ -394,22 +395,21 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 @media(max-width:640px){.gc-top{grid-template-columns:1fr}}
 .sh{font:600 15px/1.3 var(--display);margin:0 0 8px}
 .gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
-table.av{border-collapse:collapse;table-layout:fixed;width:100%}
+table.av{border-collapse:collapse;table-layout:fixed}
 table.av th,table.av td{padding:3px 4px;text-align:center;font-variant-numeric:tabular-nums;width:68px;height:36px;overflow:hidden;text-overflow:ellipsis}
 table.av thead th{font-size:12px;color:var(--muted);font-weight:600;background:var(--panel-2);height:auto;padding:7px 4px}
 table.av thead th:first-child{width:52px}
 table.av tbody th{text-align:left;font-size:14px;font-weight:600;padding-left:10px;background:var(--panel-2);width:52px}
 table.av td{font-size:19px;line-height:1;border-top:1px solid var(--line)}
 table.av .wl1{border-left:2px dashed var(--muted)}
-/* the last column takes whatever width is left over, with its content kept at the same spot a normal column's would be */
-table.av tr th:last-child,table.av tr td:last-child{width:auto;text-align:left}
 table.av tr.setrow td{font-size:12px;font-weight:600;color:var(--muted);height:auto;padding:6px 2px;border-top:1px solid var(--line)}
 table.av tr.setrow th{height:auto;font-size:12px;color:var(--muted);padding:6px 4px 6px 10px;text-align:left;font-weight:600;background:var(--panel-2);border-top:1px solid var(--line)}
 table.av tr.setrow .k-in{color:var(--sea)} table.av tr.setrow .k-risk{color:var(--coral)}
 table.av tr.ot8row td{text-align:left;padding:8px 10px;font-size:19px;letter-spacing:4px;border-top:3px solid var(--text);height:auto;background:var(--panel-2)}
 table.av tr.ot8row th{border-top:3px solid var(--text);background:var(--panel-2)}
 table.av tr.ot8row td .muted{letter-spacing:0}
-table.av tr.merchrow td{text-align:left;padding:8px 10px;font-size:19px;letter-spacing:4px;height:auto}
+table.av tr.merchrow td{text-align:left;padding:8px 10px;font-size:19px;letter-spacing:4px;height:auto;min-height:44px}
+table.av tr.merchrow th{height:auto;min-height:44px}
 table.av.merch{table-layout:auto;width:100%}
 table.av.merch th{width:auto;white-space:nowrap}
 table.av.merch td{width:auto;overflow:visible;text-overflow:clip}
@@ -1591,7 +1591,7 @@ function availGridMerch(an, mine = new Set()) {
     const cap = mi.max_purchase != null ? mi.max_purchase : null;
     const soldOut = cap != null && claims.length >= cap;
     const claimedHTML = claims.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(`${em(c.emoji)} ${mi.member ? `${mi.name}: ${label}` : label}`)}">${esc(em(c.emoji))}</span>`).join('');
-    const openHTML = cap != null ? '<span class="ot8e" title="Open spot">\u2705</span>'.repeat(Math.max(0, cap - claims.length)) : '';
+    const openHTML = cap != null ? '<span class="ot8e" title="Open spot">\u2705</span>'.repeat(Math.max(0, cap - claims.length)) : '<span class="ot8e" title="Still open to claim">\u2705</span>';
     return `<tr class="merchrow"><th scope="row">${esc(label)}</th><td>${claimedHTML}${openHTML}${soldOut ? ` <span class="pill coral">\u274c capped</span>` : ''}</td></tr>`;
   };
   const byItem = new Map();
@@ -1688,7 +1688,7 @@ function claimPanel(g, an) {
     <span class="qty"><button type="button" class="qb" data-action="qty" data-d="-1" aria-label="One fewer ${esc(label)}">&minus;</button><input type="number" name="q" value="0" min="0" max="${max}" inputmode="numeric" data-code="${esc(code)}" data-price="${price}" aria-label="How many ${esc(label)} to claim"><button type="button" class="qb" data-action="qty" data-d="1" aria-label="One more ${esc(label)}" ${max <= 0 ? 'disabled' : ''}>+</button></span></div>`;
   const next = r => { if (!an) return money(claimPrice(g, r)); const h = hypoClaims(g, [r]), st = hypoAn(g, h).seats.find(s => s.claim.id === h[0].id); return st.state === 'in' ? `Next: set ${st.pos}` : 'Next: waitlist'; };
   const rowLabel = r => { if (!isMerch(g)) return r; const mi = merchItem(g, r); return mi && mi.member ? `${mi.name}: ${mi.memberName}` : r; };
-  const chips = R.map(r => qty(r, rowLabel(r), claimPrice(g, r), `${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`, capOf(r))).join('');
+  const chips = R.map(r => qty(r, rowLabel(r), claimPrice(g, r), `${money(claimPrice(g, r))}. ${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`, capOf(r))).join('');
   const fullChip = full ? qty(full, full, claimPrice(g, full), `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(claimPrice(g, full))}, always ordered`) : '';
   const fixedHere = [...new Set(mineLive.filter(c => c.source === 'fixed').map(c => c.member_code))];
   const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim' : 'claims'} (${esc(fixedHere.join(', '))}) stay on this order${full ? (heldOf(full) ? `. You have a ${esc(full)}, so you can drop them below.` : ` unless you switch to ${esc(full)}: claim a ${esc(full)} and you can drop them. You can add and drop other ${w1}s any time.`) : ` unless I drop them. You can add and drop other ${w1}s any time.`}</p>` : '';
@@ -2109,6 +2109,7 @@ function meView(d) {
 
     ${m.pendingPayTotal > 0.005 ? `<p class="small muted" style="margin:8px 0 0">${money(m.pendingPayTotal)} in submitted ${m.pendingPayments.length === 1 ? 'payment is' : 'payments are'} awaiting review.</p>` : ''}
     <h2 class="blk">Your orders</h2>
+    <div class="orders-wrap">
     <div id="payBar" class="paybar">
       <label class="paybar-all"><input type="checkbox" id="paySelectAll" ${payableCount ? '' : 'disabled'}><span>Select all</span></label>
       <span><span id="paySelCount">0</span> selected: <b id="paySelTotal">$0.00</b></span>
@@ -2120,6 +2121,7 @@ function meView(d) {
       <select data-mefilter="status" aria-label="Payment status">${opt('', 'Any payment status', fm.status)}${Object.entries(PAY_STATUS_LABEL).map(([k, l]) => opt(k, l, fm.status)).join('')}</select>
     </div>` : ''}
     <div id="myOrders">${myOrdersList()}</div>
+    </div>
 
     ${pays ? `<h2 class="blk">Payments</h2><div class="list">${pays}</div>` : ''}`;
 }
@@ -2342,7 +2344,9 @@ function goCardAdmin(r) {
   const dl = r.drop && r.drop.deadline ? `Order by ${fmtDate(r.drop.deadline)}${r.drop.deadline_time ? ', ' + r.drop.deadline_time : ''}` : '';
   const ship = r.shipment_id && (A.data.shipments || []).find(s => s.id === r.shipment_id);
   const facts = [priceLine, rulesShort(r), r.number_of_raffles ? `${r.number_of_raffles} raffle${r.number_of_raffles === 1 ? '' : 's'}` : ''].filter(Boolean);
+  const img = r.drop && r.drop.images && r.drop.images[0];
   return `<div class="acard">
+    ${img ? `<img class="mini" src="${esc(img.thumb || img.src)}" alt="">` : ''}
     <div class="acard-main">
       <div class="acard-title"><span aria-hidden="true">${esc(r.emoji || '📦')}</span><strong>${esc(goDisplayName(r, A.data.group_orders))}</strong>${goPill(r.status)}</div>
       <div class="acard-meta">${meta.map(m => `<span>${esc(m)}</span>`).join('')}</div>
@@ -2927,7 +2931,18 @@ async function render() {
     // Lock the page behind a popup from scrolling too -- on mobile, letting both scroll at once is what
     // causes a fixed-position overlay to visibly flicker/detach for a frame while the page moves under it.
     document.body.style.overflow = $('.modal-back') ? 'hidden' : '';
+    watchPayBar();
   }
+}
+// Sticky's own "release near the end" behavior is unreliable across browsers, so instead just hide the
+// pay bar outright once its section has fully scrolled out of view in either direction.
+let payBarObserver = null;
+function watchPayBar() {
+  if (payBarObserver) { payBarObserver.disconnect(); payBarObserver = null; }
+  const wrap = $('#myOrders'), bar = $('#payBar');
+  if (!wrap || !bar) return;
+  payBarObserver = new IntersectionObserver(([entry]) => { bar.style.visibility = entry.isIntersecting ? '' : 'hidden'; }, {threshold:0});
+  payBarObserver.observe(wrap);
 }
 
 const actions = {
