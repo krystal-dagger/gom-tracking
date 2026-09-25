@@ -370,6 +370,17 @@ dialog.lb{padding:0;width:calc(100% - 24px);max-width:540px;overflow:hidden}
 
 /* sets: availability grid, rules, claiming */
 .gc-top{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:16px 24px;align-items:start}
+.gophotos{position:relative;aspect-ratio:55/85;border-radius:12px;overflow:hidden;background:var(--panel-2);box-shadow:0 0 0 1px var(--line)}
+.gophoto-slide{position:absolute;inset:0;display:none;padding:0;border:0;margin:0;cursor:zoom-in;background:none}
+.gophoto-slide.on{display:block}
+.gophoto-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.gophoto-nav{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:999px;border:0;background:rgba(9,17,26,.55);color:#fff;font-size:19px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+.gophoto-nav.prev{left:8px} .gophoto-nav.next{right:8px}
+.gophoto-nav:hover{background:rgba(9,17,26,.78)}
+.gophoto-dots{position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:center;gap:6px}
+.gophoto-dot{width:6px;height:6px;border-radius:999px;background:rgba(255,255,255,.55)}
+.gophoto-dot.on{background:#fff}
+.gophoto-ph{display:grid;place-items:center;aspect-ratio:55/85;border-radius:12px;background:var(--panel-2);box-shadow:0 0 0 1px var(--line);font-size:40px}
 .gc-photo,.gc-info{min-width:0}
 .gc-info{display:flex;flex-direction:column;gap:14px}
 .gc-grid{display:flex;flex-direction:column;gap:16px;min-width:0;border-top:1px solid var(--line);padding-top:16px}
@@ -391,11 +402,12 @@ table.av tr.setrow .k-in{color:var(--sea)} table.av tr.setrow .k-risk{color:var(
 table.av tr.ot8row td{text-align:left;padding:8px 10px;font-size:19px;letter-spacing:4px;border-top:3px solid var(--text);height:auto;background:var(--panel-2)}
 table.av tr.ot8row th{border-top:3px solid var(--text);background:var(--panel-2)}
 table.av tr.ot8row td .muted{letter-spacing:0}
+table.av tr.merchrow td{text-align:left;padding:8px 10px;font-size:19px;letter-spacing:4px;height:auto}
 table.av.merch{table-layout:auto;width:100%}
 table.av.merch th{width:auto;white-space:nowrap}
 table.av.merch td{width:auto;overflow:visible;text-overflow:clip}
 table.av.merch .ot8e{margin:2px 4px 2px 0}
-table.av.merch .pill{margin-left:6px;font-size:11.5px}
+table.av.merch .pill{margin-left:6px;font-size:11.5px;letter-spacing:normal}
 .ot8e,.gride{display:inline-block;padding:3px 5px;border-radius:6px}
 .ot8e.mine,.gride.mine{box-shadow:inset 0 0 0 2px var(--gold)}
 .mchips:has(.q){display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}
@@ -1463,10 +1475,14 @@ function joinerKeyList(g) {
   return `<details class="setdet" open><summary>Joiner key (${here.length})</summary><div style="margin-top:6px">${rows}</div></details>`;
 }
 function goPhotos(g) {
-  const key = 'go:' + g.id, items = galleryItems(key); if (!items.length) return '';
-  const more = items.length - 4;
-  return `<div class="pcs">${items.slice(0, 4).map((_, i) => pcButton(key, items, i, i === 3 && more > 0 ? `<span class="more">+${more}</span>` : '',
-    i === 3 && more > 0 ? `View all ${items.length} photocards for ${goDisplayName(g)}` : '')).join('')}</div>`;
+  const key = 'go:' + g.id, items = galleryItems(key);
+  if (!items.length) return `<div class="gophoto-ph" aria-hidden="true">📦</div>`;
+  const slides = items.map((it, i) => `<button type="button" class="gophoto-slide${i === 0 ? ' on' : ''}" data-action="lb" data-gal="${esc(key)}" data-i="${i}" aria-label="View photo ${i + 1} of ${items.length} for ${esc(goDisplayName(g))}"><img src="${esc(it.thumb)}" alt="" loading="lazy" decoding="async"></button>`).join('');
+  const nav = items.length > 1 ? `
+    <button type="button" class="gophoto-nav prev" data-action="goPhotoNav" data-d="-1" aria-label="Previous photo">\u2039</button>
+    <button type="button" class="gophoto-nav next" data-action="goPhotoNav" data-d="1" aria-label="Next photo">\u203a</button>
+    <div class="gophoto-dots">${items.map((_, i) => `<span class="gophoto-dot${i === 0 ? ' on' : ''}"></span>`).join('')}</div>` : '';
+  return `<div class="gophotos" data-idx="0">${slides}${nav}</div>`;
 }
 /* ---- sets: availability grid, rules, claiming ---- */
 const cbOf = g => (g && g.drop && g.drop.comeback_id && S.pub.comebacks.find(c => c.id === g.drop.comeback_id)) || null;
@@ -1512,22 +1528,37 @@ function availGrid(an, mine = new Set()) {
 }
 // Merch isn't bought in sets: each item (or item+member) just gets its own always-ordered row, exactly like
 // the OT8 row on a photocard order -- claims for it just accumulate, capped only by that item's own max to purchase.
+// Merch isn't bought in sets: each item just gets an always-ordered row, claims accumulating up to that
+// item's own max to purchase. A member-option item gets its own labeled grid (one row per member, named
+// per that item's own naming or just their initials); items with a single option share one grid.
 function availGridMerch(an, mine = new Set()) {
-  const rowsHTML = an.R.map(r => {
-    const claims = an.seats.filter(s => s.row === r).map(s => s.claim);
-    const mi = merchItem(an.go, r), cap = mi && mi.max_purchase != null ? mi.max_purchase : null;
-    const label = r.includes('::') ? `${(mi || {}).name || r.split('::')[0]}: ${r.split('::')[1]}` : r;
+  const row = mi => {
+    const label = mi.member ? mi.memberName : mi.name;
+    const claims = an.seats.filter(s => s.row === mi.code).map(s => s.claim);
+    const cap = mi.max_purchase != null ? mi.max_purchase : null;
     const soldOut = cap != null && claims.length >= cap;
-    const claimedHTML = claims.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(`${em(c.emoji)} ${label}`)}">${esc(em(c.emoji))}</span>`).join('');
+    const claimedHTML = claims.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(`${em(c.emoji)} ${mi.member ? `${mi.name}: ${label}` : label}`)}">${esc(em(c.emoji))}</span>`).join('');
     const openHTML = cap != null ? '<span class="ot8e" title="Open spot">\u2705</span>'.repeat(Math.max(0, cap - claims.length)) : '';
-    return `<tr class="ot8row"><th scope="row">${esc(label)}</th><td>${claimedHTML}${openHTML}${soldOut ? ` <span class="pill coral">\u274c capped</span>` : ''}</td></tr>`;
-  }).join('');
-  return `<div class="gridwrap"><table class="av merch" aria-label="Claims by item"><tbody>${rowsHTML}</tbody></table></div>
+    return `<tr class="merchrow"><th scope="row">${esc(label)}</th><td>${claimedHTML}${openHTML}${soldOut ? ` <span class="pill coral">\u274c capped</span>` : ''}</td></tr>`;
+  };
+  const byItem = new Map();
+  (an.go.merchItems || []).forEach(mi => { if (!byItem.has(mi.item_id)) byItem.set(mi.item_id, {name:mi.name, member_options:!!mi.member, rows:[]}); byItem.get(mi.item_id).rows.push(mi); });
+  const table = rowsHTML => `<div class="gridwrap"><table class="av merch" aria-label="Claims by item"><tbody>${rowsHTML}</tbody></table></div>`;
+  const groups = [], flatRows = [];
+  [...byItem.values()].forEach(item => {
+    if (item.member_options) groups.push(`<div><h4 class="sh">${esc(item.name)}</h4>${table(item.rows.map(row).join(''))}</div>`);
+    else flatRows.push(...item.rows.map(row));
+  });
+  if (flatRows.length) groups.push(`<div>${table(flatRows.join(''))}</div>`);
+  return `<div class="stack">${groups.join('')}</div>
     <p class="small muted" style="margin:8px 0 0">Each item is bought individually, not in sets.${mine.size ? ' Your claims are outlined.' : ''}</p>`;
 }
 function sumLine(an) {
   const P = (t, c = '') => `<span class="pill ${c}">${esc(t)}</span>`, n = (k, one, many) => `${k} ${k === 1 ? one : many}`, merch = isMerch(an.go);
-  const out = merch ? [P(n(an.items, 'item', 'items') + ' claimed', an.items ? 'sea' : '')]
+  // For merch there's no shared "set" across items, so the claimed count is just each item's own real tally,
+  // not the sets-based toOrder figure (which assumes every row lines up into the same numbered sets).
+  const merchClaimed = merch ? an.R.reduce((a, r) => a + (an.rowCount[r] || 0), 0) : 0;
+  const out = merch ? [P(n(merchClaimed, 'item', 'items') + ' claimed', merchClaimed ? 'sea' : '')]
     : [P(n(an.going, 'set', 'sets') + ' going through', an.going ? 'sea' : ''), P(n(an.items, 'item', 'items') + ' to order')];
   if (an.ot8.length) out.push(P(`${an.ot8.length} ${fullCode(an.go)}, always ordered`));
   if (!merch && an.unclaimed) out.push(P(`${an.unclaimed} unclaimed`));
@@ -1603,7 +1634,7 @@ function claimPanel(g, an) {
   const qty = (code, label, price, sub, max = 10) => `<div class="mchip q"><b>${esc(label)}</b><small>${esc(sub)}${max <= 0 ? ' Sold out.' : ''}</small>
     <span class="qty"><button type="button" class="qb" data-action="qty" data-d="-1" aria-label="One fewer ${esc(label)}">&minus;</button><input type="number" name="q" value="0" min="0" max="${max}" inputmode="numeric" data-code="${esc(code)}" data-price="${price}" aria-label="How many ${esc(label)} to claim"><button type="button" class="qb" data-action="qty" data-d="1" aria-label="One more ${esc(label)}" ${max <= 0 ? 'disabled' : ''}>+</button></span></div>`;
   const next = r => { if (!an) return money(claimPrice(g, r)); const h = hypoClaims(g, [r]), st = hypoAn(g, h).seats.find(s => s.claim.id === h[0].id); return st.state === 'in' ? `Next: set ${st.pos}` : 'Next: waitlist'; };
-  const rowLabel = r => isMerch(g) ? r.split('::')[1] ? `${(merchItem(g, r) || {}).name}: ${r.split('::')[1]}` : r : r;
+  const rowLabel = r => { if (!isMerch(g)) return r; const mi = merchItem(g, r); return mi && mi.member ? `${mi.name}: ${mi.memberName}` : r; };
   const chips = R.map(r => qty(r, rowLabel(r), claimPrice(g, r), `${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`, capOf(r))).join('');
   const fullChip = full ? qty(full, full, claimPrice(g, full), `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(claimPrice(g, full))}, always ordered`) : '';
   const fixedHere = [...new Set(mineLive.filter(c => c.source === 'fixed').map(c => c.member_code))];
@@ -2081,8 +2112,8 @@ function attachMerchItems(gos, items, goItems) {
     const its = (itemsByDrop.get(g.drop_id) || []).filter(i => byItemId.has(i.id)).sort((a, b) => (a.position - b.position) || a.name.localeCompare(b.name));
     g.merchItems = its.flatMap(i => {
       const s = byItemId.get(i.id);
-      return i.member_options ? MEMBERS.map(m => ({code:`${i.name}::${m}`, name:i.name, member:m, price:num(s.price), max_purchase:s.max_purchase, item_id:i.id}))
-        : [{code:i.name, name:i.name, member:null, price:num(s.price), max_purchase:s.max_purchase, item_id:i.id}];
+      return i.member_options ? MEMBERS.map(m => ({code:`${i.name}::${m}`, name:i.name, member:m, memberName:(i.member_names && i.member_names[m]) || m, price:num(s.price), max_purchase:s.max_purchase, item_id:i.id}))
+        : [{code:i.name, name:i.name, member:null, memberName:null, price:num(s.price), max_purchase:s.max_purchase, item_id:i.id}];
     });
   });
 }
@@ -2459,6 +2490,9 @@ function merchCatalogPanel(dropId, opts = {}) {
   const catRows = catalog.map(i => `<div class="mine-row"><span>${esc(i.name)}${i.member_options ? ' <span class="pill">Per member</span>' : ''}</span>
     <span><button type="button" class="btn ghost small" data-action="editMerchItem" data-id="${i.id}">Edit</button>
     <button type="button" class="btn ghost small" style="margin-left:8px" data-action="removeMerchItem" data-id="${i.id}">Remove</button></span></div>`).join('');
+  const hasOpts = !!(editingCat && editingCat.member_options);
+  const names = (editingCat && editingCat.member_names) || {};
+  const nameFields = MEMBERS.map(m => `<div class="field"><label for="miName-${m}">${esc(m)}</label><input id="miName-${m}" name="member_name_${m}" value="${esc(names[m] || '')}" placeholder="${esc(m)}"></div>`).join('');
   return `${opts.title !== false ? '<h4 class="sh">Items</h4>' : ''}
     <p class="small muted" style="margin-top:0">${opts.note || 'Add the things this drop sells. Price them per order in the Claims tab, once the order exists.'}</p>
     ${catRows || '<p class="small muted" style="margin:0">No items yet -- add one below.</p>'}
@@ -2467,7 +2501,12 @@ function merchCatalogPanel(dropId, opts = {}) {
       <input type="hidden" name="id" value="${editingCat ? esc(editingCat.id) : ''}">
       <div class="fgrid">
         <div class="field"><label for="miName">Item name</label><input id="miName" name="name" value="${editingCat ? esc(editingCat.name) : ''}" required></div>
-        <div class="field" style="align-self:end"><label class="check"><input type="checkbox" name="member_options" ${editingCat && editingCat.member_options ? 'checked' : ''}> Comes in a version per member</label></div>
+        <div class="field" style="align-self:end"><label class="check"><input type="checkbox" name="member_options" data-toggle="miNames-${esc(dropId)}" ${hasOpts ? 'checked' : ''}> Comes in a version per member</label></div>
+      </div>
+      <div id="miNames-${esc(dropId)}" style="${hasOpts ? '' : 'display:none'};margin-top:14px">
+        <h5 class="sh" style="font-size:13px">Name each member's version</h5>
+        <p class="small muted" style="margin-top:0">Optional. Leave any of these blank to just show that member's initials.</p>
+        <div class="fgrid">${nameFields}</div>
       </div>
       <div class="formacts"><button class="btn">${editingCat ? 'Save changes' : 'Add item'}</button>${editingCat ? '<button type="button" class="btn ghost" data-action="cancelMerchItem">Cancel</button>' : ''}</div>
     </form>`;
@@ -2940,6 +2979,15 @@ const actions = {
     if (!ok) return; await api.clearRoster(A.cbId); A.rosterText = ''; A.rosterPv = null; await refreshPublic(); toast('List removed'); render();
   },
   lb(b) { openLightbox(b.dataset.gal, Number(b.dataset.i) || 0); },
+  goPhotoNav(b) {
+    const wrap = b.closest('.gophotos'); if (!wrap) return;
+    const slides = [...wrap.querySelectorAll('.gophoto-slide')], dots = [...wrap.querySelectorAll('.gophoto-dot')];
+    if (!slides.length) return;
+    const idx = ((Number(wrap.dataset.idx) || 0) + Number(b.dataset.d) + slides.length) % slides.length;
+    wrap.dataset.idx = idx;
+    slides.forEach((s, i) => s.classList.toggle('on', i === idx));
+    dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+  },
   async calSel(b) {
     const d = b.dataset.date; CAL.sel = d; CAL.month = d.slice(0, 7);
     await render(); refocus(`[data-action="calSel"][data-date="${d}"]`);
@@ -2993,7 +3041,11 @@ const forms = {
     const catalog = (A.data.merch_items || []).filter(i => i.drop_id === dropId);
     const dup = catalog.some(i => i.name === name && i.id !== id);
     if (dup) throw new Error(`"${name}" is already an item on this drop. Edit it instead, or use a different name.`);
-    const row = {drop_id:dropId, name, member_options:memberOptions};
+    const row = {drop_id:dropId, name, member_options:memberOptions, member_names:null};
+    if (memberOptions) {
+      const names = {}; MEMBERS.forEach(m => { const v = (fd.get(`member_name_${m}`) || '').trim(); if (v) names[m] = v; });
+      row.member_names = Object.keys(names).length ? names : null;
+    }
     if (id) row.id = id; else row.position = catalog.length;
     await api.save('merch_items', row);
     invalidate('merch_items', 'group_orders'); await refreshPublic();
@@ -3165,6 +3217,7 @@ app.addEventListener('input', e => {
 app.addEventListener('change', e => {
   const t = e.target;
   if (t.classList.contains('pay-select')) { updatePayBar(); return; }
+  if (t.dataset.toggle) { const el = document.getElementById(t.dataset.toggle); if (el) el.style.display = t.checked ? '' : 'none'; return; }
   if (t.name === 'method' && t.closest('form[data-form="submitPayment"]')) {
     const links = {paypal:['PayPal', CONFIG.PAYPAL], venmo:['Venmo', CONFIG.VENMO], wise:['Wise', CONFIG.WISE]};
     const [label, href] = links[t.value] || [];
