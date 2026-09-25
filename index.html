@@ -548,7 +548,7 @@ const IMG_BUCKET = 'drop-images', MAX_IMGS = 12;
 const KADDY_OPTS = [['None','None'],['Kfriday','Kfriday'],['Paysable','Paysable']];
 const EVT_NAME = {fancall:'Fancall', fansign:'Fansign', 'fancall & fansign':'Fancall & fansign'};
 // For an order whose drop has a fancall/fansign: who the entry is for
-const EVENT_MODES = [['raffle','Raffle among joiners'], ['personal','Personal attempt for the GOM'], ['hosting','Hosting for someone else']];
+const EVENT_MODES = [['raffle','Raffle among joiners'], ['personal','GOM's personal attempt'], ['hosting','Hosting for someone else']];
 const EVT_SHORT = {fancall:'Call', fansign:'Sign', 'fancall & fansign':'Call & sign'};
 const KIND_ORDER = ['deadline', 'payment', 'announce', 'event'];
 const KINDS = {deadline:{label:'Order deadlines', pill:'coral'}, payment:{label:'Your payment deadlines', pill:'plum'}, announce:{label:'Winner announcements', pill:'gold'}, event:{label:'Fancall and fansign dates', pill:'sea'}};
@@ -1561,11 +1561,11 @@ function openLightbox(key, start) {
 function eventModeInfo(g, joiners) {
   const d = g && g.drop; if (!d || !d.event_type || d.event_type === 'none' || !g.event_mode) return null;
   const T = EVT_NAME[d.event_type] || 'Event', t = T.toLowerCase();
-  if (g.event_mode === 'raffle') return {icon:'🎟️', text:`${T} raffle`, sub:'The entry is raffled among joiners.'};
-  if (g.event_mode === 'personal') return {icon:'💎', text:`Personal ${t} attempt for the GOM`, sub:'This entry is for the GOM, not raffled.'};
+  if (g.event_mode === 'raffle') return {icon:'🎟️', text:`${T} raffle`, sub:'The entry is raffled among joiners. Max of 8 entries per joiner.'};
+  if (g.event_mode === 'personal') return {icon:'💎', text:`GOM's personal ${t} attempt`, sub:'This entry is for the GOM, not raffled.'};
   if (g.event_mode === 'hosting') {
     const j = g.event_for_joiner && (joiners || S.pub.joiners || []).find(x => x.id === g.event_for_joiner);
-    return {icon:'🤝', text:j ? `Hosting ${t} for @${j.name}` : `Hosting ${t} for a joiner`, sub:'This entry is for them, not raffled.'};
+    return {icon:'🤝', text:j ? `Hosting ${t} attempt for @${j.name}` : `Hosting ${t} attempt for a joiner`, sub:'This entry is for them, not raffled.'};
   }
   return null;
 }
