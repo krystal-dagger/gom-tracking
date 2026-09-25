@@ -239,8 +239,8 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .fsh{font:700 14px var(--display);color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:0 0 12px}
 .formacts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 /* modal form popups (Drops, Group orders) */
-.modal-back{position:fixed;inset:0;background:rgba(5,10,16,.6);display:grid;place-items:center;padding:20px;z-index:60;overflow-y:auto}
-.modal{background:var(--panel);border-radius:16px;max-width:640px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);margin:auto}
+.modal-back{position:fixed;inset:0;background:rgba(5,10,16,.6);display:grid;place-items:center;padding:20px;z-index:60}
+.modal{background:var(--panel);border-radius:16px;max-width:640px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 20px 60px rgba(0,0,0,.35);margin:auto;transform:translateZ(0)}
 .modal.wide{max-width:920px}
 .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 22px 0}
 .modal-head h2{margin:0}
@@ -389,6 +389,11 @@ table.av tr.setrow .k-in{color:var(--sea)} table.av tr.setrow .k-risk{color:var(
 table.av tr.ot8row td{text-align:left;padding:8px 10px;font-size:19px;letter-spacing:4px;border-top:3px solid var(--text);height:auto;background:var(--panel-2)}
 table.av tr.ot8row th{border-top:3px solid var(--text);background:var(--panel-2)}
 table.av tr.ot8row td .muted{letter-spacing:0}
+table.av.merch{table-layout:auto;width:100%}
+table.av.merch th{width:auto;white-space:nowrap}
+table.av.merch td{width:auto;overflow:visible;text-overflow:clip}
+table.av.merch .ot8e{margin:2px 4px 2px 0}
+table.av.merch .pill{margin-left:6px;font-size:11.5px}
 .ot8e,.gride{display:inline-block;padding:3px 5px;border-radius:6px}
 .ot8e.mine,.gride.mine{box-shadow:inset 0 0 0 2px var(--gold)}
 .mchips:has(.q){display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}
@@ -1486,6 +1491,7 @@ const FOOT = (x, an) => x.status === 'full' ? ['✓', 'k-in', 'Full, going throu
   : x.status === 'dropped' ? ['✗', 'k-risk', 'Not ordered, not enough claims'] : ['', '', ''];
 
 function availGrid(an, mine = new Set()) {
+  if (isMerch(an.go)) return availGridMerch(an, mine);
   const {R, N, sets} = an, ncols = sets.length;
   const cls = n => `${n === N + 1 ? 'wl1 ' : ''}${n > N ? 'wl' : ''}`;
   const head = `<tr><th scope="col"><span class="sr">Member</span></th>${sets.map(x => { const n = x.n;
@@ -1504,16 +1510,33 @@ function availGrid(an, mine = new Set()) {
   return `<div class="gridwrap"><table class="av" aria-label="Availability by ${wName(an)} and set"><thead>${head}</thead><tbody>${body}${setRow}${ot8}</tbody></table></div>
     <p class="small muted" style="margin:8px 0 0">Each column is a set. ✅ is an open spot.${an.gated ? ' Dashed columns are the waitlist, which starts right after the last set that goes through.' : ''}${full ? ` ${esc(full)} claims have their own row and are always ordered.` : ''}${mine.size ? ' Your claims are outlined.' : ''}</p>`;
 }
+// Merch isn't bought in sets: each item (or item+member) just gets its own always-ordered row, exactly like
+// the OT8 row on a photocard order -- claims for it just accumulate, capped only by that item's own max to purchase.
+function availGridMerch(an, mine = new Set()) {
+  const rowsHTML = an.R.map(r => {
+    const claims = an.seats.filter(s => s.row === r).map(s => s.claim);
+    const mi = merchItem(an.go, r), cap = mi && mi.max_purchase != null ? mi.max_purchase : null;
+    const label = r.includes('::') ? `${(mi || {}).name || r.split('::')[0]}: ${r.split('::')[1]}` : r;
+    const soldOut = cap != null && claims.length >= cap;
+    return `<tr class="ot8row"><th scope="row">${esc(label)}</th><td>${claims.length
+      ? claims.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(`${em(c.emoji)} ${label}`)}">${esc(em(c.emoji))}</span>`).join('')
+      : '<span class="muted small">None yet</span>'}${cap != null ? ` <span class="pill${soldOut ? ' coral' : ''}">${claims.length} of ${cap}${soldOut ? ', sold out' : ''}</span>` : ''}</td></tr>`;
+  }).join('');
+  return `<div class="gridwrap"><table class="av merch" aria-label="Claims by item"><tbody>${rowsHTML}</tbody></table></div>
+    <p class="small muted" style="margin:8px 0 0">Each item is bought individually, not in sets.${mine.size ? ' Your claims are outlined.' : ''}</p>`;
+}
 function sumLine(an) {
-  const P = (t, c = '') => `<span class="pill ${c}">${esc(t)}</span>`, n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
-  const out = [P(n(an.going, 'set', 'sets') + ' going through', an.going ? 'sea' : ''), P(n(an.items, 'item', 'items') + ' to order')];
+  const P = (t, c = '') => `<span class="pill ${c}">${esc(t)}</span>`, n = (k, one, many) => `${k} ${k === 1 ? one : many}`, merch = isMerch(an.go);
+  const out = merch ? [P(n(an.items, 'item', 'items') + ' claimed', an.items ? 'sea' : '')]
+    : [P(n(an.going, 'set', 'sets') + ' going through', an.going ? 'sea' : ''), P(n(an.items, 'item', 'items') + ' to order')];
   if (an.ot8.length) out.push(P(`${an.ot8.length} ${fullCode(an.go)}, always ordered`));
-  if (an.unclaimed) out.push(P(`${an.unclaimed} unclaimed`));
+  if (!merch && an.unclaimed) out.push(P(`${an.unclaimed} unclaimed`));
   if (an.waitlisted) out.push(P(`${an.waitlisted} waitlisted`, 'gold'));
   if (an.nextNeed && an.nextNeed.need) out.push(P(`Set ${an.nextNeed.n} needs ${an.nextNeed.need} more to go through`, 'coral'));
   return `<div class="sumline">${out.join('')}</div>`;
 }
 function setDetails(an) {
+  if (isMerch(an.go)) return '';   // no sets to explain for merch -- each item's row already shows its own count and cap
   const notes = an.sets.filter(x => x.status !== 'empty' && x.status !== 'full').map(x => setNote(x, an)).filter(Boolean);
   const per = an.R.map(r => `${r} ${an.toOrder[r]}`).join(', ');
   return `<details class="setdet"><summary>Set details and order counts</summary>${notes.length ? `<ul class="setnotes">${notes.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
@@ -1549,7 +1572,7 @@ function hypoClaims(g, codes) {
 const hypoAn = (g, hyp) => analyze(g, [...seatClaims(g), ...hyp], cbOf(g));
 function claimNote(f) {
   const g = goById(f.dataset.go), note = $('[data-claimnote]', f), codes = [];
-  f.querySelectorAll('input[name="q"]').forEach(i => { const k = Math.max(0, Math.min(10, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) codes.push(i.dataset.code); });
+  f.querySelectorAll('input[name="q"]').forEach(i => { const cap = i.max === '' ? 10 : Number(i.max); const k = Math.max(0, Math.min(cap, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) codes.push(i.dataset.code); });
   if (!codes.length) { const w1 = rowWords(g).one; note.textContent = `Use + to pick a ${w1}.${rowsOf(g).length > 1 ? ' Pick the same one twice to claim it twice.' : ''}`; return; }
   const hyp = hypoClaims(g, codes), infos = hyp.map(c => claimInfo(g, c, hypoAn(g, hyp)));
   const charged = r2(infos.reduce((a, i) => a + i.amount, 0)), extra = r2(infos.reduce((a, i) => a + i.extra, 0)), waits = infos.filter(i => i.state === 'wait').length;
@@ -1569,12 +1592,20 @@ function claimPanel(g, an) {
     <p class="small muted" style="margin:0">No PIN yet? DM @${esc(CONFIG.INSTAGRAM)}.${DEMO ? ' Demo: <b>demo_joiner</b>, PIN <b>1234</b>.' : ''}</p></form>`;
   const R = rowsOf(g), ctx = joinerCtx(g), mineLive = ctx.mine, heldOf = code => mineLive.filter(c => c.member_code === code).length;
   const {one:w1} = rowWords(g);
-  const qty = (code, label, price, sub) => `<div class="mchip q"><b>${esc(label)}</b><small>${esc(sub)}</small>
-    <span class="qty"><button type="button" class="qb" data-action="qty" data-d="-1" aria-label="One fewer ${esc(label)}">&minus;</button><input type="number" name="q" value="0" min="0" max="10" inputmode="numeric" data-code="${esc(code)}" data-price="${price}" aria-label="How many ${esc(label)} to claim"><button type="button" class="qb" data-action="qty" data-d="1" aria-label="One more ${esc(label)}">+</button></span></div>`;
+  const full = fullCode(g);
+  // How many more of this code can still go through: max_purchase for merch, max_sets for PC (never the full/OT8 code).
+  const capOf = code => {
+    if (!an) return 10;
+    if (isMerch(g)) { const mi = merchItem(g, code); return mi && mi.max_purchase != null ? Math.max(0, mi.max_purchase - (an.rowCount[code] || 0)) : 10; }
+    if (code !== full && g.max_sets != null) return Math.max(0, g.max_sets - (an.rowCount[code] || 0));
+    return 10;
+  };
+  const qty = (code, label, price, sub, max = 10) => `<div class="mchip q"><b>${esc(label)}</b><small>${esc(sub)}${max <= 0 ? ' Sold out.' : ''}</small>
+    <span class="qty"><button type="button" class="qb" data-action="qty" data-d="-1" aria-label="One fewer ${esc(label)}">&minus;</button><input type="number" name="q" value="0" min="0" max="${max}" inputmode="numeric" data-code="${esc(code)}" data-price="${price}" aria-label="How many ${esc(label)} to claim"><button type="button" class="qb" data-action="qty" data-d="1" aria-label="One more ${esc(label)}" ${max <= 0 ? 'disabled' : ''}>+</button></span></div>`;
   const next = r => { if (!an) return money(claimPrice(g, r)); const h = hypoClaims(g, [r]), st = hypoAn(g, h).seats.find(s => s.claim.id === h[0].id); return st.state === 'in' ? `Next: set ${st.pos}` : 'Next: waitlist'; };
   const rowLabel = r => isMerch(g) ? r.split('::')[1] ? `${(merchItem(g, r) || {}).name}: ${r.split('::')[1]}` : r : r;
-  const chips = R.map(r => qty(r, rowLabel(r), claimPrice(g, r), `${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`)).join('');
-  const full = fullCode(g), fullChip = full ? qty(full, full, claimPrice(g, full), `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(claimPrice(g, full))}, always ordered`) : '';
+  const chips = R.map(r => qty(r, rowLabel(r), claimPrice(g, r), `${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`, capOf(r))).join('');
+  const fullChip = full ? qty(full, full, claimPrice(g, full), `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(claimPrice(g, full))}, always ordered`) : '';
   const fixedHere = [...new Set(mineLive.filter(c => c.source === 'fixed').map(c => c.member_code))];
   const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim' : 'claims'} (${esc(fixedHere.join(', '))}) stay on this order${full ? (heldOf(full) ? `. You have a ${esc(full)}, so you can drop them below.` : ` unless you switch to ${esc(full)}: claim a ${esc(full)} and you can drop them. You can add and drop other ${w1}s any time.`) : ` unless I drop them. You can add and drop other ${w1}s any time.`}</p>` : '';
   return `<form class="panel-mini" data-form="claim" data-go="${g.id}"><h4 class="sh" style="margin:0">Claim as ${esc(em(ctx.emoji))} ${esc(me.joiner.name)}</h4>
@@ -2208,7 +2239,7 @@ function fieldSections(key, fields, vals) {
     : null;
   const visible = s => {
     if (key === 'drops') { if (s === 'pc') return dropType === 'PC'; if (s === 'merch') return dropType === 'Merch'; }
-    if (key === 'group_orders' && s === 'pc') return !dropType || dropType === 'PC';
+    if (key === 'group_orders' && (s === 'pc' || s === 'rules')) return !dropType || dropType === 'PC';
     return true;
   };
   return [...groups.entries()].map(([s, fs]) => ({section:s, fields:fs, visible:visible(s)}));
@@ -2220,7 +2251,7 @@ function updateFormSections(form) {
   form.querySelectorAll('[data-section]').forEach(el => {
     const s = el.dataset.section;
     const show = key === 'drops' ? (s === 'pc' ? dropType === 'PC' : s === 'merch' ? dropType === 'Merch' : true)
-      : (s === 'pc' ? (!dropType || dropType === 'PC') : true);
+      : ((s === 'pc' || s === 'rules') ? (!dropType || dropType === 'PC') : true);
     el.style.display = show ? '' : 'none';
   });
 }
@@ -2728,7 +2759,12 @@ async function render() {
   } catch (e) {
     html = `<div class="panel"><h2>Something went wrong</h2><p class="err">${esc(e.message || e)}</p><p class="muted small">Check the Supabase URL and key in index.html, and that schema.sql ran without errors.</p></div>`;
   }
-  if (id === renderId) app.innerHTML = html + goModal() + payModal();
+  if (id === renderId) {
+    app.innerHTML = html + goModal() + payModal();
+    // Lock the page behind a popup from scrolling too -- on mobile, letting both scroll at once is what
+    // causes a fixed-position overlay to visibly flicker/detach for a frame while the page moves under it.
+    document.body.style.overflow = $('.modal-back') ? 'hidden' : '';
+  }
 }
 
 const actions = {
@@ -2855,7 +2891,8 @@ const actions = {
     if (!ok) return; await api.remove('raffles', b.dataset.id); toast('Removed'); render();
   },
   qty(b) {
-    const inp = $('input[name="q"]', b.parentElement), v = Math.max(0, Math.min(Number(inp.max) || 10, (parseInt(inp.value, 10) || 0) + Number(b.dataset.d)));
+    const inp = $('input[name="q"]', b.parentElement), capMax = inp.max === '' ? 10 : Number(inp.max);
+    const v = Math.max(0, Math.min(capMax, (parseInt(inp.value, 10) || 0) + Number(b.dataset.d)));
     inp.value = v; b.closest('.mchip').classList.toggle('on', v > 0); claimNote(b.closest('form'));
   },
   async unclaim(b) {
@@ -3023,7 +3060,7 @@ const forms = {
   },
   async claim(f) {
     const goId = f.dataset.go, err = $('[data-err]', f); err.textContent = '';
-    const members = []; f.querySelectorAll('input[name="q"]').forEach(i => { const k = Math.max(0, Math.min(10, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) members.push(i.dataset.code); });
+    const members = []; f.querySelectorAll('input[name="q"]').forEach(i => { const cap = i.max === '' ? 10 : Number(i.max); const k = Math.max(0, Math.min(cap, parseInt(i.value, 10) || 0)); for (let j = 0; j < k; j++) members.push(i.dataset.code); });
     if (!members.length) { err.textContent = 'Pick at least one member.'; return; }
     const c = cred(); if (!c) { S.me = null; render(); return; }
     const res = await api.joinerClaim(c.h, c.p, goId, members);
@@ -3058,6 +3095,8 @@ const forms = {
     if (key === 'group_orders') {
       drop = A.data.drops.find(d => d.id === row.drop_id);
       const merch = drop && drop.type === 'Merch', rowsN = drop && !merch && drop.solo_unit === 'Unit' ? 4 : 8;
+      // Merch is bought individually, not in sets -- the set-rules fields are hidden for it, so force them clean.
+      if (merch) { row.min_members = 0; row.split_cost = false; row.sort_threshold = null; }
       if (row.min_members != null && !(Number.isInteger(row.min_members) && row.min_members >= 0 && (merch || row.min_members <= rowsN))) throw new Error(merch ? 'Members needed for a set must be a whole number of 0 or more.' : `Members needed for a set must be a whole number from 0 to ${rowsN}.`);
       if (row.sort_threshold != null && !(row.sort_threshold >= 0)) throw new Error('The sort threshold must be 0 or more.');
       if (row.max_sets != null && !(Number.isInteger(row.max_sets) && row.max_sets >= 1)) throw new Error('Max # of sets must be a whole number of 1 or more, or left empty.');
