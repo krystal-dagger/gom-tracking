@@ -1548,13 +1548,13 @@ function openLightbox(key, start) {
 /* =====================================================================
    8. PAGE: Drops
    ===================================================================== */
-// Claims open if any of the drop's orders is open; completed once every order that isn't cancelled is completed;
+// Claims open if any of the drop's orders is open; completed once every order is completed or cancelled;
 // anything else is in progress.
+const DONE_STATUSES = new Set(['Completed', 'Cancelled']);
 function dropStatus(d) {
   const gs = gosOfDrop(d.id); if (!gs.length) return 'no_order';
   if (gs.some(g => g.status === 'Claims Open')) return 'go_open';
-  const live = gs.filter(g => g.status !== 'Cancelled');
-  return live.length && live.every(g => g.status === 'Completed') ? 'completed' : 'in_progress';
+  return gs.every(g => DONE_STATUSES.has(g.status)) ? 'completed' : 'in_progress';
 }
 function effDeadline(d) {
   return d.deadline ? {date:d.deadline, time:d.deadline_time} : null;
@@ -2152,7 +2152,7 @@ function shipCell(g, p) {
   if (g.status === 'Cancelled') return '<span class="muted">Cancelled</span>';
   if (p && p.shipped) return `<span class="pill sea">Shipped</span><div class="small muted">${esc([p.shipping_type, p.tracking].filter(Boolean).join(', '))}</div>`;
   // a completed order may still have items waiting to go out (some joiners ship several orders together)
-  if (g.status === 'On Hand' || g.status === 'Completed') return `<span class="pill gold">Packing soon</span>${p && p.shipping_type ? `<div class="small muted">${esc(p.shipping_type)}</div>` : ''}`;
+  if (g.status === 'On Hand' || g.status === 'Completed') return `<span class="pill gold">On hand</span>${p && p.shipping_type ? `<div class="small muted">${esc(p.shipping_type)}</div>` : ''}`;
   return `<span class="muted small">Not here yet</span>`;
 }
 // One order's payment breakdown for this joiner, shared by the order card and the "Your orders" filter.
