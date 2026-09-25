@@ -207,6 +207,10 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
   background:var(--text);color:var(--panel);padding:12px 18px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);margin:14px 0}
 .paybar b{font-variant-numeric:tabular-nums}
 .paybar .btn{background:var(--panel);color:var(--text)}
+.paybar .btn:disabled{opacity:.5;cursor:not-allowed}
+.paybar-all{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px}
+.paybar-all input{width:17px;height:17px;margin:0;cursor:pointer}
+.paybar-all:has(input:disabled){opacity:.5;cursor:default}
 .prow2{display:grid;grid-template-columns:90px minmax(0,1fr) 110px 100px;gap:14px;padding:12px 20px;border-top:1px solid var(--line);align-items:center}
 .prow2:first-child{border-top:0}
 .prow2 .r{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
@@ -1296,7 +1300,7 @@ try { api = DEMO ? demoApi() : supabaseApi(); } catch (e) { api = null; window._
 /* =====================================================================
    6. State
    ===================================================================== */
-const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, loadError:null, openGoId:null, paySelection:null};
+const S = {pub:{drops:[], gos:[], shipments:[], stats:{}, comebacks:[], seats:[], joiners:[], dropLinks:[], cbEmojis:[]}, me:null, filters:{q:'', store:'', type:'', status:''}, meFilters:{q:'', store:'', status:''}, loadError:null, openGoId:null, paySelection:null};
 const A = {is:false, checked:false, tab:'drops', data:{}, edit:{}, adding:{}, goId:'', preview:null, claimText:'', cbId:'', rosterText:'', rosterPv:null, editMerchItem:null, editGoMerchItem:null, editBonusItem:null, editRaffle:null};
 const CAL = {view: matchMedia('(max-width: 700px)').matches ? 'list' : 'month', month: today().slice(0, 7), sel: today(), kinds:{deadline:true, announce:true, event:true}, past:false};
 const goById = id => S.pub.gos.find(g => g.id === id);
@@ -1927,6 +1931,62 @@ function shipCell(g, p) {
   if (g.status === 'On Hand') return `<span class="pill gold">Packing soon</span>${p && p.shipping_type ? `<div class="small muted">${esc(p.shipping_type)}</div>` : ''}`;
   return `<span class="muted small">Not here yet</span>`;
 }
+// One order's payment breakdown for this joiner, shared by the order card and the "Your orders" filter.
+function myOrderStat(d, m, g) {
+  const cs = d.claims.filter(c => c.group_order_id === g.id);
+  const chargesHere = d.charges.filter(c => c.group_order_id === g.id);
+  const initials = r2(sum(cs.filter(c => c.status === 'filled' && m.infoOf.has(c.id)), c => m.infoOf.get(c.id).amount));
+  const dueAmt = kind => r2(sum(chargesHere.filter(c => c.kind === kind && c.due), c => c.amount));
+  const ems = dueAmt('ems'), customs = dueAmt('customs'), doms = dueAmt('doms');
+  const other = r2(sum(chargesHere.filter(c => (c.kind === 'other' || c.kind === 'fee') && c.due), c => c.amount));
+  const notDueHere = r2(sum(chargesHere.filter(c => !c.due), c => c.amount));
+  const paidHere = r2(sum(d.payments.filter(p => (p.status || 'approved') === 'approved' && ((p.order_ids || []).includes(g.id) || p.group_order_id === g.id)), p => p.amount));
+  const total = r2(initials + ems + customs + doms + other);
+  const owed = g.status === 'Cancelled' ? 0 : r2(total - paidHere);
+  const isPending = m.pendingPayments.some(p => (p.order_ids || []).includes(g.id) || p.group_order_id === g.id);
+  const payStatus = g.status === 'Cancelled' ? 'refund' : isPending ? 'pending' : owed > 0.005 ? 'owed' : (paidHere > 0.005 || total > 0.005) ? 'paid' : 'nothing';
+  return {cs, initials, ems, customs, doms, other, notDueHere, paidHere, total, owed, isPending, payStatus};
+}
+const PAY_STATUS_LABEL = {owed:'Owed', pending:'Payment pending review', paid:'Paid in full', nothing:'Nothing due', refund:'Refund'};
+function myOrderRow(d, m, g) {
+  const st = myOrderStat(d, m, g);
+  const part = d.participation.find(p => p.group_order_id === g.id);
+  const overdue = g.payment_deadline && st.owed > 0.005 && today() > g.payment_deadline;
+  const items = g.drop ? galleryItems('drop:' + g.drop.id) : [];
+  const thumb = items.length ? `<img class="ocard-thumb" src="${esc(items[0].thumb || items[0].src)}" alt="">` : '';
+  const canPay = st.owed > 0.005 && !st.isPending && g.status !== 'Cancelled';
+  const cat = (label, amt) => amt > 0.005 ? `<span>${esc(label)} <b>${money(amt)}</b></span>` : `<span class="muted">${esc(label)} —</span>`;
+  return `<div class="ocard">
+    ${canPay ? `<label class="ocard-pick"><input type="checkbox" class="pay-select" data-go="${g.id}" data-owed="${st.owed}"><span class="sr">Select ${esc(goDisplayName(g))} to pay</span></label>` : ''}
+    ${thumb}
+    <div class="ocard-body">
+    <div class="ocard-head"><div class="nm">${esc(g.emoji || '📦')} ${esc(goDisplayName(g))}</div>${goPill(g.status)}</div>
+    <div class="ocard-claims">${chipsMe(st.cs, m.infoOf)}</div>
+    <div class="ocard-costs">${cat('Initials', st.initials)}${cat('EMS', st.ems)}${cat('Customs', st.customs)}${cat('DOMs', st.doms)}${cat('Other', st.other)}</div>
+    ${g.payment_deadline ? `<p class="small ${overdue ? 'err' : 'muted'}" style="margin:8px 0 0">${overdue ? 'Payment was due' : 'Pay by'} ${esc(fmtDate(g.payment_deadline))}</p>` : ''}
+    <div class="ocard-foot"><span>${shipCell(g, part)}</span>${g.status === 'Cancelled' ? '<span class="muted">Refund</span>'
+      : st.isPending ? '<span class="pill gold">Payment pending review</span>'
+      : `<span class="owed${st.owed > 0.005 ? '' : ' clear'}">${st.owed > 0.005 ? `Owed ${money(st.owed)}` : PAY_STATUS_LABEL[st.payStatus]}</span>`}</div>
+    ${st.notDueHere > 0.005 ? `<p class="small muted" style="margin:8px 0 0">+${money(st.notDueHere)} not due yet</p>` : ''}
+    </div>
+  </div>`;
+}
+function myOrdersList() {
+  const d = S.me; if (!d) return '';
+  const m = computeMe(d);
+  const orders = [...new Set(d.claims.map(c => c.group_order_id))].map(goById).filter(Boolean)
+    .sort((a, b) => (a.status === 'Shipped to Joiners') - (b.status === 'Shipped to Joiners') || byNewest(a, b));
+  const f = S.meFilters, q = f.q.trim().toLowerCase();
+  const list = orders.filter(g => {
+    if (q && !`${goDisplayName(g)} ${(g.drop && g.drop.store) || ''}`.toLowerCase().includes(q)) return false;
+    if (f.store && (!g.drop || g.drop.store !== f.store)) return false;
+    if (f.status && myOrderStat(d, m, g).payStatus !== f.status) return false;
+    return true;
+  });
+  if (!orders.length) return '<p class="muted">No claims yet. Watch the Drops page for new orders.</p>';
+  if (!list.length) return '<div class="empty"><p>No orders match those filters.</p><button class="btn ghost" data-action="clearMeFilters">Clear filters</button></div>';
+  return `<div class="list">${list.map(g => myOrderRow(d, m, g)).join('')}</div>`;
+}
 function meView(d) {
   const m = computeMe(d), j = d.joiner;
   const balClass = m.balance > 0.005 ? 'owed' : m.balance < -0.005 ? 'credit' : 'clear';
@@ -1935,43 +1995,16 @@ function meView(d) {
 
   const orders = [...new Set(d.claims.map(c => c.group_order_id))].map(goById).filter(Boolean)
     .sort((a, b) => (a.status === 'Shipped to Joiners') - (b.status === 'Shipped to Joiners') || byNewest(a, b));
-  const cat = (label, amt) => amt > 0.005 ? `<span>${esc(label)} <b>${money(amt)}</b></span>` : `<span class="muted">${esc(label)} —</span>`;
-  const pendingHere = gid => m.pendingPayments.some(p => (p.order_ids || []).includes(gid) || p.group_order_id === gid);
-  const orderRows = orders.map(g => {
-    const cs = d.claims.filter(c => c.group_order_id === g.id);
-    const chargesHere = d.charges.filter(c => c.group_order_id === g.id);
-    const initials = r2(sum(cs.filter(c => c.status === 'filled' && m.infoOf.has(c.id)), c => m.infoOf.get(c.id).amount));
-    const dueAmt = kind => r2(sum(chargesHere.filter(c => c.kind === kind && c.due), c => c.amount));
-    const ems = dueAmt('ems'), customs = dueAmt('customs'), doms = dueAmt('doms');
-    const other = r2(sum(chargesHere.filter(c => (c.kind === 'other' || c.kind === 'fee') && c.due), c => c.amount));
-    const notDueHere = r2(sum(chargesHere.filter(c => !c.due), c => c.amount));
-    const paidHere = r2(sum(d.payments.filter(p => (p.status || 'approved') === 'approved' && ((p.order_ids || []).includes(g.id) || p.group_order_id === g.id)), p => p.amount));
-    const total = r2(initials + ems + customs + doms + other);
-    const owed = g.status === 'Cancelled' ? 0 : r2(total - paidHere);
-    const part = d.participation.find(p => p.group_order_id === g.id);
-    const overdue = g.payment_deadline && owed > 0.005 && today() > g.payment_deadline;
-    const items = g.drop ? galleryItems('drop:' + g.drop.id) : [];
-    const thumb = items.length ? `<img class="ocard-thumb" src="${esc(items[0].thumb || items[0].src)}" alt="">` : '';
-    const isPending = pendingHere(g.id);
-    const canPay = owed > 0.005 && !isPending && g.status !== 'Cancelled';
-    return `<div class="ocard">
-      ${canPay ? `<label class="ocard-pick"><input type="checkbox" class="pay-select" data-go="${g.id}" data-owed="${owed}"><span class="sr">Select ${esc(goDisplayName(g))} to pay</span></label>` : ''}
-      ${thumb}
-      <div class="ocard-body">
-      <div class="ocard-head"><div class="nm">${esc(g.emoji || '📦')} ${esc(goDisplayName(g))}</div>${goPill(g.status)}</div>
-      <div class="ocard-claims">${chipsMe(cs, m.infoOf)}</div>
-      <div class="ocard-costs">${cat('Initials', initials)}${cat('EMS', ems)}${cat('Customs', customs)}${cat('DOMs', doms)}${cat('Other', other)}</div>
-      ${g.payment_deadline ? `<p class="small ${overdue ? 'err' : 'muted'}" style="margin:8px 0 0">${overdue ? 'Payment was due' : 'Pay by'} ${esc(fmtDate(g.payment_deadline))}</p>` : ''}
-      <div class="ocard-foot"><span>${shipCell(g, part)}</span>${g.status === 'Cancelled' ? '<span class="muted">Refund</span>'
-        : isPending ? '<span class="pill gold">Payment pending review</span>'
-        : `<span class="owed${owed > 0.005 ? '' : ' clear'}">${owed > 0.005 ? `Owed ${money(owed)}` : paidHere > 0.005 || total > 0.005 ? 'Paid in full' : 'Nothing due'}</span>`}</div>
-      ${notDueHere > 0.005 ? `<p class="small muted" style="margin:8px 0 0">+${money(notDueHere)} not due yet</p>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+  const payableCount = orders.filter(g => myOrderStat(d, m, g).owed > 0.005 && !myOrderStat(d, m, g).isPending && g.status !== 'Cancelled').length;
+  const stores = [...new Set(orders.map(g => g.drop && g.drop.store).filter(Boolean))].sort();
+  const opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`;
+  const fm = S.meFilters;
 
-  const pays = d.payments.slice().sort((a, b) => (b.paid_on || '').localeCompare(a.paid_on || '')).map(p =>
-    `<div class="prow2"><div class="muted small">${esc(fmtDate(p.paid_on))}</div><div>${esc(p.note || (p.amount < 0 ? 'Refund' : 'Payment'))} <span class="muted small">${esc(p.method || '')}</span></div><div class="r">${money(p.amount)}</div><div></div></div>`).join('');
+  const pays = d.payments.slice().sort((a, b) => (b.paid_on || '').localeCompare(a.paid_on || '')).map(p => {
+    const forOrders = (p.order_ids && p.order_ids.length ? p.order_ids : p.group_order_id ? [p.group_order_id] : []).map(goById).filter(Boolean);
+    return `<div class="prow2"><div class="muted small">${esc(fmtDate(p.paid_on))}</div><div>${esc(p.note || (p.amount < 0 ? 'Refund' : 'Payment'))} <span class="muted small">${esc(p.method || '')}</span>
+      ${forOrders.length ? `<div class="small muted" style="margin-top:2px">For: ${forOrders.map(g => esc(goDisplayName(g))).join(', ')}</div>` : ''}</div><div class="r">${money(p.amount)}</div><div></div></div>`;
+  }).join('');
 
   const cbHTML = comebackPanels(d, m);
 
@@ -1989,8 +2022,7 @@ function meView(d) {
       <div><div class="k">Claim participation</div><div class="v">${m.pct}%</div><div class="track" role="img" aria-label="${m.pct} percent"><div class="fill" style="width:${m.pct}%"></div></div><div class="s">${m.joined} of ${m.active} active orders</div></div>
     </section>
 
-    ${m.balance > 0.005 ? `<div class="pay"><div><strong>${money(m.balance)} to send</strong><p>Pay by PayPal, Venmo (friends and family) or Wise, then DM @${esc(CONFIG.INSTAGRAM)} so it can be recorded. This page updates once the host has logged it.</p></div>
-      <a class="btn" href="${esc(CONFIG.PAYPAL)}" target="_blank" rel="noopener">PayPal</a><a class="btn ghost" href="${esc(CONFIG.VENMO)}" target="_blank" rel="noopener">Venmo</a>${CONFIG.WISE ? `<a class="btn ghost" href="${esc(CONFIG.WISE)}" target="_blank" rel="noopener">Wise</a>` : ''}</div>` : ''}
+    ${m.balance > 0.005 ? `<div class="pay"><div><strong>${money(m.balance)} to send</strong><p>Scroll down to Your orders, select what you're paying for, and use the Pay now button. This page updates once the host has approved the payment.</p></div></div>` : ''}
 
     ${cbHTML || `<section class="panel"><p style="margin:0">You've been part of <b>${orders.length}</b> group ${orders.length === 1 ? 'order' : 'orders'} total.</p></section>`}
 
@@ -2013,8 +2045,17 @@ function meView(d) {
 
     ${m.pendingPayTotal > 0.005 ? `<p class="small muted" style="margin:8px 0 0">${money(m.pendingPayTotal)} in submitted ${m.pendingPayments.length === 1 ? 'payment is' : 'payments are'} awaiting review.</p>` : ''}
     <h2 class="blk">Your orders</h2>
-    <div id="payBar" class="paybar" style="display:none"><span><span id="paySelCount">0</span> selected: <b id="paySelTotal">$0.00</b></span><button type="button" class="btn" data-action="openPayModal">Pay now</button></div>
-    ${orders.length ? `<div class="list">${orderRows}</div>` : '<p class="muted">No claims yet. Watch the Drops page for new orders.</p>'}
+    <div id="payBar" class="paybar">
+      <label class="paybar-all"><input type="checkbox" id="paySelectAll" ${payableCount ? '' : 'disabled'}><span>Select all</span></label>
+      <span><span id="paySelCount">0</span> selected: <b id="paySelTotal">$0.00</b></span>
+      <button type="button" class="btn" data-action="openPayModal" id="payNowBtn" disabled>Pay now</button>
+    </div>
+    ${orders.length ? `<div class="filters">
+      <input type="search" data-mefilter="q" placeholder="Search by name or store" value="${esc(fm.q)}" aria-label="Search your orders">
+      <select data-mefilter="store" aria-label="Store">${opt('', 'All stores', fm.store)}${stores.map(s => opt(s, s, fm.store)).join('')}</select>
+      <select data-mefilter="status" aria-label="Payment status">${opt('', 'Any payment status', fm.status)}${Object.entries(PAY_STATUS_LABEL).map(([k, l]) => opt(k, l, fm.status)).join('')}</select>
+    </div>` : ''}
+    <div id="myOrders">${myOrdersList()}</div>
 
     ${pays ? `<h2 class="blk">Payments</h2><div class="list">${pays}</div>` : ''}`;
 }
@@ -2809,6 +2850,7 @@ async function render() {
 const actions = {
   signout() { S.me = null; session.del('jo'); render(); },
   clearFilters() { S.filters = {q:'', store:'', type:'', status:''}; render(); },
+  clearMeFilters() { S.meFilters = {q:'', store:'', status:''}; render(); },
   async adminOut() { await api.adminSignOut(); A.is = false; A.data = {}; render(); },
   tab(b) { A.tab = b.dataset.tab; A.preview = null; render(); },
   async edit(b) { delete A.adding[b.dataset.key]; A.edit[b.dataset.key] = b.dataset.id; await render();
@@ -3193,12 +3235,13 @@ app.addEventListener('submit', e => {
   e.preventDefault(); guard(forms[f.dataset.form], f);
 });
 function updatePayBar() {
-  const boxes = [...document.querySelectorAll('.pay-select:checked')];
   const bar = $('#payBar'); if (!bar) return;
-  bar.style.display = boxes.length ? '' : 'none';
-  if (!boxes.length) return;
+  const all = [...document.querySelectorAll('.pay-select')], boxes = all.filter(b => b.checked);
   $('#paySelCount').textContent = boxes.length;
   $('#paySelTotal').textContent = money(sum(boxes, b => Number(b.dataset.owed) || 0));
+  const payBtn = $('#payNowBtn'); if (payBtn) payBtn.disabled = !boxes.length;
+  const selectAll = $('#paySelectAll');
+  if (selectAll && all.length) { selectAll.checked = boxes.length === all.length; selectAll.indeterminate = boxes.length > 0 && boxes.length < all.length; }
 }
 function autoRound(f) {
   const storeI = $('[name="store"]', f), cbI = $('[name="comeback_id"]', f), roundI = $('[name="round"]', f);
@@ -3211,6 +3254,7 @@ app.addEventListener('input', e => {
   const t = e.target;
   if (t.name === 'q' && t.closest('form[data-form="claim"]')) { t.closest('.mchip').classList.toggle('on', (parseInt(t.value, 10) || 0) > 0); claimNote(t.closest('form')); return; }
   if (t.name === 'store' && t.closest('form[data-key="drops"]')) { autoRound(t.closest('form')); return; }
+  if (t.dataset.mefilter) { S.meFilters[t.dataset.mefilter] = t.value; $('#myOrders').innerHTML = myOrdersList(); return; }
   if (!t.dataset.filter) return;
   S.filters[t.dataset.filter] = t.value; $('#dropList').innerHTML = dropList();
 });
@@ -3227,6 +3271,11 @@ app.addEventListener('change', e => {
   if ((t.name === 'type' || t.name === 'drop_id') && t.closest('form[data-form="crud"]')) updateFormSections(t.closest('form'));
   if (t.name === 'comeback_id' && t.closest('form[data-key="drops"]')) { autoRound(t.closest('form')); return; }
   if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; $('#dropList').innerHTML = dropList(); return; }
+  if (t.dataset.mefilter) { S.meFilters[t.dataset.mefilter] = t.value; $('#myOrders').innerHTML = myOrdersList(); return; }
+  if (t.id === 'paySelectAll') {
+    document.querySelectorAll('.pay-select').forEach(b => { b.checked = t.checked; });
+    updatePayBar(); return;
+  }
   if (t.matches('[data-imgfile]')) { guard(addPhotos, t); return; }
   if (t.name === 'q' && t.closest('form[data-form="claim"]')) {
     const f = t.closest('form'); t.closest('.mchip').classList.toggle('on', (parseInt(t.value, 10) || 0) > 0); claimNote(f); return;
