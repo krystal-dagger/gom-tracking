@@ -1520,7 +1520,7 @@ function availGridMerch(an, mine = new Set()) {
     const soldOut = cap != null && claims.length >= cap;
     return `<tr class="ot8row"><th scope="row">${esc(label)}</th><td>${claims.length
       ? claims.map(c => `<span class="ot8e${mine.has(c.id) ? ' mine' : ''}" title="${esc(`${em(c.emoji)} ${label}`)}">${esc(em(c.emoji))}</span>`).join('')
-      : '<span class="muted small">None yet</span>'}${cap != null ? ` <span class="pill${soldOut ? ' coral' : ''}">${claims.length} of ${cap}${soldOut ? ', sold out' : ''}</span>` : ''}</td></tr>`;
+      : '<span class="muted small">None yet</span>'}${cap != null ? ` <span class="pill${soldOut ? ' coral' : ''}">${soldOut ? '\u274c capped' : '\u2705'}</span>` : ''}</td></tr>`;
   }).join('');
   return `<div class="gridwrap"><table class="av merch" aria-label="Claims by item"><tbody>${rowsHTML}</tbody></table></div>
     <p class="small muted" style="margin:8px 0 0">Each item is bought individually, not in sets.${mine.size ? ' Your claims are outlined.' : ''}</p>`;
