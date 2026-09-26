@@ -1749,7 +1749,7 @@ function sumLine(an) {
   // not the sets-based toOrder figure (which assumes every row lines up into the same numbered sets).
   const merchClaimed = merch ? an.R.reduce((a, r) => a + (an.rowCount[r] || 0), 0) : 0;
   const out = merch ? [P(n(merchClaimed, 'item', 'items') + ' claimed', merchClaimed ? 'sea' : '')]
-    : [P(n(an.going, 'set', 'sets') + ' going through', an.going ? 'sea' : ''), P(n(an.items, 'item', 'items') + ' to order')];
+    : [P(n(an.going, 'shared set', 'shared sets') + ' going through', an.going ? 'sea' : ''), P(n(an.items, 'item', 'items') + ' to order')];
   if (an.ot8.length) out.push(P(`${an.ot8.length} ${fullCode(an.go)}, always ordered`));
   if (!merch && an.unclaimed) out.push(P(`${an.unclaimed} unclaimed`));
   if (an.waitlisted) out.push(P(`${an.waitlisted} waitlisted`, 'gold'));
