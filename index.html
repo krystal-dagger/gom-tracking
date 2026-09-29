@@ -279,7 +279,8 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .acard-title strong{font-weight:700;font-size:15.5px}
 .acard-meta{display:flex;flex-wrap:wrap;gap:6px 10px;color:var(--muted);font-size:13.5px;margin-bottom:4px}
 .acard-meta b{color:var(--text);font-weight:600}
-.acard-notes{color:var(--muted);font-size:13px;margin-top:4px;font-style:italic}
+.acard-notes{color:var(--muted);font-size:13px;margin-top:4px;font-style:italic;white-space:pre-line}
+.gonote{white-space:pre-line}
 .acard-acts{display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end}
 .arow{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
 .arow:first-child{border-top:0}
@@ -2009,7 +2010,7 @@ function goCard(g) {
     ${stepper(g.status)}
     <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
     ${publicRaffles(g)}
-    ${g.public_note ? `<p class="small muted" style="margin:0">${esc(g.public_note)}</p>` : ''}
+    ${g.public_note ? `<p class="small muted gonote" style="margin:0">${esc(g.public_note)}</p>` : ''}
     ${g.platform_link ? `<a class="small" href="${esc(g.platform_link)}" target="_blank" rel="noopener">See the ${g.platform === 'threads' ? 'Threads' : 'Instagram'} post</a>` : ''}`;
   return `<article class="gocard">
     <div class="gc-top"><div class="gc-photo">${goPhotos(g)}</div><div class="gc-info">${info}</div></div>
@@ -2482,7 +2483,7 @@ const CFG = {
     fields:[F('drop_id','Drop','ref',{ref:'drops',req:1,wide:1,hint:'Which drop this order is for. A new drop creates its first order for you automatically; add more here for extra rounds. The order\'s name is worked out from the drop -- a second order for the same drop is labeled "Batch 2" automatically.'}),
       F('emoji','Emoji'), F('platform','Platform','select',{req:1,opts:[['instagram','Instagram'],['threads','Threads']]}), F('platform_link','Platform link','text',{wide:1}),
       F('kaddy','Kaddy','select',{req:1,opts:KADDY_OPTS}), F('status','Status','select',{req:1,opts:STATUSES}), F('shipment_id','Kaddy box','ref',{ref:'shipments'}),
-      F('public_note','Notes (visible to joiners)','text',{wide:1}), F('host_note','Notes (host only)','text',{wide:1}),
+      F('public_note','Notes (visible to joiners)','textarea',{wide:1}), F('host_note','Notes (host only)','textarea',{wide:1}),
       F('payment_deadline','Initials payment deadline','date',{hint:'When joiners need to have paid for their claims. Separate from the claim deadline, which is on the drop.'}),
       F('payment_deadline_time','Initials payment time','time',{hint:'Optional. Shown to everyone in their own time zone.'}),
       F('doms_deadline','DOMs payment deadline','date',{hint:'When domestic shipping needs to be paid. EMS and customs deadlines come from the kaddy box.'}),
@@ -2624,6 +2625,7 @@ function fieldHTML(f, val) {
     input = `<input id="${id}" name="${f.k}" type="text" list="dl-${f.k}" value="${esc(v)}" ${req} autocomplete="off">
       <datalist id="dl-${f.k}">${v !== '' ? `<option value="${esc(v)}">` : ''}${opts.map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
   }
+  else if (f.t === 'textarea') input = `<textarea id="${id}" name="${f.k}" rows="4" ${req}>${esc(v)}</textarea>`;
   else input = `<input id="${id}" name="${f.k}" type="text" value="${esc(v)}" ${req}>`;
   return `<div class="field ${f.wide ? 'wide' : ''}"><label for="${id}">${esc(f.l)}${f.req ? ' *' : ''}</label>${input}${f.hint ? `<small>${esc(f.hint)}</small>` : ''}</div>`;
 }
