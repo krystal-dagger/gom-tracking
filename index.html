@@ -287,12 +287,39 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .arow strong{font-weight:600}
 .acts{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .pad{padding:18px}
-.prow{display:grid;grid-template-columns:minmax(0,1.5fr) 76px minmax(0,1fr) auto minmax(0,1fr);gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
-.prow:first-child{border-top:0}
-@media(max-width:820px){.prow{grid-template-columns:76px 1fr 1fr}.prow>:first-child{grid-column:1/-1}}
 .emoji-in{text-align:center;font-size:18px;padding:6px 8px}
 .emoji-in.missing{border-color:var(--coral);background:var(--coral-bg)}
 .chip.emo{background:transparent;font-size:16px;padding-left:0}
+.jlist{display:grid;gap:12px}
+.jcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.jcard-head{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center}
+.jcard-head strong{font-weight:600;font-size:16px}
+.jowe{text-align:right;font-variant-numeric:tabular-nums}
+.jowe b{font-size:17px}
+.jowe small{display:block;color:var(--muted);font-size:12.5px}
+.jclaims{margin:10px 0 0}
+.claimbtn{cursor:pointer;border:1px solid transparent;font:600 12.5px/1 var(--body);color:var(--text)}
+.claimbtn:hover{border-color:var(--coral)}
+.jship{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.jship select{width:auto;min-width:150px}
+.jship input[data-field="carrier"]{width:110px}
+.jship input[data-field="tracking"]{flex:1 1 180px;width:auto}
+.jship .note{font-size:13.5px;color:var(--muted)}
+.jtotal{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:12px;background:var(--panel-2);font-weight:600;margin-top:12px}
+@media(max-width:600px){.jcard-head{grid-template-columns:56px minmax(0,1fr)}.jowe{grid-column:1/-1;text-align:left}}
+.rafflist{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+.rafflist li{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 12px;border-radius:10px;background:var(--panel-2);font-size:14px}
+.rafflist .won{font-weight:700;color:var(--sea)}
+.rafflist .tbd{color:var(--muted)}
+.evbanner .won{display:block;margin-top:3px;font-size:14px;color:var(--sea)}
+.rafnote{font-size:12.5px;font-weight:600;color:var(--gold)}
+.rafq{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0;display:grid;gap:8px}
+.rafq legend{font-size:13px;font-weight:600;color:var(--muted);padding:0 4px}
+.rafq .q{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:14.5px}
+.rafq .q .opts{display:flex;gap:14px}
+.rafq label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.rafq input{width:auto;min-height:0;margin:0}
+.myraf select{width:auto;min-height:34px;padding:4px 30px 4px 10px;font-size:14px}
 .cap{white-space:pre-wrap;font:16px/1.7 var(--body);background:var(--panel-2);border-radius:12px;padding:16px;margin:0;overflow-x:auto}
 table.pv{width:100%;border-collapse:collapse;font-size:14.5px}
 table.pv th,table.pv td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
@@ -939,7 +966,7 @@ function rosterToText(cb, roster, emojis, joiners, hostHandle) {
    4. DEMO data + API  (used when Supabase is not configured)
    ===================================================================== */
 function seedDemo() {
-  const D = {drops:[], group_orders:[], shipments:[], joiners:[], joiner_accounts:[], claims:[], participants:[], charges:[], payments:[], comebacks:[], comeback_roster:[], comeback_emojis:[], merch_items:[], go_merch_items:[], bonus_items:[], bonus_claims:[], raffles:[]};
+  const D = {drops:[], group_orders:[], shipments:[], joiners:[], joiner_accounts:[], claims:[], participants:[], charges:[], payments:[], comebacks:[], comeback_roster:[], comeback_emojis:[], merch_items:[], go_merch_items:[], bonus_items:[], bonus_claims:[], raffles:[], raffle_entries:[]};
   let seed = 11; const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
   const pick = arr => arr[Math.floor(rnd() * arr.length)];
   const off = n => addDays(today(), n);
@@ -1030,7 +1057,7 @@ function seedDemo() {
   D.bonus_items.push({id:'bi-th1', group_order_id:th.id, item_name:'Keyring', claims_needed:4, position:0, created_at:'2026-07-01T00:00:00Z'});
 
   // a raffle already recorded on the split-cost order
-  D.raffles.push({id:uid(), group_order_id:kong.id, name:'Unclaimed HJ raffle', winner:null, position:0, created_at:'2026-07-01T00:00:00Z'});
+  D.raffles.push({id:'rf-kong-hj', group_order_id:kong.id, name:'Unclaimed HJ raffle', kind:'extra', winner:null, winner_joiner_id:null, position:0, created_at:'2026-07-01T00:00:00Z'});
 
   const people = [['demo_joiner','🐙'],['starlit_atiny','🌟'],['bun.tiny','🐰'],['crewmate_08','🧭'],['seaglass.hwa','🐚'],['pirate_pudding','🍩'],['wooyoung.wave','🌊'],['sanbeam','🔦']];
   people.forEach(([name,emoji]) => {
@@ -1118,7 +1145,11 @@ function seedDemo() {
   D.joiner_accounts.push({handle:'octo.tiny', joiner_id:'j-octo.tiny', platform:'instagram'});
   addClaim('j-octo.tiny', wm, 'Bread Keychain'); addClaim('j-octo.tiny', kong, 'SN');
   // fancall/fansign entries: one of each kind
-  Object.assign(kong, {event_mode:'raffle'}); Object.assign(mex, {event_mode:'personal'}); Object.assign(music, {event_mode:'hosting', event_for_joiner:'j-starlit_atiny'});
+  Object.assign(kong, {event_mode:'raffle'});
+  D.raffles.push({id:'rf-kong-ev', group_order_id:kong.id, name:'Fansign raffle', kind:'event', winner:null, winner_joiner_id:null, position:-1, created_at:'2026-07-01T00:00:00Z'});
+  // everyone on Kongsoonteez but the demo joiner has already said yes/no, so the demo joiner gets asked
+  [...new Set(D.claims.filter(c => c.group_order_id === kong.id && c.joiner_id !== me).map(c => c.joiner_id))].forEach((jid, i) => {
+    D.raffle_entries.push({raffle_id:'rf-kong-ev', joiner_id:jid, entered:true}, {raffle_id:'rf-kong-hj', joiner_id:jid, entered:i % 2 === 0}); }); Object.assign(mex, {event_mode:'personal'}); Object.assign(music, {event_mode:'hosting', event_for_joiner:'j-starlit_atiny'});
   return D;
 }
 
@@ -1131,6 +1162,19 @@ function demoApi() {
     return !!k && normEmoji(g && g.emoji || '').trim() !== k && !db.participants.some(p => p.group_order_id === goId && p.joiner_id !== jid && p.emoji && normEmoji(p.emoji).trim() === k); };
   const ensurePart = (goId, jid) => { if (db.participants.some(p => p.group_order_id === goId && p.joiner_id === jid)) return;
     const e = defEmoji(goId, jid); db.participants.push({group_order_id:goId, joiner_id:jid, emoji:e && emojiFree(goId, jid, e) ? e : null, shipping_type:null, shipped:false, tracking:null, note:null}); };
+  // raffle answers, same rules as _raffle_answers() in the database
+  const raffleLate = g => !!(g && g.payment_deadline && isPastDue(g.payment_deadline, g.payment_deadline_time));
+  const raffleAnswers = (goId, jid, answers, write) => {
+    const g = db.group_orders.find(x => x.id === goId);
+    for (const r of db.raffles.filter(x => x.group_order_id === goId).sort((a, b) => a.position - b.position)) {
+      const v = answers && typeof answers[r.id] === 'boolean' ? answers[r.id] : null, e = db.raffle_entries.find(x => x.raffle_id === r.id && x.joiner_id === jid);
+      const drawn = !!(r.winner_joiner_id || r.winner);
+      if (!write) { if (!e && v === null && !drawn) return r.name; continue; }
+      if (v === null || drawn || (e && raffleLate(g))) continue;
+      if (e) e.entered = v; else db.raffle_entries.push({raffle_id:r.id, joiner_id:jid, entered:v});
+    }
+    return null;
+  };
   const firstAt = p => db.claims.filter(c => c.group_order_id === p.group_order_id && c.joiner_id === p.joiner_id).map(c => c.created_at).sort()[0] || '';
   db.participants.slice().sort((a, b) => a.group_order_id.localeCompare(b.group_order_id) || firstAt(a).localeCompare(firstAt(b))).forEach(p => {
     const e = defEmoji(p.group_order_id, p.joiner_id); p.emoji = e && emojiFree(p.group_order_id, p.joiner_id, e) ? e : null; });
@@ -1176,7 +1220,8 @@ function demoApi() {
         stats: statsMap(), comebacks: db.comebacks, seats: seatList(),
         joiners: db.joiners.map(({id,name,emoji}) => ({id,name,emoji})),
         cbEmojis: db.comeback_emojis, merchItems: db.merch_items, goMerchItems: db.go_merch_items, bonusItems: db.bonus_items,
-        orderEmojis: db.participants.filter(p => p.emoji).map(({group_order_id, joiner_id, emoji}) => ({group_order_id, joiner_id, emoji}))});
+        orderEmojis: db.participants.filter(p => p.emoji).map(({group_order_id, joiner_id, emoji}) => ({group_order_id, joiner_id, emoji})),
+        raffles: db.raffles});
     },
     async login(handle, pin) {
       const a = db.joiner_accounts.find(x => x.handle === normHandle(handle));
@@ -1191,7 +1236,8 @@ function demoApi() {
         participation: db.participants.filter(c => c.joiner_id === j.id).map(({joiner_id, ...r}) => r),
         roster: db.comeback_roster.filter(r => r.joiner_id === j.id).map(({joiner_id, id, ...r}) => r),
         emojis: db.comeback_emojis.filter(e => e.joiner_id === j.id).map(({comeback_id, emoji}) => ({comeback_id, emoji})),
-        bonus_claims: db.bonus_claims.filter(b => b.joiner_id === j.id && b.status === 'filled').map(strip)});
+        bonus_claims: db.bonus_claims.filter(b => b.joiner_id === j.id && b.status === 'filled').map(strip),
+        raffle_entries: db.raffle_entries.filter(e => e.joiner_id === j.id).map(({raffle_id, entered}) => ({raffle_id, entered}))});
     },
     async isAdmin() { return admin; },
     async adminSignIn(email, pw) { if (pw !== 'demo') throw new Error('In demo mode the host password is "demo".'); admin = true; },
@@ -1247,7 +1293,7 @@ function demoApi() {
     },
     async removeImages() {},
     async clearRoster(cbId) { ['comeback_roster','comeback_emojis'].forEach(k => { db[k] = db[k].filter(x => x.comeback_id !== cbId); }); },
-    async joinerClaim(handle, pin, goId, members, emoji) {     // same rules as the joiner_claim function in schema.sql
+    async joinerClaim(handle, pin, goId, members, emoji, raffles) {     // same rules as the joiner_claim function in schema.sql
       const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
       const g = withDrop(db.group_orders.find(x => x.id === goId));
       if (!g || g.status !== 'Claims Open') return {error:'closed'};
@@ -1272,6 +1318,7 @@ function demoApi() {
           if (n >= g.max_sets) return {error:'sold_out', detail:c};
         }
       }
+      const miss = raffleAnswers(goId, jid, raffles, false); if (miss) return {error:'raffle_answers', detail:miss};
       const part = db.participants.find(p => p.group_order_id === goId && p.joiner_id === jid);
       if (!(part && part.emoji)) {
         const want = String(emoji || '').trim() || defEmoji(goId, jid);
@@ -1292,8 +1339,18 @@ function demoApi() {
           source: claimSourceFor(g, {isHost:!!(j && j.is_host), onList, spots, haveStanding, code:c}), roster_pos:null,
           created_at:new Date(Date.now() + k++).toISOString()});
       });
+      raffleAnswers(goId, jid, raffles, true);
       if (!merch && codes.length) autoAssignBonusDemo(goId, jid);
       return {ok:true, added:codes.length};
+    },
+    async setRaffleEntry(handle, pin, raffleId, entered) {
+      const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
+      const r = db.raffles.find(x => x.id === raffleId); if (!r || !db.claims.some(c => c.group_order_id === r.group_order_id && c.joiner_id === jid)) return {error:'not_found'};
+      if (r.winner_joiner_id || r.winner) return {error:'drawn'};
+      if (raffleLate(db.group_orders.find(g => g.id === r.group_order_id))) return {error:'closed'};
+      const e = db.raffle_entries.find(x => x.raffle_id === raffleId && x.joiner_id === jid);
+      if (e) e.entered = !!entered; else db.raffle_entries.push({raffle_id:raffleId, joiner_id:jid, entered:!!entered});
+      return {ok:true};
     },
     async joinerUnclaim(handle, pin, claimId) {
       const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
@@ -1362,10 +1419,10 @@ function supabaseApi() {
     demo: false,
     async loadPublic() {
       const soft = pr => pr.catch(() => []);     // an older database without the newer upgrades still loads
-      const [drops, gos, shipments, st, comebacks, seats, joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis] = await Promise.all([
+      const [drops, gos, shipments, st, comebacks, seats, joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis, raffles] = await Promise.all([
         all('drops'), all('group_orders'), all('public_shipments'), all('go_stats'),
-        soft(all('comebacks')), soft(all('order_seats')), soft(all('public_joiners')), soft(all('comeback_emojis')), soft(all('merch_items')), soft(all('go_merch_items')), soft(all('bonus_items')), soft(all('public_order_emojis'))]);
-      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})), joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis,
+        soft(all('comebacks')), soft(all('order_seats')), soft(all('public_joiners')), soft(all('comeback_emojis')), soft(all('merch_items')), soft(all('go_merch_items')), soft(all('bonus_items')), soft(all('public_order_emojis')), soft(all('raffles'))]);
+      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})), joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis, raffles,
         stats: Object.fromEntries(st.map(s => [s.group_order_id, {joiners:s.joiners, items:s.items}]))};
     },
     async login(handle, pin) {
@@ -1414,8 +1471,9 @@ function supabaseApi() {
           ? 'Picture upload is not set up yet, or you are signed out. Run upgrade-photos-calendar.sql in Supabase, then sign in again.' : m);
       }
     },
-    async joinerClaim(handle, pin, goId, members, emoji) {
+    async joinerClaim(handle, pin, goId, members, emoji, raffles) {
       const args = {p_handle:handle, p_pin:pin, p_order:goId, p_members:members}; if (emoji) args.p_emoji = emoji;
+      if (raffles && Object.keys(raffles).length) args.p_raffles = raffles;
       const {data, error} = await sb.rpc('joiner_claim', args); if (error) fail(error); return data;
     },
     async joinerUnclaim(handle, pin, claimId) {
@@ -1437,6 +1495,9 @@ function supabaseApi() {
       if (breakdown && breakdown.length) args.p_breakdown = breakdown;
       const {data, error} = await sb.rpc('joiner_submit_payment', args);
       if (error) fail(error); return data;
+    },
+    async setRaffleEntry(handle, pin, raffleId, entered) {
+      const {data, error} = await sb.rpc('joiner_set_raffle_entry', {p_handle:handle, p_pin:pin, p_raffle:raffleId, p_entered:entered}); if (error) fail(error); return data;
     },
     async pickBonusType(handle, pin, bonusClaimId, type) {
       const {data, error} = await sb.rpc('joiner_pick_bonus_type', {p_handle:handle, p_pin:pin, p_bonus_claim_id:bonusClaimId, p_type:type});
@@ -1556,12 +1617,25 @@ function openLightbox(key, start) {
 /* =====================================================================
    8. PAGE: Drops
    ===================================================================== */
+// An order's raffles: its fancall/fansign raffle (kind 'event', shown in the order's banner) and any extra raffle
+// incentives. `list` defaults to the public raffle list.
+const rafflesOf = (g, list) => (list || S.pub.raffles || []).filter(r => r.group_order_id === g.id)
+  .sort((a, b) => (a.kind === 'event' ? 0 : 1) - (b.kind === 'event' ? 0 : 1) || (a.position - b.position) || a.name.localeCompare(b.name));
+const extraRaffles = (g, list) => rafflesOf(g, list).filter(r => r.kind !== 'event');
+const raffleDrawn = r => !!(r.winner_joiner_id || r.winner);
+// Joiners can change their raffle answers until the order's initials payment is due
+const raffleAnswersClosed = g => !!(g.payment_deadline && isPastDue(g.payment_deadline, g.payment_deadline_time));
+const myRaffleAnswer = rid => { const e = ((S.me && S.me.raffle_entries) || []).find(x => x.raffle_id === rid); return e ? e.entered : null; };
 // What kind of fancall/fansign entry an order is: a raffle among joiners, the GOM's own attempt, or hosting for a
 // joiner. Null when the drop has no event or the host hasn't said. `joiners` defaults to the public joiner list.
 function eventModeInfo(g, joiners) {
   const d = g && g.drop; if (!d || !d.event_type || d.event_type === 'none' || !g.event_mode) return null;
   const T = EVT_NAME[d.event_type] || 'Event', t = T.toLowerCase();
-  if (g.event_mode === 'raffle') return {icon:'🎟️', text:`${T} raffle`, sub:'The entry is raffled among joiners. Max of 8 entries per joiner.'};
+  if (g.event_mode === 'raffle') {
+    const er = rafflesOf(g).find(r => r.kind === 'event'), w = er && raffleWinnerName(er, joiners || S.pub.joiners);
+    const we = w && er.winner_joiner_id ? (orderEmojiRows(g).find(e => e.joiner_id === er.winner_joiner_id) || {}).emoji || '' : '';
+    return {icon:'🎟️', text:`${T} raffle`, sub:w ? '' : 'The entry is raffled among joiners. Max of 8 entries per joiner.', winner:w ? `${we} @${w}`.trim() : ''};
+  }
   if (g.event_mode === 'personal') return {icon:'💎', text:`GOM's personal ${t} attempt`, sub:'This entry is for the GOM, not raffled.'};
   if (g.event_mode === 'hosting') {
     const j = g.event_for_joiner && (joiners || S.pub.joiners || []).find(x => x.id === g.event_for_joiner);
@@ -1592,7 +1666,8 @@ function dropRow(d, anyPics) {
   const thumb = items.length ? pcCover('drop:' + d.id, items, dropDisplayName(d)) : (anyPics ? '<span class="pc-sp" aria-hidden="true"></span>' : '');
   const dl = effDeadline(d), T = EVT_NAME[d.event_type];
   const evTexts = [...new Map(gos.map(g => eventModeInfo(g)).filter(Boolean).map(x => [x.text, x])).values()];
-  const evModes = evTexts.map(x => `<span class="evmode"><span aria-hidden="true">${x.icon}</span>${esc(x.text)}</span>`).join('');
+  const evModes = evTexts.map(x => `<span class="evmode"><span aria-hidden="true">${x.icon}</span>${esc(x.text)}${x.winner ? ` \u00b7 won by ${esc(x.winner)}` : ''}</span>`).join('');
+  const hasExtraRaffle = gos.some(g => extraRaffles(g).length || num(g.number_of_raffles) > 0);
   const dates = [
     dl ? ['Order by', fmtWhen(dl.date, dl.time)] : null,
     d.event_type !== 'none' && d.winners_on ? [`${T} winners`, fmtWhen(d.winners_on, d.winners_time)] : null,
@@ -1607,6 +1682,7 @@ function dropRow(d, anyPics) {
       ${d.type === 'PC' && d.album_type ? `<span>${esc(d.album_type)}</span>` : ''}
       ${d.type === 'PC' && d.solo_unit === 'Unit' ? '<span>Unit</span>' : ''}
       ${d.round ? `<span>Round ${esc(d.round)}</span>` : ''}
+      ${hasExtraRaffle ? '<span class="rafnote">🎁 Raffle incentive</span>' : ''}
     </p>${dates.length ? `<p class="meta">${dates.map(([k, v]) => `<span>${esc(k)} <span class="dt">${esc(v)}</span></span>`).join('')}</p>` : ''}</div></div>
     <div class="drop-r"><div class="drop-gos">${goButtons}</div></div>
   </article>`;
@@ -1768,7 +1844,7 @@ const claimError = (r, go) => ({
   closed:'Claims are closed for this order.', deadline:'The deadline for this order has passed.', no_price:'This order has no price yet, so claiming is not open.',
   nothing:'Pick at least one member.', too_many:'That is too many at once. Claim up to 40 at a time.', bad_member:`${r.detail || 'That'} is not a member of this order.`,
   not_found:'That claim was not found.',
-  emoji_needed:'Pick an emoji to use on this order.', bad_emoji:'Your emoji for this order should be a single emoji, with no letters or numbers.',
+  emoji_needed:'Pick an emoji to use on this order.', raffle_answers:`Say whether you want to be entered in the ${r.detail || 'raffle'} first.`, bad_emoji:'Your emoji for this order should be a single emoji, with no letters or numbers.',
   emoji_taken:`${r.detail || 'That emoji'} is already taken on this order. Pick another one.`,
   sold_out:`${r.detail || 'That'} is sold out.`,
   fixed:`A fixed claim stays unless you switch to ${go ? fullCode(go) : 'OT8'} (claim one first) or the host drops it. DM @${CONFIG.INSTAGRAM}.`,
@@ -1842,8 +1918,14 @@ function claimPanel(g, an) {
       <input id="ce-${g.id}" name="emoji" class="emoji-in" required maxlength="16" autocomplete="off" spellcheck="false" placeholder="Pick an emoji">
       <small>${ctx.usual ? `Your usual ${esc(ctx.usual)} is already taken on this order, so pick another one.` : 'Pick an emoji to be on this order.'}
       ${ctx.others.length ? `Taken here: ${esc(ctx.others.join(' '))}${g.emoji ? `, plus ${esc(g.emoji)} for the order itself` : ''}.` : g.emoji ? `You can't use ${esc(g.emoji)}, the order's own emoji.` : ''} It stays yours on this order.</small></div>` : '';
+  const askRaffles = rafflesOf(g).filter(r => !raffleDrawn(r) && myRaffleAnswer(r.id) === null);
+  const raffleQs = askRaffles.length ? `<fieldset class="rafq"><legend>Raffles on this order (required)</legend>
+      ${askRaffles.map(r => `<div class="q"><span>Enter me in the <b>${esc(r.name)}</b>?</span><span class="opts">
+        <label><input type="radio" name="raffle:${r.id}" value="yes" required> Yes</label><label><input type="radio" name="raffle:${r.id}" value="no"> No</label></span></div>`).join('')}
+      <small class="muted">You only answer once per order, and can change it until payment is due.</small></fieldset>` : '';
   return `<form class="panel-mini" data-form="claim" data-go="${g.id}"><h4 class="sh" style="margin:0">Claim as ${ctx.emoji ? esc(ctx.emoji) + ' ' : ''}${esc(me.joiner.name)}</h4>
     ${emojiPick}
+    ${raffleQs}
     <div class="mchips" role="group" aria-label="Choose how many of each to claim">${chips}${fullChip}</div>
     ${fixedNote}
     <p class="small muted" style="margin:0" data-claimnote role="status">Use + to pick a ${w1}.${R.length > 1 ? ' Pick the same one twice to claim it twice.' : ''}</p>
@@ -1867,6 +1949,20 @@ function myClaimsList(g, an, mineLive) {
   const total = r2(mineLive.reduce((a, c) => a + claimInfo(g, c, an).amount, 0));
   return `<div><h4 class="sh">Your claims on this order</h4>${rows}<p class="small muted" style="margin:8px 0 0">Going through so far: <b>${money(total)}</b>. Waitlisted claims are not charged unless their set fills up enough to go through.</p></div>`;
 }
+// A joiner's yes/no for each raffle on an order they're in, changeable until payment is due or the raffle is drawn.
+// With `answeredOnly`, raffles they haven't answered are left out (the claim form asks about those instead).
+function myRaffleEntries(g, answeredOnly) {
+  if (!S.me || !S.me.claims.some(c => c.group_order_id === g.id)) return '';
+  const list = rafflesOf(g).filter(r => !answeredOnly || raffleDrawn(r) || myRaffleAnswer(r.id) !== null); if (!list.length) return '';
+  const closed = raffleAnswersClosed(g);
+  const rows = list.map(r => {
+    const a = myRaffleAnswer(r.id), w = raffleWinnerName(r, S.pub.joiners), icon = r.kind === 'event' ? '🎟️' : '🎁';
+    const ctl = raffleDrawn(r) ? `<span class="small ${r.winner_joiner_id === S.me.joiner.id ? '' : 'muted'}">${r.winner_joiner_id === S.me.joiner.id ? '🏆 You won!' : `Won by @${esc(w)}`}</span>`
+      : `<select data-raffle="${r.id}" aria-label="Your entry in ${esc(r.name)}" ${closed ? 'disabled' : ''}>${a === null ? '<option value="" selected>Not answered yet</option>' : ''}<option value="yes" ${a === true ? 'selected' : ''}>Enter me</option><option value="no" ${a === false ? 'selected' : ''}>Don't enter me</option></select>`;
+    return `<div class="mine-row"><span>${icon} ${esc(r.name)}</span><span>${ctl}</span></div>`;
+  }).join('');
+  return `<div class="myraf"><h4 class="sh">Your raffle entries</h4>${rows}<p class="small muted" style="margin:6px 0 0">${closed ? 'Payment is due, so these are locked in.' : 'You can change these until payment is due.'}</p></div>`;
+}
 function setsPanel(g, an, ro) {
   const cb = cbOf(g), parts = [];
   parts.push(`<div><h4 class="sh">Availability</h4>${availGrid(an, myIds())}</div>`, sumLine(an), setDetails(an));
@@ -1875,10 +1971,23 @@ function setsPanel(g, an, ro) {
   if (cb && g.roster_required) parts.push(`<p class="small muted" style="margin:0">Part of ${esc(cb.name)}. GOM, fixed and soft claimers are added automatically and go first in each line, in that order.</p>`);
   const mineLive = S.me ? S.me.claims.filter(c => c.group_order_id === g.id && c.status === 'filled') : [];
   if (mineLive.length) parts.push(myClaimsList(g, an, mineLive));
+  parts.push(myRaffleEntries(g, !ro && claimsOpen(g)));
   if (!ro) parts.push(claimPanel(g, an));
   return parts.join('');
 }
 
+// The raffles on an order and who won each (or "Not drawn yet"). Winners show with their emoji on this order.
+function raffleWinnerName(r, joiners) { const j = r.winner_joiner_id && (joiners || []).find(x => x.id === r.winner_joiner_id); return j ? j.name : r.winner || ''; }
+function publicRaffles(g) {
+  const list = extraRaffles(g);
+  const planned = num(g.number_of_raffles);
+  if (!list.length && !planned) return '';
+  const emojiOf = jid => (orderEmojiRows(g).find(e => e.joiner_id === jid) || {}).emoji || '';
+  const rows = list.map(r => { const w = raffleWinnerName(r, S.pub.joiners);
+    return `<li><span>${esc(r.name)}</span>${w ? `<span class="won">Won by ${esc(`${emojiOf(r.winner_joiner_id)} @${w}`.trim())}</span>` : '<span class="tbd">Not drawn yet</span>'}</li>`; });
+  for (let i = list.length; i < planned; i++) rows.push(`<li><span>Raffle ${i + 1}</span><span class="tbd">Not drawn yet</span></li>`);
+  return `<div style="margin-top:14px"><h4 class="sh" style="margin:0">🎁 Raffle incentives</h4><ul class="rafflist">${rows.join('')}</ul></div>`;
+}
 function goCard(g) {
   const st = S.pub.stats[g.id] || {joiners:0, items:0};
   const ship = g.shipment_id && S.pub.shipments.find(s => s.id === g.shipment_id);
@@ -1896,9 +2005,10 @@ function goCard(g) {
   ].filter(x => x[1] !== '');
   const ev = eventModeInfo(g);
   const info = `<div class="gohead"><h3><span class="em" aria-hidden="true">${esc(g.emoji || '📦')}</span>${esc(goDisplayName(g))}</h3>${goPill(g.status)}</div>
-    ${ev ? `<div class="evbanner"><span class="ic" aria-hidden="true">${ev.icon}</span><div>${esc(ev.text)}<small>${esc(ev.sub)}</small></div></div>` : ''}
+    ${ev ? `<div class="evbanner"><span class="ic" aria-hidden="true">${ev.icon}</span><div>${esc(ev.text)}${ev.winner ? `<span class="won">🏆 Won by ${esc(ev.winner)}</span>` : ''}${ev.sub ? `<small>${esc(ev.sub)}</small>` : ''}</div></div>` : ''}
     ${stepper(g.status)}
     <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>
+    ${publicRaffles(g)}
     ${g.public_note ? `<p class="small muted" style="margin:0">${esc(g.public_note)}</p>` : ''}
     ${g.platform_link ? `<a class="small" href="${esc(g.platform_link)}" target="_blank" rel="noopener">See the ${g.platform === 'threads' ? 'Threads' : 'Instagram'} post</a>` : ''}`;
   return `<article class="gocard">
@@ -2175,7 +2285,7 @@ function comebackPanels(d, m) {
 }
 function shipCell(g, p) {
   if (g.status === 'Cancelled') return '<span class="muted">Cancelled</span>';
-  if (p && p.shipped) return `<span class="pill sea">Shipped</span><div class="small muted">${esc([p.shipping_type, p.tracking].filter(Boolean).join(', '))}</div>`;
+  if (p && p.shipped) return `<span class="pill sea">Shipped</span><div class="small muted">${esc([p.shipping_type, p.carrier, p.tracking].filter(Boolean).join(', '))}</div>`;
   // a completed order may still have items waiting to go out (some joiners ship several orders together)
   if (g.status === 'On Hand' || g.status === 'Completed') return `<span class="pill gold">On hand</span>${p && p.shipping_type ? `<div class="small muted">${esc(p.shipping_type)}</div>` : ''}`;
   return `<span class="muted small">Not here yet</span>`;
@@ -2240,6 +2350,7 @@ function myOrderRow(d, m, g) {
     ${myBonusLine(d, g)}
     <div class="ocard-costs">${cat('Initials', st.initials)}${cat('EMS', st.ems)}${cat('Customs', st.customs)}${cat('DOMs', st.doms)}${cat('Other', st.other)}</div>
     ${myPayDue(g, st)}
+    ${myRaffleEntries(g)}
     <div class="ocard-foot"><span>${shipCell(g, part)}</span>${g.status === 'Cancelled' ? '<span class="muted">Refund</span>'
       : st.isPending ? '<span class="pill gold">Payment pending review</span>'
       : `<span class="owed${st.owed > 0.005 ? '' : ' clear'}">${st.owed > 0.005 ? `Owed ${money(st.owed)}` : PAY_STATUS_LABEL[st.payStatus]}</span>`}</div>
@@ -2994,20 +3105,35 @@ function bonusPanel(go, claims, bonusClaims) {
     </form>
   </section>`;
 }
-function rafflesPanel(go, raffles) {
+function rafflesPanel(go, raffles, parts = [], emo = () => '', entries = []) {
   if (!go.number_of_raffles && !raffles.length) return '';
   const editing = A.editRaffle && raffles.find(r => r.id === A.editRaffle);
-  const rows = raffles.slice().sort((a, b) => (a.position - b.position) || a.name.localeCompare(b.name)).map(r => `<div class="mine-row"><span>${esc(r.name)}${r.winner ? ` — won by ${esc(r.winner)}` : ' — no winner recorded yet'}</span>
-    <span><button type="button" class="btn ghost small" data-action="editRaffle" data-id="${r.id}">Edit</button>
-    <button type="button" class="btn ghost small" style="margin-left:8px" data-action="removeRaffle" data-id="${r.id}">Remove</button></span></div>`).join('');
+  const jById = new Map((A.data.joiners || []).map(j => [j.id, j]));
+  const who = id => `${emo(id) || ''} @${(jById.get(id) || {}).name || '?'}`.trim();
+  const inOrder = parts.map(p => jById.get(p.joiner_id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+  const cur = editing ? editing.winner_joiner_id || '' : '';
+  // an older raffle may have a typed-in winner instead of a joiner: keep it selectable so saving doesn't lose it
+  const legacy = editing && !editing.winner_joiner_id && editing.winner ? `<option value="text:${esc(editing.winner)}" selected>${esc(editing.winner)} (typed in)</option>` : '';
+  // joiners who asked to be entered come first
+  const inIds = new Set(editing ? entries.filter(e => e.raffle_id === editing.id && e.entered).map(e => e.joiner_id) : []);
+  const opt = j => `<option value="${j.id}" ${j.id === cur ? 'selected' : ''}>${esc(who(j.id))}</option>`;
+  const inList = inOrder.filter(j => inIds.has(j.id)), rest = inOrder.filter(j => !inIds.has(j.id));
+  const winnerOpts = `<option value="">Not drawn yet</option>${legacy}${inList.length ? `<optgroup label="Asked to be entered">${inList.map(opt).join('')}</optgroup>${rest.length ? `<optgroup label="Everyone else on this order">${rest.map(opt).join('')}</optgroup>` : ''}` : inOrder.map(opt).join('')}`;
+  const rows = rafflesOf(go, raffles).map(r => { const w = raffleWinnerName(r, A.data.joiners);
+    const es = entries.filter(e => e.raffle_id === r.id), yes = es.filter(e => e.entered), no = es.length - yes.length;
+    const missing = parts.filter(p => !es.some(e => e.joiner_id === p.joiner_id)).length;
+    return `<div class="mine-row"><span>${r.kind === 'event' ? '🎟️' : '🎁'} <b>${esc(r.name)}</b>${w ? ` — won by ${esc(r.winner_joiner_id ? who(r.winner_joiner_id) : '@' + w)}` : ' — not drawn yet'}
+      <div class="small muted" style="margin-top:2px">${yes.length} entered${yes.length ? `: ${esc(yes.map(e => who(e.joiner_id)).join(', '))}` : ''}${no ? ` · ${no} said no` : ''}${missing ? ` · ${missing} haven't answered` : ''}</div></span>
+    <span><button type="button" class="btn ghost small" data-action="editRaffle" data-id="${r.id}">${raffleDrawn(r) ? 'Edit' : 'Pick winner'}</button>
+    ${r.kind === 'event' ? '' : `<button type="button" class="btn ghost small" style="margin-left:8px" data-action="removeRaffle" data-id="${r.id}">Remove</button>`}</span></div>`; }).join('');
   return `<section class="panel"><h2>Raffles</h2>
-    <p class="small muted" style="margin-top:0">You run these yourself; record the result here.${go.number_of_raffles ? ` Set for ${go.number_of_raffles}.` : ''}</p>
+    <p class="small muted" style="margin-top:0">You run these yourself; record the result here. Joiners say whether they want to be entered in each one before their first claim.${go.number_of_raffles ? ` Set for ${go.number_of_raffles}.` : ''}${go.event_mode === 'raffle' ? ' The 🎟️ one is this order\'s fancall/fansign raffle, and goes away if you change that setting.' : ''}</p>
     ${rows || '<p class="small muted" style="margin:0">None recorded yet.</p>'}
     <form data-form="raffle" class="panel-mini" style="margin-top:14px">
       <input type="hidden" name="id" value="${editing ? esc(editing.id) : ''}">
       <div class="fgrid">
         <div class="field"><label for="rfName">Raffle name</label><input id="rfName" name="name" value="${editing ? esc(editing.name) : ''}" required></div>
-        <div class="field"><label for="rfWinner">Winner</label><input id="rfWinner" name="winner" value="${editing ? esc(editing.winner || '') : ''}" placeholder="Not drawn yet"></div>
+        <div class="field"><label for="rfWinner">Winner</label><select id="rfWinner" name="winner">${winnerOpts}</select><small>Anyone on this order.</small></div>
       </div>
       <div class="formacts"><button class="btn">${editing ? 'Save changes' : 'Add raffle'}</button>${editing ? '<button type="button" class="btn ghost" style="margin-left:8px" data-action="cancelRaffle">Cancel</button>' : ''}</div>
     </form>
@@ -3028,6 +3154,16 @@ function orderEmojiProblem(go, parts, jid, emoji) {
   if (other) { const j = (A.data.joiners || []).find(x => x.id === other.joiner_id); return `${emoji} is already ${j ? '@' + j.name + '\'s' : 'someone\'s'} emoji on this order.`; }
   return '';
 }
+// An order marked as a fancall/fansign raffle gets a raffle row for it (removed again if the setting changes and
+// nobody's been drawn), and every planned raffle gets a row, so joiners have something to say yes or no to.
+async function syncOrderRaffles(go, drop) {
+  const list = await api.list('raffles', {group_order_id:go.id}).catch(() => null); if (!list) return;
+  const ev = list.find(r => r.kind === 'event'), wantEv = go.event_mode === 'raffle' && dropHasEvent(drop);
+  if (wantEv && !ev) await api.save('raffles', {group_order_id:go.id, name:`${EVT_NAME[drop.event_type] || 'Event'} raffle`, kind:'event', position:-1});
+  if (!wantEv && ev && !raffleDrawn(ev)) await api.remove('raffles', ev.id);
+  const extras = list.filter(r => r.kind !== 'event').length;
+  for (let n = extras + 1; n <= num(go.number_of_raffles); n++) await api.save('raffles', {group_order_id:go.id, name:`Raffle ${n}`, kind:'extra', position:n - 1});
+}
 async function claimsTab() {
   await need('group_orders', 'joiners', 'joiner_accounts', 'comebacks');
   const picker = goPicker();
@@ -3038,6 +3174,7 @@ async function claimsTab() {
     cbId ? api.list('comeback_emojis', {comeback_id:cbId}).catch(() => []) : [],
     !isMerch(go) ? api.list('bonus_claims', {group_order_id:go.id}).catch(() => []) : [],
     api.list('raffles', {group_order_id:go.id}).catch(() => [])]);
+  const raffleEntries = raffles.length ? (await api.list('raffle_entries').catch(() => [])).filter(e => raffles.some(r => r.id === e.raffle_id)) : [];
   const jById = new Map(A.data.joiners.map(j => [j.id, j])), cbA = A.data.comebacks.find(c => c.id === cbId) || null;
   const emo = orderEmojiOf(parts, ce, jById);
   const an = analyze(go, claims.map(c => ({...c, emoji:emo(c.joiner_id)})), cbA);
@@ -3047,31 +3184,41 @@ async function claimsTab() {
   const newCount = pv ? pv.rows.filter(r => !r.joinerId).length : 0;
   const claimCount = pv ? pv.rows.reduce((n, r) => n + r.claims.length, 0) : 0;
   const nameOf = id => (jById.get(id) || {}).name || '';
-  const partRows = parts.slice().sort((a, b) => nameOf(a.joiner_id).localeCompare(nameOf(b.joiner_id))).map(p => {
-    const j = jById.get(p.joiner_id) || {name:'Unknown'};
-    const cs = claims.filter(c => c.joiner_id === p.joiner_id);
-    return `<div class="prow"><div><strong>${esc(`${p.emoji || ''} ${j.name}`.trim())}</strong><div>${chips(cs)}</div></div>
-      <input type="text" class="emoji-in${p.emoji ? '' : ' missing'}" data-part data-joiner="${p.joiner_id}" data-field="emoji" value="${esc(p.emoji || '')}" placeholder="Emoji" maxlength="16" autocomplete="off" aria-label="${esc(j.name)}'s emoji on this order">
-      <select data-part data-joiner="${p.joiner_id}" data-field="shipping_type" aria-label="Shipping type"><option value="">Shipping type</option>${SHIPPING_TYPES.map(t => `<option ${t === p.shipping_type ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
-      <label class="check"><input type="checkbox" data-part data-joiner="${p.joiner_id}" data-field="shipped" ${p.shipped ? 'checked' : ''}> Shipped</label>
-      <input type="text" data-part data-joiner="${p.joiner_id}" data-field="tracking" placeholder="Tracking" value="${esc(p.tracking || '')}" aria-label="Tracking"></div>`;
+  // One card per joiner on the order: their emoji here, what they owe, their claims (click one to delete it) and shipping
+  const partOf = new Map(parts.map(p => [p.joiner_id, p]));
+  const jids = [...new Set([...parts.map(p => p.joiner_id), ...claims.map(c => c.joiner_id)])].sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
+  const SRC = {gom:'GOM', fixed:'fixed claim', soft:'soft claim', extra:'extra claim'};
+  const claimBtn = c => {
+    const i = c.status === 'filled' ? info(c) : null;
+    const cls = c.status === 'dropped' ? 'x' : !i ? '' : i.state === 'wait' ? 'wait' : i.state === 'pending' || i.state === 'dropped' ? 'risk' : '';
+    const note = !i ? 'dropped' : i.state === 'wait' ? 'waitlist' : i.state === 'pending' ? 'needs more' : i.state === 'dropped' ? 'set dropped' : '';
+    const detail = [c.member_code, i ? placeText(i, an) : 'dropped', i ? (i.state === 'in' ? money(i.amount) : i.state === 'mixed' ? money(i.amount) + ' so far' : 'not charged') : '', SRC[c.source] || ''].filter(Boolean).join(', ');
+    return `<button type="button" class="chip claimbtn ${cls}" data-action="claimMenu" data-id="${c.id}" data-status="${c.status}" data-code="${esc(c.member_code)}" data-who="${esc(nameOf(c.joiner_id))}" data-detail="${esc(detail)}" title="${esc(detail)}">${esc(c.member_code)}${note ? `<small>${esc(note)}</small>` : ''}</button>`;
+  };
+  const totals = {base:0, extra:0, total:0};
+  const partRows = jids.map(jid => {
+    const p = partOf.get(jid) || {joiner_id:jid}, name = nameOf(jid) || 'Unknown';
+    const cs = claims.filter(c => c.joiner_id === jid).sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+    const is = cs.filter(c => c.status === 'filled').map(info);
+    const o = {base:sum(is, x => x.base), extra:sum(is, x => x.extra), total:sum(is, x => x.amount), pend:sum(is, x => x.pendingBase)};
+    totals.base = r2(totals.base + o.base); totals.extra = r2(totals.extra + o.extra); totals.total = r2(totals.total + o.total);
+    const st = p.shipping_type || '', stamped = /stamped/i.test(st), tracked = /tracked/i.test(st);
+    const f = field => `data-part data-joiner="${jid}" data-field="${field}"`;
+    return `<div class="jcard" data-prow>
+      <div class="jcard-head">
+        <input type="text" class="emoji-in${p.emoji ? '' : ' missing'}" ${f('emoji')} value="${esc(p.emoji || '')}" placeholder="Emoji" maxlength="16" autocomplete="off" aria-label="${esc(name)}'s emoji on this order">
+        <div><strong>@${esc(name)}</strong></div>
+        <div class="jowe"><b>${money(o.total)}</b>${o.extra > 0.005 ? `<small>${money(o.base)} claims + ${money(o.extra)} split share</small>` : ''}${o.pend > 0.005 ? `<small>+${money(o.pend)} if a set goes through</small>` : ''}</div>
+      </div>
+      <div class="jclaims">${cs.map(claimBtn).join('') || '<span class="small muted">No claims</span>'}</div>
+      <div class="jship">
+        <select ${f('shipping_type')} aria-label="Shipping type for ${esc(name)}"><option value="">Shipping type</option>${SHIPPING_TYPES.map(t => `<option ${t === st ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+        <label class="check"><input type="checkbox" ${f('shipped')} ${p.shipped ? 'checked' : ''}> Shipped</label>
+        ${stamped ? '<span class="note">Tracking not available for stamped mail</span>'
+          : tracked ? `<input type="text" ${f('carrier')} placeholder="Carrier" value="${esc(p.carrier || 'USPS')}" aria-label="Carrier for ${esc(name)}"><input type="text" ${f('tracking')} placeholder="Tracking number" value="${esc(p.tracking || '')}" aria-label="Tracking for ${esc(name)}">` : ''}
+      </div></div>`;
   }).join('');
-  const claimRows = claims.slice().sort((a, b) => nameOf(a.joiner_id).localeCompare(nameOf(b.joiner_id)) || (a.created_at || '').localeCompare(b.created_at || '')).map(c => {
-    const i = c.status === 'filled' ? info(c) : null, place = i ? placeText(i, an) : '';
-    return `<div class="arow"><div><strong>${esc(`${emo(c.joiner_id) || ''} ${nameOf(c.joiner_id)}`.trim())}</strong><small>${esc(c.member_code)}${place ? ', ' + esc(place) : ''}, ${c.items} ${c.items === 1 ? 'item' : 'items'}, ${i ? (i.state === 'in' ? money(i.amount) : i.state === 'mixed' ? money(i.amount) + ' so far' : 'not charged') : 'dropped'}${{gom:', GOM', fixed:', fixed claim', soft:', soft claim', extra:', extra claim'}[c.source] || ''}</small></div>
-      <div class="acts"><button class="btn ghost small" data-action="toggleClaim" data-id="${c.id}" data-status="${c.status}">${c.status === 'filled' ? 'Mark dropped' : 'Restore'}</button>
-      <button class="btn danger small" data-action="delClaim" data-id="${c.id}">Delete</button></div></div>`;
-  }).join('');
-
-  // what every joiner owes for this order
-  const byJ = new Map(); claims.filter(c => c.status === 'filled').forEach(c => { if (!byJ.has(c.joiner_id)) byJ.set(c.joiner_id, []); byJ.get(c.joiner_id).push(c); });
-  const owe = [...byJ].map(([jid, cs]) => { const is = cs.map(info);
-    return {jid, cs, is, base:sum(is, x => x.base), extra:sum(is, x => x.extra), total:sum(is, x => x.amount), pend:sum(is, x => x.pendingBase), wait:is.filter(x => x.state === 'wait').length}; })
-    .sort((a, b) => nameOf(a.jid).localeCompare(nameOf(b.jid)));
-  const oweTable = owe.length ? `<div style="overflow-x:auto;margin-top:14px"><table class="pv"><thead><tr><th>Joiner</th><th>Claims</th><th class="r">Claims</th><th class="r">Split share</th><th class="r">Owes</th></tr></thead><tbody>
-    ${owe.map(o => `<tr><td>${esc(`${emo(o.jid) || ''} ${nameOf(o.jid)}`.trim())}</td><td>${chipsMe(o.cs, new Map(o.cs.map((c, i) => [c.id, o.is[i]])))}</td><td class="r">${money(o.base)}</td><td class="r">${o.extra ? money(o.extra) : ''}</td><td class="r"><b>${money(o.total)}</b>${o.pend > 0.005 ? `<br><span class="small muted">+${money(o.pend)} if set goes through</span>` : ''}</td></tr>`).join('')}
-    <tr class="tot"><td colspan="2">Total to collect</td><td class="r">${money(sum(owe, o => o.base))}</td><td class="r">${money(sum(owe, o => o.extra))}</td><td class="r">${money(sum(owe, o => o.total))}</td></tr></tbody></table></div>` : '';
-  const setsPanelA = `<section class="panel"><h2>Sets, waitlist and totals</h2>${availGrid(an)}<div style="margin-top:12px">${sumLine(an)}</div>${setDetails(an)}${oweTable}
+  const setsPanelA = `<section class="panel"><h2>Sets and waitlist</h2>${availGrid(an)}<div style="margin-top:12px">${sumLine(an)}</div>${setDetails(an)}
       <p class="small muted" style="margin:12px 0 0">${an.closed ? 'This order is closed, so waitlisted claims are not ordered.' : 'The order is still open, so waitlisted claims can still go through if their set fills up.'} Claims already carry their base price. The split share is worked out here from the rules.</p></section>`;
 
   return picker + `
@@ -3079,7 +3226,7 @@ async function claimsTab() {
       <div class="formacts" style="margin:0"><button class="btn" data-action="syncOrder">Add comeback claimers and sort claims</button></div></section>` : ''}
     ${isMerch(go) ? merchItemsPanel(go) : ''}
     ${!isMerch(go) ? bonusPanel(go, claims, bonusClaims) : ''}
-    ${rafflesPanel(go, raffles)}
+    ${rafflesPanel(go, raffles, parts, emo, raffleEntries)}
     ${setsPanelA}
     <section class="panel"><h2>Add claims</h2>
       ${!isMerch(go) ? `<p class="small muted" style="margin-top:0">Paste the caption grid from your post: a row per ${isUnitGO(go) ? 'unit' : 'member'} like <b>${esc(rowsOf(go)[0])}: 💎🌱🚀</b>${fullCode(go) ? `, an <b>${esc(fullCode(go))}:</b> row` : ''}, and the emoji key underneath, like <b>💫 dancefae</b> (write <b>💎 GOM</b> for you). Each emoji is one claim, in the order shown. The key sets each joiner's emoji on this order. Anything already on the order isn't added twice, so you can paste an updated caption again later.</p>` : ''}
@@ -3091,12 +3238,12 @@ async function claimsTab() {
         ${pv.block ? '<p class="err" style="margin:10px 0 0">Fix the emoji problems above, then preview again.</p>' : !claimCount && pv.rows.length ? '<p class="small muted" style="margin:10px 0 0">Everything in this list is already on the order.</p>' : ''}
         ${claimCount && !pv.block ? `<div class="formacts"><button class="btn" data-action="commitClaims">Add ${claimCount} ${claimCount === 1 ? 'claim' : 'claims'}${newCount ? ` and create ${newCount} new ${newCount === 1 ? 'joiner' : 'joiners'}` : ''}</button></div>` : ''}</div>` : ''}
     </section>
-    <h2 class="blk" style="margin-top:8px">Joiners on this order</h2>
+    <h2 class="blk" style="margin-top:8px">Joiners on this order (${jids.length})</h2>
     <p class="small muted" style="margin:-4px 0 10px">Each joiner's emoji here is theirs for this order only. No two joiners can share one, and none can match the order's own emoji${go.emoji ? ` (${esc(go.emoji)})` : ''}.</p>
     ${noEmoji.length ? `<p class="err" style="margin:0 0 10px">${noEmoji.length === 1 ? '1 joiner needs' : noEmoji.length + ' joiners need'} an emoji on this order: ${noEmoji.map(p => '@' + esc(nameOf(p.joiner_id))).join(', ')}. Their usual one was already taken here. They show as ❔ until you give them one.</p>` : ''}
-    <div class="list">${partRows || '<p class="pad muted">No joiners yet. Add claims above.</p>'}</div>
-    <h2 class="blk">All claims (${claims.length})</h2>
-    <div class="list">${claimRows || '<p class="pad muted">No claims yet.</p>'}</div>`;
+    <p class="small muted" style="margin:-4px 0 10px">Click a claim to delete it. Dashed ones are on the waitlist; struck-through ones were dropped.</p>
+    <div class="jlist">${partRows || '<p class="pad muted">No joiners yet. Add claims above.</p>'}</div>
+    ${jids.length ? `<div class="jtotal"><span>Total to collect (${jids.length} ${jids.length === 1 ? 'joiner' : 'joiners'}, ${claims.filter(c => c.status === 'filled').length} claims)</span><span>${money(totals.total)}${totals.extra > 0.005 ? ` <span class="small muted" style="font-weight:500">(${money(totals.base)} claims + ${money(totals.extra)} split)</span>` : ''}</span></div>` : ''}`;
 }
 
 /* --- Instagram caption grid --- */
@@ -3352,10 +3499,20 @@ const actions = {
     A.preview = null; A.claimText = '';
     toast(`Added ${rows.length} ${rows.length === 1 ? 'claim' : 'claims'}${newOnes.length ? `. ${newOnes.length} new ${newOnes.length === 1 ? 'joiner needs a PIN' : 'joiners need PINs'}${pv.grid ? '' : ' and emojis'} in the Joiners tab` : ''}`); render();
   },
-  async toggleClaim(b) { await api.save('claims', {id:b.dataset.id, status:b.dataset.status === 'filled' ? 'dropped' : 'filled'}); await refreshPublic(); render(); },
-  async delClaim(b) {
-    const ok = await ask({title:'Delete this claim?', html:'<p>Use "Mark dropped" instead if the joiner dropped it and you want to keep a record.</p>', ok:'Delete', danger:true});
-    if (!ok) return; await api.remove('claims', b.dataset.id); await refreshPublic(); render();
+  // Clicking a claim in a joiner's card: confirm deleting that one claim (or, ticked, mark it dropped / restore it)
+  async claimMenu(b) {
+    const filled = b.dataset.status === 'filled', who = b.dataset.who, code = b.dataset.code;
+    const alt = filled ? 'Mark it dropped instead (keeps a record, like a fixed spot you took away)' : 'Restore this claim instead';
+    const pending = ask({title:`Delete @${who}'s ${code} claim?`, ok:'Delete claim', danger:true,
+      html:`<p class="small muted" style="margin:0 0 12px">${esc(b.dataset.detail)}</p><label class="check"><input type="checkbox" name="alt"> ${esc(alt)}</label>`});
+    // swap the button to match the choice while the popup is open
+    const dlg = [...document.querySelectorAll('dialog')].pop(), altBox = dlg && $('input[name="alt"]', dlg), okBtn = dlg && $('.dlg-actions .btn:last-child', dlg);
+    if (altBox && okBtn) altBox.addEventListener('change', () => { okBtn.textContent = altBox.checked ? (filled ? 'Mark dropped' : 'Restore') : 'Delete claim'; okBtn.classList.toggle('danger', !altBox.checked); });
+    const r = await pending; if (!r) return;
+    if (r.alt) await api.save('claims', {id:b.dataset.id, status:filled ? 'dropped' : 'filled'});
+    else await api.remove('claims', b.dataset.id);
+    await refreshPublic(); await keepScroll(render);
+    toast(r.alt ? (filled ? `${code} marked dropped` : `${code} restored`) : `Deleted @${who}'s ${code} claim`);
   },
   // merch catalog (drop-level: name + member options)
   editMerchItem(b) { A.editMerchItem = b.dataset.id; render(); },
@@ -3584,13 +3741,17 @@ const forms = {
   },
   async raffle(f) {
     const go = A.data.group_orders.find(g => g.id === A.goId); if (!go) return;
-    const fd = new FormData(f), id = fd.get('id') || '', name = (fd.get('name') || '').trim(), winner = (fd.get('winner') || '').trim() || null;
+    const fd = new FormData(f), id = fd.get('id') || '', name = (fd.get('name') || '').trim(), pick = String(fd.get('winner') || '');
     if (!name) throw new Error('Give the raffle a name.');
+    // the winner is a joiner on the order; their handle is kept in "winner" too, for anything still reading that
+    const wj = pick && !pick.startsWith('text:') ? (A.data.joiners || []).find(j => j.id === pick) : null;
+    const winner_joiner_id = wj ? wj.id : null, winner = wj ? wj.name : pick.startsWith('text:') ? pick.slice(5) : null;
     const existing = await api.list('raffles', {group_order_id:go.id});
-    const row = {group_order_id:go.id, name, winner};
-    if (id) row.id = id; else row.position = existing.length;
+    const row = {group_order_id:go.id, name, winner, winner_joiner_id};
+    if (id) row.id = id; else { row.position = existing.length; row.kind = 'extra'; }
     await api.save('raffles', row);
     A.editRaffle = null;
+    await refreshPublic();
     toast(id ? 'Raffle updated' : 'Raffle added'); render();
   },
   async login(f) {
@@ -3614,12 +3775,15 @@ const forms = {
       if (emoji.length > 16 || /[\p{L}\p{N}\s]/u.test(emoji)) { err.textContent = claimError({error:'bad_emoji'}); return; }
       if (ctx.takenKeys.has(normEmoji(emoji).trim())) { err.textContent = claimError({error:'emoji_taken', detail:emoji}); return; }
     }
-    const res = await api.joinerClaim(c.h, c.p, goId, members, emoji || null);
+    const raffles = {}; f.querySelectorAll('input[name^="raffle:"]').forEach(i => { if (i.checked) raffles[i.name.slice(7)] = i.value === 'yes'; });
+    const unanswered = [...new Set([...f.querySelectorAll('input[name^="raffle:"]')].map(i => i.name.slice(7)))].filter(id => !(id in raffles));
+    if (unanswered.length) { err.textContent = 'Say whether you want to be entered in each raffle.'; return; }
+    const res = await api.joinerClaim(c.h, c.p, goId, members, emoji || null, raffles);
     if (res.error) {
       const msg = claimError(res, goById(goId));
       if (res.error === 'invalid' || res.error === 'locked') { S.me = null; session.del('jo'); }
       // someone may have just taken the emoji: reload so the form shows the emoji picker with the current list
-      if (res.error === 'emoji_taken' || res.error === 'emoji_needed') { await refreshPublic(); await keepScroll(render); toast(msg, true); return; }
+      if (res.error === 'emoji_taken' || res.error === 'emoji_needed' || res.error === 'raffle_answers') { await refreshPublic(); await keepScroll(render); toast(msg, true); return; }
       err.textContent = msg;
       return;
     }
@@ -3674,6 +3838,7 @@ const forms = {
     if (key === 'group_orders') {
       const go = {...(oldGo || {}), ...row, ...saved};
       if (oldGo && (num(oldGo.price_per_pc) !== num(go.price_per_pc) || num(oldGo.ot8_price) !== num(go.ot8_price))) { const n = await repriceClaims(oldGo, go); if (n) notes.push(`${n} claim ${n === 1 ? 'price' : 'prices'} updated`); }
+      await syncOrderRaffles(go, drop);
       if (drop && drop.comeback_id && go.roster_required && go.status === 'Claims Open') { go.drop = drop; const r = await syncOrder(go); if (r.added) notes.push(`${r.added} comeback ${r.added === 1 ? 'claimer' : 'claimers'} added`); }
     }
     if (key === 'drops' && !editId) {
@@ -3737,6 +3902,15 @@ app.addEventListener('input', e => {
 app.addEventListener('change', e => {
   const t = e.target;
   if (t.classList.contains('pay-select')) { updatePayBar(); return; }
+  if (t.dataset.raffle) {
+    const c = cred(); if (!c || !t.value) return;
+    guard(async () => {
+      const res = await api.setRaffleEntry(c.h, c.p, t.dataset.raffle, t.value === 'yes');
+      if (res.error) throw new Error({drawn:'That raffle has already been drawn.', closed:'Payment is due, so raffle entries are locked in.'}[res.error] || 'Something went wrong. Try again.');
+      await doLogin(c.h, c.p, true); await keepScroll(render); toast(t.value === 'yes' ? 'You\'re entered' : 'You\'re not entered');
+    });
+    return;
+  }
   if (t.dataset.toggle) { const el = document.getElementById(t.dataset.toggle); if (el) el.style.display = t.checked ? '' : 'none'; return; }
   if (t.dataset.countToggle) {
     const n = Math.max(1, Math.min(8, parseInt(t.value, 10) || 1));
@@ -3766,7 +3940,7 @@ app.addEventListener('change', e => {
   if (t.dataset.pick === 'go') { A.goId = t.value; A.preview = null; render(); return; }
   if (t.dataset.pick === 'cb') { A.cbId = t.value; A.rosterPv = null; A.rosterText = ''; render(); return; }
   if (t.hasAttribute('data-part')) {
-    const row = t.closest('.prow'), jid = t.dataset.joiner;
+    const row = t.closest('[data-prow]'), jid = t.dataset.joiner;
     guard(async () => {
       const emoji = $('[data-field="emoji"]', row).value.trim() || null;
       if (t.dataset.field === 'emoji') {
@@ -3775,11 +3949,18 @@ app.addEventListener('change', e => {
         const bad = orderEmojiProblem(go, parts, jid, emoji);
         if (bad) throw new Error(bad);
       }
-      await api.save('participants', {group_order_id:A.goId, joiner_id:jid, emoji,
-        shipping_type:$('[data-field="shipping_type"]', row).value || null,
-        shipped:$('[data-field="shipped"]', row).checked,
-        tracking:$('[data-field="tracking"]', row).value.trim() || null});
-      if (t.dataset.field === 'emoji') { await refreshPublic(); await keepScroll(render); }
+      const val = k => { const el = $(`[data-field="${k}"]`, row); return !el ? undefined : el.type === 'checkbox' ? el.checked : (el.value.trim() || null); };
+      const data = {group_order_id:A.goId, joiner_id:jid, emoji};
+      ['shipping_type', 'shipped', 'carrier', 'tracking'].forEach(k => { const v = val(k); if (v !== undefined) data[k] = v; });
+      if (t.dataset.field === 'shipping_type') {
+        // stamped mail has no tracking; tracked shipping starts with USPS as the carrier
+        if (/stamped/i.test(data.shipping_type || '')) { data.tracking = null; data.carrier = null; }
+        else if (/tracked/i.test(data.shipping_type || '')) data.carrier = data.carrier || 'USPS';
+        else data.carrier = null;
+      }
+      await api.save('participants', data);
+      if (t.dataset.field === 'emoji') await refreshPublic();
+      if (t.dataset.field === 'emoji' || t.dataset.field === 'shipping_type') await keepScroll(render);
       toast('Saved');
     });
   }
