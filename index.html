@@ -205,7 +205,13 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .ocard-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .ocard-head .nm{font-weight:600}
 .ocard-claims{margin-top:8px}
-.ocard-bonuses{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.ocard-bonuses{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted)}
+.ocard-bonuses b{font-weight:600;color:var(--text)}
+.ocard-bonuses .linklike{font-size:13px}
+.bonus-row select{width:auto;min-height:34px;padding:4px 30px 4px 10px;font-size:14px}
+.typeavail{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.typeavail span{font-size:12.5px;padding:3px 8px;border-radius:999px;background:var(--panel-2)}
+.typeavail span.out{opacity:.55;text-decoration:line-through}
 .bonus-tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--gold-bg);color:var(--gold);border:0;margin:0}
 .bonus-tag.pick select{width:auto;min-height:0;padding:3px 6px;font-size:12.5px;border-radius:6px;background:var(--panel)}
 .ocard-costs{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:13.5px}
@@ -1055,7 +1061,7 @@ function seedDemo() {
 
   // bonus items on a couple of PC orders
   D.bonus_items.push({id:'bi-sw1', group_order_id:sw.id, item_name:'Photocard sleeve', claims_needed:3, position:0, created_at:'2026-07-01T00:00:00Z'});
-  D.bonus_items.push({id:'bi-th1', group_order_id:th.id, item_name:'Keyring', claims_needed:4, position:0, created_at:'2026-07-01T00:00:00Z'});
+  D.bonus_items.push({id:'bi-th1', group_order_id:th.id, item_name:'Unit PC', claims_needed:3, type_count:4, type_names:['HJ/SH','YH/MG','YS/WY','SN/JH'], joiner_picks:true, position:0, created_at:'2026-07-01T00:00:00Z'});
 
   // a raffle already recorded on the split-cost order
   D.raffles.push({id:'rf-kong-hj', group_order_id:kong.id, name:'Unclaimed HJ raffle', kind:'extra', winner:null, winner_joiner_id:null, position:0, created_at:'2026-07-01T00:00:00Z'});
@@ -1110,6 +1116,7 @@ function seedDemo() {
   addClaim(me, sw, 'OT8');
   addClaim(me, music, 'SN'); addClaim(me, music, 'WY');
   addClaim(me, mex, 'SH');
+  addClaim(me, th, 'MG');      // a third claim on Teez-Heart earns a Unit PC to pick a type for
   const ch = (go, kind, label, amount, due) => D.charges.push({id:uid(), joiner_id:me, group_order_id:go.id, kind, label, amount, due});
   ch(fromm,'doms','US Tracked shipping (Fromm 2.0)',4.00,true);
   ch(mini,'doms','US Stamped shipping (Mini Fanmeet)',2.00,true);
@@ -1176,12 +1183,16 @@ function demoApi() {
     }
     return null;
   };
+  // hand out bonus items to whoever has already earned one (the seed data adds claims directly)
+  db.group_orders.forEach(g => [...new Set(db.claims.filter(c => c.group_order_id === g.id && c.status === 'filled').map(c => c.joiner_id))].forEach(jid => autoAssignBonusDemo(g.id, jid)));
   const firstAt = p => db.claims.filter(c => c.group_order_id === p.group_order_id && c.joiner_id === p.joiner_id).map(c => c.created_at).sort()[0] || '';
   db.participants.slice().sort((a, b) => a.group_order_id.localeCompare(b.group_order_id) || firstAt(a).localeCompare(firstAt(b))).forEach(p => {
     const e = defEmoji(p.group_order_id, p.joiner_id); p.emoji = e && emojiFree(p.group_order_id, p.joiner_id, e) ? e : null; });
   const clone = x => JSON.parse(JSON.stringify(x));
   // Mirrors the SQL _auto_assign_bonus function: give this joiner every bonus their own claims on this
   // order now qualify them for, without handing out more than the order as a whole has earned so far.
+  const bonusSets = bi => { const items = db.claims.filter(c => c.group_order_id === bi.group_order_id && c.status === 'filled').reduce((a, c) => a + num(c.items), 0);
+    return Math.floor(Math.floor(items / bi.claims_needed) / Math.max(1, bi.type_count || 1)); };
   function autoAssignBonusDemo(goId, jid) {
     db.bonus_items.filter(bi => bi.group_order_id === goId).forEach(bi => {
       const personalItems = db.claims.filter(c => c.group_order_id === goId && c.joiner_id === jid && c.status === 'filled').reduce((a, c) => a + num(c.items), 0);
@@ -1222,7 +1233,9 @@ function demoApi() {
         joiners: db.joiners.map(({id,name,emoji}) => ({id,name,emoji})),
         cbEmojis: db.comeback_emojis, merchItems: db.merch_items, goMerchItems: db.go_merch_items, bonusItems: db.bonus_items,
         orderEmojis: db.participants.filter(p => p.emoji).map(({group_order_id, joiner_id, emoji}) => ({group_order_id, joiner_id, emoji})),
-        raffles: db.raffles});
+        raffles: db.raffles,
+        bonusTypeCounts: Object.values(db.bonus_claims.filter(b => b.status === 'filled' && b.type).reduce((m, b) => {
+          const k = b.bonus_item_id + '|' + b.type; (m[k] = m[k] || {bonus_item_id:b.bonus_item_id, type:b.type, picked:0}).picked++; return m; }, {}))});
     },
     async login(handle, pin) {
       const a = db.joiner_accounts.find(x => x.handle === normHandle(handle));
@@ -1381,6 +1394,8 @@ function demoApi() {
       const bi = db.bonus_items.find(x => x.id === bc.bonus_item_id);
       if (!bi || !bi.joiner_picks) return {error:'not_allowed'};
       if (!type || !(bi.type_names || []).includes(type)) return {error:'bad_type'};
+      const sets = bonusSets(bi), used = db.bonus_claims.filter(b => b.bonus_item_id === bi.id && b.status === 'filled' && b.type === type).length;
+      if (used >= sets) return {error:'type_full', detail:sets};
       bc.type = type; return {ok:true};
     },
     async recomputeBonus(goId) {
@@ -1420,10 +1435,10 @@ function supabaseApi() {
     demo: false,
     async loadPublic() {
       const soft = pr => pr.catch(() => []);     // an older database without the newer upgrades still loads
-      const [drops, gos, shipments, st, comebacks, seats, joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis, raffles] = await Promise.all([
+      const [drops, gos, shipments, st, comebacks, seats, joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis, raffles, bonusTypeCounts] = await Promise.all([
         all('drops'), all('group_orders'), all('public_shipments'), all('go_stats'),
-        soft(all('comebacks')), soft(all('order_seats')), soft(all('public_joiners')), soft(all('comeback_emojis')), soft(all('merch_items')), soft(all('go_merch_items')), soft(all('bonus_items')), soft(all('public_order_emojis')), soft(all('raffles'))]);
-      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})), joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis, raffles,
+        soft(all('comebacks')), soft(all('order_seats')), soft(all('public_joiners')), soft(all('comeback_emojis')), soft(all('merch_items')), soft(all('go_merch_items')), soft(all('bonus_items')), soft(all('public_order_emojis')), soft(all('raffles')), soft(all('public_bonus_type_counts'))]);
+      return {drops, gos, shipments, comebacks, seats: seats.map(({claim_id, ...r}) => ({id:claim_id, ...r})), joiners, cbEmojis, merchItems, goMerchItems, bonusItems, orderEmojis, raffles, bonusTypeCounts,
         stats: Object.fromEntries(st.map(s => [s.group_order_id, {joiners:s.joiners, items:s.items}]))};
     },
     async login(handle, pin) {
@@ -1933,6 +1948,23 @@ function claimPanel(g, an) {
     <p class="err" data-err role="alert"></p>
     <div class="formacts" style="margin:0"><button class="btn">Claim</button><button type="button" class="btn ghost" data-action="signout">Sign out</button></div></form>`;
 }
+// The joiner's bonus items on an order, listed with their claims; a type picker when it's theirs to pick
+function myBonusRows(g) {
+  const mine = ((S.me && S.me.bonus_claims) || []).filter(b => b.group_order_id === g.id); if (!mine.length) return '';
+  const claims = seatClaims(g);
+  return mine.map(b => {
+    const bi = (g.bonusItems || []).find(x => x.id === b.bonus_item_id), name = bi ? bi.item_name : 'Bonus item';
+    let right = '<span class="small muted">Being assigned</span>';
+    if (b.type || !bi || bi.type_count <= 1) right = b.type ? `<b>${esc(b.type)}</b>` : '<span class="small muted">Included</span>';
+    else if (bi.joiner_picks) {
+      const av = bonusTypeAvail(bi, claims, pubTypeUsed(bi)), open = av.per.filter(p => p.left > 0);
+      right = open.length
+        ? `<form data-form="bonusPick" style="display:inline"><input type="hidden" name="bonus_claim_id" value="${b.id}"><select name="type" data-autosubmit required aria-label="Pick your ${esc(name)} type"><option value="">Pick your type\u2026</option>${av.per.map(p => `<option value="${esc(p.type)}" ${p.left ? '' : 'disabled'}>${esc(p.type)} (${p.left} left)</option>`).join('')}</select></form>`
+        : `<span class="small muted">${av.sets ? 'Every type is taken for now' : 'No full set yet'}. More open at ${av.nextAt} items.</span>`;
+    }
+    return `<div class="mine-row bonus-row"><span><span class="chip" style="background:var(--gold-bg);color:var(--gold)">\u{1F381} Bonus</span> <span class="small">${esc(name)}</span></span><span>${right}</span></div>`;
+  }).join('');
+}
 function myClaimsList(g, an, mineLive) {
   if (!mineLive.length) return '';
   const canDrop = claimsOpen(g), full = fullCode(g), hasOt8 = mineLive.some(c => c.member_code === full), R = rowsOf(g);
@@ -1948,7 +1980,7 @@ function myClaimsList(g, an, mineLive) {
       ${canDrop && !locked ? `<button type="button" class="btn ghost small" style="margin-left:8px" data-action="unclaim" data-id="${c.id}" data-src="${c.source}">Drop</button>` : ''}${canDrop && locked ? `<span class="small muted" style="margin-left:8px">Stays unless you go ${esc(full)}</span>` : ''}</span></div>`;
   }).join('');
   const total = r2(mineLive.reduce((a, c) => a + claimInfo(g, c, an).amount, 0));
-  return `<div><h4 class="sh">Your claims on this order</h4>${rows}<p class="small muted" style="margin:8px 0 0">Going through so far: <b>${money(total)}</b>. Waitlisted claims are not charged unless their set fills up enough to go through.</p></div>`;
+  return `<div><h4 class="sh">Your claims on this order</h4>${rows}${myBonusRows(g)}<p class="small muted" style="margin:8px 0 0">Going through so far: <b>${money(total)}</b>. Waitlisted claims are not charged unless their set fills up enough to go through.</p></div>`;
 }
 // A joiner's yes/no for each raffle on an order they're in, changeable until payment is due or the raffle is drawn.
 // With `answeredOnly`, raffles they haven't answered are left out (the claim form asks about those instead).
@@ -2316,9 +2348,9 @@ function myBonusLine(d, g) {
   const rows = mine.map(b => {
     const bi = (g.bonusItems || []).find(x => x.id === b.bonus_item_id);
     const name = bi ? bi.item_name : 'Bonus item';
-    if (b.type) return `<span class="bonus-tag">\u{1F381} ${esc(name)}: ${esc(b.type)}</span>`;
-    if (bi && bi.joiner_picks) return `<form data-form="bonusPick" class="bonus-tag pick"><input type="hidden" name="bonus_claim_id" value="${b.id}">\u{1F381} ${esc(name)}: <select name="type" data-autosubmit required><option value="">Pick your type\u2026</option>${(bi.type_names || []).map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('')}</select></form>`;
-    return `<span class="bonus-tag">\u{1F381} ${esc(name)} \u2014 being assigned</span>`;
+    if (b.type) return `<span>\u{1F381} ${esc(name)}: <b>${esc(b.type)}</b></span>`;
+    if (bi && bi.joiner_picks && bi.type_count > 1) return `<span>\u{1F381} ${esc(name)}: <button type="button" class="linklike" data-action="openGo" data-id="${g.id}">pick your type on the order</button></span>`;
+    return `<span>\u{1F381} ${esc(name)}${bi && bi.type_count > 1 ? ' (type being assigned)' : ''}</span>`;
   }).join('');
   return `<div class="ocard-bonuses">${rows}</div>`;
 }
@@ -2868,10 +2900,27 @@ function bonusEarned(claims, bonusItem) {
   return Math.floor(items / bonusItem.claims_needed);
 }
 // A small public note on the order: how many of each bonus item the claims so far have earned
+// For a bonus item whose type the joiner picks: each type can go once per full set of types the order has earned
+// (claim 3, get 1 with 4 types -> a full set every 12 claimed items). `used` is how many of each type are picked.
+function bonusTypeAvail(bi, claims, used) {
+  const earned = bonusEarned(claims, bi), n = Math.max(1, bi.type_count || 1), sets = Math.floor(earned / n);
+  const names = bi.type_names && bi.type_names.length ? bi.type_names : Array.from({length:n}, (_, i) => `Type ${i + 1}`);
+  const per = names.map(t => { const u = used(t); return {type:t, used:u, left:Math.max(0, sets - u)}; });
+  const itemsNow = claims.filter(c => c.status === 'filled').reduce((a, c) => a + num(c.items), 0);
+  return {earned, sets, per, nextAt:(sets + 1) * n * bi.claims_needed, itemsNow};
+}
+const pubTypeUsed = bi => t => ((S.pub.bonusTypeCounts || []).find(x => x.bonus_item_id === bi.id && x.type === t) || {}).picked || 0;
+const typeAvailChips = av => `<div class="typeavail">${av.per.map(p => `<span class="${p.left ? '' : 'out'}">${esc(p.type)}: ${p.left} left</span>`).join('')}</div>`;
 function bonusNote(go, claims, bonusItems) {
   if (!bonusItems || !bonusItems.length) return '';
-  const lines = bonusItems.map(bi => { const earned = bonusEarned(claims, bi); return `Claim ${bi.claims_needed}, get 1 ${esc(bi.item_name)}: ${earned} earned so far.`; });
-  return `<p class="small muted" style="margin:8px 0 0">${lines.join(' ')}</p>`;
+  const lines = bonusItems.map(bi => {
+    const earned = bonusEarned(claims, bi), base = `Claim ${bi.claims_needed}, get 1 ${esc(bi.item_name)}: ${earned} earned so far.`;
+    if (!(bi.joiner_picks && bi.type_count > 1)) return `<p class="small muted" style="margin:8px 0 0">${base}</p>`;
+    const av = bonusTypeAvail(bi, claims, pubTypeUsed(bi));
+    return `<div style="margin-top:8px"><p class="small muted" style="margin:0">${base} You pick your type, but each type is only guaranteed once per full set of ${bi.type_count}, which takes ${bi.type_count * bi.claims_needed} claimed items.
+      ${av.sets ? `${av.sets} full ${av.sets === 1 ? 'set' : 'sets'} so far.` : 'No full set yet.'} The next one opens at ${av.nextAt} items (${av.itemsNow} now).</p>${typeAvailChips(av)}</div>`;
+  });
+  return lines.join('');
 }
 
 // Adds the comeback's fixed and soft claimers to one order (fixed first, then soft, in your list order).
@@ -3067,16 +3116,20 @@ function bonusPanel(go, claims, bonusClaims) {
     const assigned = bonusClaims.filter(b => b.status === 'filled' && b.bonus_item_id === bi.id);
     const personalAssigned = assigned.length;
     const extra = Math.max(0, earned - personalAssigned);
+    const av = bi.type_count > 1 ? bonusTypeAvail(bi, claims, t => assigned.filter(b => b.type === t).length) : null;
+    const over = av ? av.per.filter(p => p.used > av.sets) : [];
     const rows = assigned.map(b => { const j = jById.get(b.joiner_id);
       const needsType = bi.type_count > 1 && !b.type;
       const typePick = needsType ? (bi.joiner_picks
         ? `<span class="pill gold">Waiting for them to pick</span>`
         : `<form data-form="bonusType" style="display:inline"><input type="hidden" name="bonus_claim_id" value="${b.id}">
-            <select name="type" data-autosubmit required><option value="">Pick a type\u2026</option>${(bi.type_names || []).map((n, i) => `<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></form>`) : '';
+            <select name="type" data-autosubmit required><option value="">Pick a type\u2026</option>${(bi.type_names || []).map((n, i) => `<option value="${esc(n)}">${esc(n)}${av ? ` (${(av.per.find(p => p.type === n) || {}).left || 0} left)` : ''}</option>`).join('')}</select></form>`) : '';
       return `<div class="mine-row"><span>${jLabel(j)} — ${esc(bi.item_name)}${b.type ? `: ${esc(b.type)}` : ''}</span><span>${typePick}<button type="button" class="btn ghost small" style="margin-left:8px" data-action="removeBonusClaim" data-id="${b.id}">Remove</button></span></div>`; }).join('');
     return `<div style="margin-bottom:14px"><div class="mine-row"><span><b>${esc(bi.item_name)}</b> — claim ${bi.claims_needed}, get 1${bi.type_count > 1 ? ` (${bi.type_count} types, ${bi.joiner_picks ? 'joiner picks' : 'you pick'})` : ''}. <span class="pill sea">${personalAssigned} auto-assigned</span>${extra ? ` <span class="pill gold">${extra} extra unassigned</span>` : ''}</span>
       <span><button type="button" class="btn ghost small" data-action="editBonusItem" data-id="${bi.id}">Edit</button>
       <button type="button" class="btn ghost small" style="margin-left:8px" data-action="removeBonusItem" data-id="${bi.id}">Remove</button></span></div>
+      ${av ? `<p class="small muted" style="margin:4px 0 0">${av.sets ? `${av.sets} full ${av.sets === 1 ? 'set' : 'sets'} of ${bi.type_count} so far` : 'No full set yet'}; each type can be picked ${av.sets} ${av.sets === 1 ? 'time' : 'times'}. The next set opens at ${av.nextAt} items (${av.itemsNow} now).</p>${typeAvailChips(av)}
+        ${over.length ? `<p class="err small" style="margin:6px 0 0">More picked than the order has earned: ${over.map(p => `${esc(p.type)} (${p.used} of ${av.sets})`).join(', ')}. This can happen after claims were dropped.</p>` : ''}` : ''}
       ${rows}
       ${extra ? `<form data-form="bonusAssign" class="panel-mini" style="margin-top:8px"><input type="hidden" name="bonus_item_id" value="${bi.id}">
         <p class="small muted" style="margin:0 0 8px">${extra} earned by the order as a whole but not by any one joiner's own claims -- hand one to whoever you like (a raffle winner, say).</p>
@@ -3671,9 +3724,12 @@ const forms = {
     const fd = new FormData(f), claimId = fd.get('bonus_claim_id'), type = fd.get('type');
     if (!type) return;
     const res = await api.pickBonusType(c.h, c.p, claimId, type);
-    if (res.error) throw new Error(res.error === 'already_picked' ? 'That one already has a type picked.' : 'Something went wrong. Try again.');
-    await doLogin(c.h, c.p, true);
-    render();
+    if (res.error) {
+      if (res.error === 'type_full') { await refreshPublic(); await keepScroll(render); }
+      throw new Error(res.error === 'already_picked' ? 'That one already has a type picked.' : res.error === 'type_full' ? `${type} is all taken for now. Pick another type, or wait until more claims open up another set.` : 'Something went wrong. Try again.');
+    }
+    await refreshPublic(); await doLogin(c.h, c.p, true);
+    await keepScroll(render);
     toast('Type picked');
   },
   async merchItem(f) {
