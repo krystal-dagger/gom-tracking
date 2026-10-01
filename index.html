@@ -327,6 +327,11 @@ h2.blk{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:30px 0 12px}
 .rafq label{display:flex;align-items:center;gap:6px;cursor:pointer}
 .rafq input{width:auto;min-height:0;margin:0}
 .myraf select{width:auto;min-height:34px;padding:4px 30px 4px 10px;font-size:14px}
+.myraf.box{margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}
+.myraf.box .sh{margin-top:0}
+.myraf .mine-row{border-top-color:color-mix(in srgb,var(--line) 70%,transparent)}
+.rafwin{margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--sea-bg);color:var(--sea);font-weight:700;font-size:14px}
+.entrylist textarea{min-height:0;font:15px/1.6 var(--body)}
 .cap{white-space:pre-wrap;font:16px/1.7 var(--body);background:var(--panel-2);border-radius:12px;padding:16px;margin:0;overflow-x:auto}
 table.pv{width:100%;border-collapse:collapse;font-size:14.5px}
 table.pv th,table.pv td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
@@ -1751,10 +1756,15 @@ function joinerKeyList(g) {
   const firstAt = new Map();
   seatClaims(g).forEach(c => { const e = normEmoji(c.emoji || ''); if (!e) return; if (!firstAt.has(e) || c.created_at < firstAt.get(e)) firstAt.set(e, c.created_at); });
   const here = orderEmojiRows(g).filter(e => firstAt.has(normEmoji(e.emoji)) && names.has(e.joiner_id));
+  // any emoji on the grid without an order emoji row (older data): match it to the joiner whose usual emoji it is
+  const covered = new Set(here.map(e => normEmoji(e.emoji)));
+  [...firstAt.keys()].filter(k => !covered.has(k)).forEach(k => {
+    const j = (S.pub.joiners || []).find(x => x.emoji && normEmoji(x.emoji) === k); if (j) here.push({joiner_id:j.id, emoji:j.emoji});
+  });
   if (!here.length) return '';
   const rows = here.slice().sort((a, b) => (firstAt.get(normEmoji(a.emoji)) || '').localeCompare(firstAt.get(normEmoji(b.emoji)) || ''))
     .map(e => `<div class="mine-row compact"><span>${esc(em(e.emoji))} @${esc(names.get(e.joiner_id))}</span></div>`).join('');
-  return `<details class="setdet" open><summary>Joiner key (${here.length})</summary><div style="margin-top:6px">${rows}</div></details>`;
+  return `<details class="setdet" ${claimsOpen(g) ? 'open' : ''}><summary>Joiner key (${here.length})</summary><div style="margin-top:6px">${rows}</div></details>`;
 }
 function goPhotos(g) {
   const key = 'go:' + g.id, items = galleryItems(key);
@@ -1984,17 +1994,23 @@ function myClaimsList(g, an, mineLive) {
 }
 // A joiner's yes/no for each raffle on an order they're in, changeable until payment is due or the raffle is drawn.
 // With `answeredOnly`, raffles they haven't answered are left out (the claim form asks about those instead).
+// Once none of their answers can change any more, the box goes away, and only a raffle they won is shown.
 function myRaffleEntries(g, answeredOnly) {
   if (!S.me || !S.me.claims.some(c => c.group_order_id === g.id)) return '';
-  const list = rafflesOf(g).filter(r => !answeredOnly || raffleDrawn(r) || myRaffleAnswer(r.id) !== null); if (!list.length) return '';
-  const closed = raffleAnswersClosed(g);
+  const closed = raffleAnswersClosed(g), all = rafflesOf(g);
+  if (closed || !all.some(r => !raffleDrawn(r))) {
+    const won = all.filter(r => r.winner_joiner_id === S.me.joiner.id);
+    return won.map(r => `<div class="rafwin">🏆 You won the ${esc(r.name)}!</div>`).join('');
+  }
+  const list = all.filter(r => !answeredOnly || raffleDrawn(r) || myRaffleAnswer(r.id) !== null); if (!list.length) return '';
   const rows = list.map(r => {
     const a = myRaffleAnswer(r.id), w = raffleWinnerName(r, S.pub.joiners), icon = r.kind === 'event' ? '🎟️' : '🎁';
     const ctl = raffleDrawn(r) ? `<span class="small ${r.winner_joiner_id === S.me.joiner.id ? '' : 'muted'}">${r.winner_joiner_id === S.me.joiner.id ? '🏆 You won!' : `Won by @${esc(w)}`}</span>`
       : `<select data-raffle="${r.id}" aria-label="Your entry in ${esc(r.name)}" ${closed ? 'disabled' : ''}>${a === null ? '<option value="" selected>Not answered yet</option>' : ''}<option value="yes" ${a === true ? 'selected' : ''}>Enter me</option><option value="no" ${a === false ? 'selected' : ''}>Don't enter me</option></select>`;
     return `<div class="mine-row"><span>${icon} ${esc(r.name)}</span><span>${ctl}</span></div>`;
   }).join('');
-  return `<div class="myraf"><h4 class="sh">Your raffle entries</h4>${rows}<p class="small muted" style="margin:6px 0 0">${closed ? 'Payment is due, so these are locked in.' : 'You can change these until payment is due.'}</p></div>`;
+  const due = g.payment_deadline ? ` (${fmtWhen(g.payment_deadline, g.payment_deadline_time)})` : '';
+  return `<div class="myraf box"><h4 class="sh">Your raffle entries</h4>${rows}<p class="small muted" style="margin:6px 0 0">You can change these until payment is due${esc(due)}.</p></div>`;
 }
 function setsPanel(g, an, ro) {
   const cb = cbOf(g), parts = [];
@@ -3160,7 +3176,10 @@ function bonusPanel(go, claims, bonusClaims) {
     </form>
   </section>`;
 }
-function rafflesPanel(go, raffles, parts = [], emo = () => '', entries = []) {
+// Raffle entries: one per claimed item going through (an OT8 counts as 8), at most 8 per joiner, only for joiners
+// who opted in to that raffle.
+const RAFFLE_MAX_ENTRIES = 8;
+function rafflesPanel(go, raffles, parts = [], emo = () => '', entries = [], itemsIn = () => 0) {
   if (!go.number_of_raffles && !raffles.length) return '';
   const editing = A.editRaffle && raffles.find(r => r.id === A.editRaffle);
   const jById = new Map((A.data.joiners || []).map(j => [j.id, j]));
@@ -3177,8 +3196,15 @@ function rafflesPanel(go, raffles, parts = [], emo = () => '', entries = []) {
   const rows = rafflesOf(go, raffles).map(r => { const w = raffleWinnerName(r, A.data.joiners);
     const es = entries.filter(e => e.raffle_id === r.id), yes = es.filter(e => e.entered), no = es.length - yes.length;
     const missing = parts.filter(p => !es.some(e => e.joiner_id === p.joiner_id)).length;
-    return `<div class="mine-row"><span>${r.kind === 'event' ? '🎟️' : '🎁'} <b>${esc(r.name)}</b>${w ? ` — won by ${esc(r.winner_joiner_id ? who(r.winner_joiner_id) : '@' + w)}` : ' — not drawn yet'}
-      <div class="small muted" style="margin-top:2px">${yes.length} entered${yes.length ? `: ${esc(yes.map(e => who(e.joiner_id)).join(', '))}` : ''}${no ? ` · ${no} said no` : ''}${missing ? ` · ${missing} haven't answered` : ''}</div></span>
+    const list = yes.map(e => ({jid:e.joiner_id, n:Math.min(RAFFLE_MAX_ENTRIES, itemsIn(e.joiner_id))})).filter(x => x.n > 0)
+      .sort((a, b) => ((jById.get(a.jid) || {}).name || '').localeCompare((jById.get(b.jid) || {}).name || ''));
+    const lines = list.flatMap(x => Array(x.n).fill(who(x.jid))), noneIn = yes.length - list.length;
+    const entryList = `<details class="setdet entrylist" style="margin-top:6px"><summary>Entry list: ${lines.length} ${lines.length === 1 ? 'entry' : 'entries'} from ${list.length} ${list.length === 1 ? 'joiner' : 'joiners'}</summary>
+      ${lines.length ? `<textarea readonly rows="${Math.min(14, lines.length)}" aria-label="Entry list for ${esc(r.name)}">${esc(lines.join('\n'))}</textarea>
+      <div class="formacts" style="margin-top:8px"><button type="button" class="btn small" data-action="copyText" data-copy="${esc(lines.join('\n'))}">Copy</button></div>` : '<p class="small muted" style="margin:6px 0 0">Nobody to enter yet.</p>'}
+      <p class="small muted" style="margin:6px 0 0">One entry per claimed item going through, up to ${RAFFLE_MAX_ENTRIES} each, for joiners who opted in.${no ? ` Left out: ${no} said no` : ''}${missing ? `${no ? ',' : ' Left out:'} ${missing} haven't answered` : ''}${noneIn ? `${no || missing ? ',' : ' Left out:'} ${noneIn} opted in with nothing going through` : ''}${no || missing || noneIn ? '.' : ''}${go.status === 'Claims Open' ? ' Claims are still open, so this can still change.' : ''}</p></details>`;
+    return `<div class="mine-row" style="flex-wrap:wrap"><span style="flex:1 1 320px">${r.kind === 'event' ? '🎟️' : '🎁'} <b>${esc(r.name)}</b>${w ? ` — won by ${esc(r.winner_joiner_id ? who(r.winner_joiner_id) : '@' + w)}` : ' — not drawn yet'}
+      <div class="small muted" style="margin-top:2px">${yes.length} entered${yes.length ? `: ${esc(yes.map(e => who(e.joiner_id)).join(', '))}` : ''}${no ? ` · ${no} said no` : ''}${missing ? ` · ${missing} haven't answered` : ''}</div>${entryList}</span>
     <span><button type="button" class="btn ghost small" data-action="editRaffle" data-id="${r.id}">${raffleDrawn(r) ? 'Edit' : 'Pick winner'}</button>
     ${r.kind === 'event' ? '' : `<button type="button" class="btn ghost small" style="margin-left:8px" data-action="removeRaffle" data-id="${r.id}">Remove</button>`}</span></div>`; }).join('');
   return `<section class="panel"><h2>Raffles</h2>
@@ -3281,7 +3307,7 @@ async function claimsTab() {
       <div class="formacts" style="margin:0"><button class="btn" data-action="syncOrder">Add comeback claimers and sort claims</button></div></section>` : ''}
     ${isMerch(go) ? merchItemsPanel(go) : ''}
     ${!isMerch(go) ? bonusPanel(go, claims, bonusClaims) : ''}
-    ${rafflesPanel(go, raffles, parts, emo, raffleEntries)}
+    ${rafflesPanel(go, raffles, parts, emo, raffleEntries, jid => claims.filter(c => c.joiner_id === jid && c.status === 'filled' && ['in', 'mixed'].includes(info(c).state)).reduce((a, c) => a + num(c.items), 0))}
     ${setsPanelA}
     <section class="panel"><h2>Add claims</h2>
       ${!isMerch(go) ? `<p class="small muted" style="margin-top:0">Paste the caption grid from your post: a row per ${isUnitGO(go) ? 'unit' : 'member'} like <b>${esc(rowsOf(go)[0])}: 💎🌱🚀</b>${fullCode(go) ? `, an <b>${esc(fullCode(go))}:</b> row` : ''}, and the emoji key underneath, like <b>💫 dancefae</b> (write <b>💎 GOM</b> for you). Each emoji is one claim, in the order shown. The key sets each joiner's emoji on this order. Anything already on the order isn't added twice, so you can paste an updated caption again later.</p>` : ''}
