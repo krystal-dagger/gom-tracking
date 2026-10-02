@@ -81,6 +81,18 @@ nav a[aria-current="page"]{color:var(--text);background:var(--panel-2)}
 .faq:last-of-type{border-bottom:1px solid var(--line);margin-bottom:4px}
 .faq summary{font-weight:600;cursor:pointer;font-size:15.5px}
 .faq p,.faq ul{margin:8px 0 0}
+.faq>p,.faq li{line-height:1.6}
+.rules-fig{margin:12px 0;text-align:center}
+.rules-fig img{max-width:100%;height:auto;border-radius:10px;background:#fff}
+.faq .rules-fig img{max-height:520px}
+.rules-note{border:2px solid var(--coral);color:var(--coral);border-radius:12px;padding:10px 14px}
+.rules-cheer{font-family:var(--display);font-size:20px;font-weight:700;color:var(--sea);text-align:center;margin:16px 0 4px!important}
+.rules-side{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:start;margin-top:14px}
+.rules-side .rules-fig{margin:0}
+.rules-side h4{margin:0 0 4px;font-size:15px}
+.rules-side p{margin:0}
+@media(max-width:560px){.rules-side{grid-template-columns:1fr}.rules-side .rules-fig img{max-width:200px}}
+.faq img[src*="caption-example"]{max-height:none;max-width:min(100%,560px)}
 .icon-btn{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:16px}
 @media(max-width:640px){
   .bar-in{flex-wrap:wrap;gap:8px 12px}
@@ -2283,10 +2295,46 @@ const RULES_PAGE = [
   {id:'how-gos-work', title:'How GOs work',
     intro:'GOs, or group orders, have a big learning curve if you\'ve never seen or participated in them before. I was very confused when I first saw them, so here are some things I wish I knew when I started!',
     faq:[
-      {q:'What are GOs?', a:['An individual makes a large purchase of merch/albums/PCs/etc, and they act as a middleman to distribute the desired items to their joiners. They handle collecting payments, placing the order, and packing and shipping the items out to each joiner.']},
-      {q:'Why are GOs a thing?', a:[
+      {q:'What are GOs?', open:true, a:['An individual makes a large purchase of merch/albums/PCs/etc, and they act as a middleman to distribute the desired items to their joiners. They handle collecting payments, placing the order, and packing and shipping the items out to each joiner.']},
+      {q:'Why are GOs a thing?', a:[{list:[
         'To reduce shipping costs when purchasing from international stores, since overseas shipping can be pricey, and with a GO the shipping costs can be distributed between members',
-        'A seller might only be willing to sell items in a set, but a buyer could host a GO to secure the items they want from the set and sell the rest of the items to others without having to pay for the whole set completely out of their own pocket']},
+        'A seller might only be willing to sell items in a set, but a buyer could host a GO to secure the items they want from the set and sell the rest of the items to others without having to pay for the whole set completely out of their own pocket']}]},
+      {q:'How does a group order (GO) work?', a:[
+        {small:'(I will reference Ateez/OT8 and POBs/albums specifically, but this applies to other groups and other merch as well)'},
+        'A GO is where many people come together to purchase everything they want as a single order to cut down on shipping costs and get the member that you want w/o needing to buy a full set.*',
+        {small:'*it\'s usually the case that stores guarantee one of each member w/ an OT8 set, but there are some instances where they don\'t send complete sets – I\'ll get into what happens in that case later'},
+        {img:'img/rules/go-diagram.webp', alt:'Five joiners each send money to the GOM for the members they want (YH, MG, YS and WY, JH, SN); the GOM, who wants HJ and SH, buys 8 albums from the store.'},
+        'When new POB sets are announced, GOMs will make a post that they are hosting that set. Anyone who wants to join can comment on the post w/ which member(s) they want and an emoji that will represent your claims (PCs you want). The post will also include info like:',
+        {list:['how much each claim costs', 'what is included with each claim (POB only, POB and inclusions only, POB w/ album, etc)', 'available payment methods',
+          'how many payments you\'ll need to make', 'payment deadline', 'what country the GOM is based in and if they ship to other countries', 'etc...']},
+        {note:'<b>PLEASE NOTE:</b> Not all GOMs are the same! It is <u>VERY IMPORTANT</u> that you read through their info and policies carefully b/c they can differ on how they do things. A lot of issues can be avoided and questions can be answered by reading their info. However, if you\'re still confused after reading it, don\'t hesitate to ask the GOM questions! A good GOM wants you to understand everything b/c that can save them a lot of potential headache later!'}]},
+      {q:'What does a GO post look like?', a:[
+        'Here\'s an example of one of my GO post captions w/ some more detailed explanations:',
+        {img:'img/rules/caption-example.webp', alt:'An example GO caption for a Higher NASA Selfie GO, annotated: SECURED means the order has been placed; $8 initials is the PC cost; shipping policy; accepted payment methods; 2 payments, initials (PC cost plus shipping to the GOM) and DOMs (shipping to joiners plus any customs); an availability grid showing what is claimed vs still available; and a key of which emoji is which joiner.'}]},
+      {q:'How do payments work?', a:[
+        'When the payment deadline approaches, the GOM will typically make a group chat and add all the joiners to begin collecting payments. They will have some sort of spreadsheet (Google sheet, Notion, etc) to keep track of claims and payment status that they will share. Joiners are responsible for checking that their claims are marked down correctly before paying.',
+        '<b>PAYMENT NOTES ARE IMPORTANT!</b> Follow your GOM\'s instructions for payment notes! Not only do proper payment notes help your GOM keep track of who paid for what when they are handling multiple GOs, it also helps prevent their payment accounts from being frozen! Certain words in payment notes used repeatedly can cause Paypal, Venmo, etc. to flag accounts, and if the accounts are frozen, it delays the GOM receiving payments or being able to purchase items, and then they might miss order deadlines and no one will get their items. <b>THIS IS WHY GOMS CAN BE STRICT ABOUT THEM!</b>',
+        'Once all payments are collected, the GOM will place the order. At this point, they should inform the joiners of purchase and post proof (order receipt screenshots, partial order number, or similar) to the group chat.']},
+      {q:'What is a kaddy (or k-addy)?', a:[
+        {img:'img/rules/kaddy-flow.webp', alt:'Step 1: the GOM places orders with multiple stores. Step 2: the orders ship to the kaddy. Step 3: the kaddy consolidates the orders into one package to ship to the GOM. Step 4: the GOM ships items to the joiners.'},
+        'Many GOMs, especially ones who host a lot of GOs, use a kaddy (a Korean address). A kaddy is a warehouse that acts as a middleman between the store/seller and a GOM. Shipping to a kaddy is MUCH cheaper than shipping directly to the GOM, so GOMs can send multiple orders to a kaddy, and they are able to open albums to remove inclusions and PCs and ship those back w/o the heavy/bulky albums, as well as consolidate multiple orders into single packages to save on international shipping costs.']},
+      {q:'Why are there multiple payments?', a:[
+        'It can be difficult to predict the exact amount that international shipping will cost from a kaddy b/c you won\'t know the weight, box dimensions, or full amount of kaddy fees until the items are consolidated. Also, tariff/customs laws change a lot and some packages get them while others don\'t. Because of this, GOMs need to wait until they have the bill before they can figure out how much joiners will owe. GOMs may also wait to collect DOMs fees until they have the items in hand. Because items can potentially take months to arrive after collecting initial payments, it doesn\'t make sense to collect addresses (and be able to calculate shipping costs) until then. Also, a joiner might choose to combine shipping w/ multiple GOs w/ that same GOM depending on when items arrive, so that could affect shipping costs too.']},
+      {q:'What happens when sets aren\'t filled?', a:[
+        'There are 3 options that could happen when sets aren\'t filled: dropping sets, splitting sets, or sorting. Let\'s take a look at the availability from my example Instagram GO caption to explain what happens in each case:',
+        {side:{img:'img/rules/sets-dropping.webp', alt:'The example availability grid with sets 3, 4 and 5 crossed out.'}, h:'#1 – Dropping sets',
+          text:'Different sets/GOMs will have different rules about when a set will "go through" (aka whether or not that set will be purchased). Let\'s say that I had a rule that a set will only go through if 7 out of 8 members are claimed before the deadline. In that case, only sets 1 and 2 would be purchased, and all of the other claims would be dropped.'},
+        {side:{img:'img/rules/sets-splitting.webp', alt:'An availability grid with set 2 (7 claims) marked +$1.15 and set 3 (6 claims) marked +$1.33.'}, h:'#2 – Splitting sets',
+          text:'Let\'s say the claims look like this instead. The GOM might have a rule where if enough members are claimed in a set, they won\'t drop the set, but instead opt to split the cost of the unclaimed members between the joiners of the set and then raffle them off to said joiners. So in this case, if the cost of a claim is $8, the 7 claims of set 2 would get an additional $8/7 = $1.15 tacked on to the initials, and the 6 claims in set 3 would get $8/6 = $1.33 added to the initials.'},
+        {side:{img:'img/rules/sets-sorting.webp', alt:'The example availability grid, labelled 23 total claims.'}, h:'#3 – Sorting',
+          text:'The last option is where the GOM orders the exact amount of claims (23 here) instead of ordering in full sets. Sorting can also occur if stores don\'t send POBs in full sets and instead send random amounts of each member. In this case, the GOM will have some way to prioritize their list of joiners (I\'ve heard of ordering by the timestamp of a member preference form submission, or by OT8 claimers before others, etc) and go through the list assigning POBs to joiners. In this case, you are not guaranteed the member you claimed.'}]},
+      {q:'DOMs time!', a:[
+        'Your GOM should keep you updated when items arrive to the kaddy, ship out to them, and when they have them on hand. The GOM will ask for your address and DOMs payment, either through a form or DMs. They should do an address check and a claim check w/ you before packing and shipping your claims. When they drop orders off, they should send proof of the envelopes/packages being put in the mail collection bins. Once you receive your items, <b>PLEASE SEND PROOF OF RECEIVING YOUR ITEMS</b>, either through posting to your Instagram story and tagging your GOM or by sending them a DM. GOMs add this proof to their Instagram highlights to build trust in the B/S/T community and show that they are reliable.',
+        {cheer:'Congrats! You\'ve now successfully participated in a group order!'}]},
+      {q:'Important notes about joining a GO', a:[{list:[
+        'Remember that GOMs are just regular people with families and jobs that are doing a <u>ton</u> of work for free!',
+        'Be mindful that GOs take time! If you are not patient, GOs may not be for you! Items can take months to ship and GOMs have no control over that. You either get cheaper items that take a while to get through GOs, or you pay more and get your items faster on your own.',
+        'Pay on time! If you know you can\'t pay right away, don\'t join. If you don\'t pay by the deadlines, GOMs are forced to choose between fronting the costs themselves or waiting and potentially not securing orders, and that\'s not fair to the GOM or other joiners.']}]},
     ]},
   {id:'go-rules', title:'Group order rules',
     groups:[
@@ -2361,13 +2409,27 @@ const RULES_PAGE = [
     ],
     outro:'If you have any other questions, don\'t hesitate to ask!'},
 ];
-// Rule text is written here by the host (not user input); the only markup used is <u> for underlining.
-const ruleText = t => esc(t).replace(/&lt;(\/?)u&gt;/g, '<$1u>');
+// Rule text is written here by the host (not user input); the only markup kept is <u> and <b>.
+const ruleText = t => esc(t).replace(/&lt;(\/?)(u|b)&gt;/g, '<$1$2>');
+// One block of an FAQ answer: a paragraph (plain string), {list}, {small}, {note}, {cheer}, {img, alt}, or a picture
+// beside a titled paragraph ({side, h, text}).
+const ruleFig = f => `<figure class="rules-fig"><img src="${esc(f.img)}" alt="${esc(f.alt)}" loading="lazy" decoding="async"></figure>`;
+function ruleBlock(b) {
+  if (typeof b === 'string') return `<p>${ruleText(b)}</p>`;
+  if (b.list) return `<ul class="rules">${b.list.map(x => `<li>${ruleText(x)}</li>`).join('')}</ul>`;
+  if (b.small) return `<p class="small muted">${ruleText(b.small)}</p>`;
+  if (b.note) return `<p class="rules-note">${ruleText(b.note)}</p>`;
+  if (b.cheer) return `<p class="rules-cheer">${ruleText(b.cheer)}</p>`;
+  if (b.side) return `<div class="rules-side">${ruleFig(b.side)}<div><h4>${esc(b.h)}</h4><p>${ruleText(b.text)}</p></div></div>`;
+  if (b.img) return ruleFig(b);
+  return '';
+}
 function pageRules() {
   const toc = `<nav class="rules-toc" aria-label="On this page">${RULES_PAGE.map(sec => `<button type="button" class="kchip" data-action="rulesJump" data-to="${sec.id}">${esc(sec.title)}</button>`).join('')}</nav>`;
   const body = RULES_PAGE.map(sec => `<section class="panel rules-sec" id="rules-${sec.id}"><h2>${esc(sec.title)}</h2>
     ${sec.intro ? `<p class="rules-intro">${ruleText(sec.intro)}</p>` : ''}
-    ${(sec.faq || []).map(f => `<details class="faq" open><summary>${esc(f.q)}</summary>${f.a.length > 1 ? `<ul class="rules">${f.a.map(x => `<li>${ruleText(x)}</li>`).join('')}</ul>` : `<p>${ruleText(f.a[0])}</p>`}</details>`).join('')}
+    ${(sec.faq || []).map(f => `<details class="faq" ${f.open ? 'open' : ''}><summary>${esc(f.q)}</summary>${f.a.map(ruleBlock).join('')}</details>`).join('')}
+    ${sec.faq ? '<p class="small muted" style="margin:10px 0 0">Tap a question to open it.</p>' : ''}
     ${(sec.groups || []).map(gr => `<div class="rules-group"><h3>${esc(gr.h)}</h3><ul class="rules">${gr.items.map(x => `<li>${ruleText(x)}</li>`).join('')}</ul></div>`).join('')}
     ${sec.outro ? `<p class="rules-intro" style="margin-bottom:0">${ruleText(sec.outro)}</p>` : ''}</section>`).join('');
   return head('Rules & FAQ', `How group orders work here, the rules for joining, and how fixed and soft claims work. Questions? DM @${esc(CONFIG.INSTAGRAM)}.`) + toc + body;
