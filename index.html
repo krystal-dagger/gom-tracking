@@ -894,8 +894,8 @@ function rulesList(go, cb) {
     ? `Each ${w1} has one line, and spots go in this order: GOM, fixed claimers, soft claimers, then everyone else by claim time. A fixed or soft claimer who drops a spot and adds the same ${w1} back goes to the end of their group. Their other claims come after all fixed and soft claimers, ahead of everyone else.`
     : `Spots in each ${w1}'s line go in claim order.`);
   if (cb && go.roster_required) out.push(full
-    ? `Fixed claimers keep their fixed ${W} unless they switch to ${full} or I drop them, and can add or drop other ${W} any time. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`
-    : `Fixed claimers keep their fixed ${W} unless I drop them, and can add or drop other ${W} any time. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`);
+    ? `Fixed and soft claimers can drop each of their ${W} from up to ${DROP_MAX} orders of ${cb.name}, or switch their fixed and soft claims to one ${full} and back while claims are open (switching isn't a drop). Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`
+    : `Fixed and soft claimers can drop each of their ${W} from up to ${DROP_MAX} orders of ${cb.name}. Soft claimers need to join at least ${cb.soft_min_orders} drops of ${cb.name}.`);
   const dl = go.drop && go.drop.deadline;
   if (dl) out.push(`Claim deadline: ${fmtWhen(dl, go.drop.deadline_time)}.`);
   return out;
@@ -1016,7 +1016,8 @@ const DROP_MAX = 3;
 const membersOverlap = (a, b) => { const bs = b.split('/'); return a.split('/').some(m => bs.includes(m)); };
 // How many of a comeback's orders a joiner has dropped one member from, counted for one claim type (fixed or soft)
 // (claims: theirs, orders: the comeback's)
-const memberDrops = (claims, orderIds, source, mem) => new Set(claims.filter(c => c.status === 'dropped' && c.source === source && orderIds.has(c.group_order_id) && membersOverlap(c.member_code, mem)).map(c => c.group_order_id)).size;
+// (claims replaced by a switch to OT8/OT4 aren't drops)
+const memberDrops = (claims, orderIds, source, mem) => new Set(claims.filter(c => c.status === 'dropped' && !c.switched && c.source === source && orderIds.has(c.group_order_id) && membersOverlap(c.member_code, mem)).map(c => c.group_order_id)).size;
 // Whether a claim covers a member: the member itself, a pair or unit with them in it, or the full set
 const claimCovers = (c, mem) => membersOverlap(c.member_code, mem) || c.member_code === 'OT8' || c.member_code === 'OT4';
 // Turns saved comeback claimers back into your Instagram list format
@@ -1258,6 +1259,16 @@ function demoApi() {
   db.participants.slice().sort((a, b) => a.group_order_id.localeCompare(b.group_order_id) || firstAt(a).localeCompare(firstAt(b))).forEach(p => {
     const e = defEmoji(p.group_order_id, p.joiner_id); p.emoji = e && emojiFree(p.group_order_id, p.joiner_id, e) ? e : null; });
   const clone = x => JSON.parse(JSON.stringify(x));
+  // Mirrors the SQL _switch_back function: removes the OT8/OT4 a joiner switched to and puts their fixed/soft
+  // claims back in their old places (a member they've claimed again as fixed/soft since keeps that claim instead)
+  function switchBackDemo(goId, jid) {
+    const mine = () => db.claims.filter(x => x.group_order_id === goId && x.joiner_id === jid);
+    db.claims = db.claims.filter(x => !(x.group_order_id === goId && x.joiner_id === jid && x.switched && x.status === 'filled'));
+    mine().filter(x => x.switched && x.status === 'dropped').forEach(x => {
+      if (mine().some(y => y.status === 'filled' && y.member_code === x.member_code && (y.source === 'fixed' || y.source === 'soft'))) db.claims = db.claims.filter(y => y !== x);
+      else { x.status = 'filled'; x.switched = false; }
+    });
+  }
   // Mirrors the SQL _auto_assign_bonus function: give this joiner every bonus their own claims on this
   // order now qualify them for, without handing out more than the order as a whole has earned so far.
   const bonusSets = bi => { const items = db.claims.filter(c => c.group_order_id === bi.group_order_id && c.status === 'filled').reduce((a, c) => a + num(c.items), 0);
@@ -1440,8 +1451,8 @@ function demoApi() {
       const c = db.claims.find(x => x.id === claimId && x.joiner_id === jid && x.status === 'filled'); if (!c) return {error:'not_found'};
       const g = withDrop(db.group_orders.find(x => x.id === c.group_order_id));
       if (!isOpen(g)) return {error:'closed'};
-      // a fixed claim stays unless the joiner has the full claim (OT8/OT4) on the order
-      if (c.source === 'fixed' && !db.claims.some(x => x.group_order_id === c.group_order_id && x.joiner_id === jid && x.member_code === fullCode(g) && x.status === 'filled')) return {error:'fixed'};
+      // dropping an OT8/OT4 a fixed/soft claimer switched to puts their fixed/soft claims back (not a drop)
+      if (c.switched && c.member_code === fullCode(g)) { switchBackDemo(g.id, jid); return {ok:true, switched_back:true}; }
       // same rules as joiner_unclaim: keep a record only for comeback-list claimers or after payment is due
       const cbId = g.drop && g.drop.comeback_id;
       // each fixed or soft member can be dropped from up to 3 of the comeback's orders
@@ -1452,6 +1463,22 @@ function demoApi() {
       const keep = (cbId && db.comeback_roster.some(r => r.comeback_id === cbId && r.joiner_id === jid)) || (g.payment_deadline && isPastDue(g.payment_deadline, g.payment_deadline_time));
       if (keep) c.status = 'dropped'; else db.claims = db.claims.filter(x => x.id !== c.id);
       return {ok:true};
+    },
+    async joinerSwitchFull(handle, pin, goId) {    // same rules as joiner_switch_full
+      const jid = demoAuth(handle, pin); if (!jid) return {error:'invalid'};
+      const g = withDrop(db.group_orders.find(x => x.id === goId)); if (!g || !isOpen(g)) return {error:'closed'};
+      const full = fullCode(g); if (!full) return {error:'no_spots'};
+      if (g.price_per_pc == null) return {error:'no_price'};
+      const mine = db.claims.filter(x => x.group_order_id === goId && x.joiner_id === jid);
+      if (mine.some(x => x.switched && x.status === 'filled')) return {error:'already_switched'};
+      const spots = mine.filter(x => x.status === 'filled' && (x.source === 'fixed' || x.source === 'soft'));
+      if (!spots.length) return {error:'no_spots'};
+      spots.forEach(x => { x.status = 'dropped'; x.switched = true; });
+      const j = db.joiners.find(x => x.id === jid);
+      db.claims.push({id:uid(), group_order_id:goId, joiner_id:jid, member_code:full, items:rowsOf(g).length, price:claimPrice(g, full), status:'filled', note:null,
+        source:j && j.is_host ? 'gom' : 'extra', roster_pos:null, switched:true, created_at:new Date().toISOString()});
+      autoAssignBonusDemo(goId, jid);
+      return {ok:true, replaced:spots.length};
     },
     async uploadPaymentProof(blob) {   // demo just keeps it as a data URL, matching photo uploads
       return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => no(new Error('Could not read that image.')); r.readAsDataURL(blob); });
@@ -1572,6 +1599,9 @@ function supabaseApi() {
     },
     async joinerUnclaim(handle, pin, claimId) {
       const {data, error} = await sb.rpc('joiner_unclaim', {p_handle:handle, p_pin:pin, p_claim:claimId}); if (error) fail(error); return data;
+    },
+    async joinerSwitchFull(handle, pin, goId) {
+      const {data, error} = await sb.rpc('joiner_switch_full', {p_handle:handle, p_pin:pin, p_order:goId}); if (error) fail(error); return data;
     },
     async uploadPaymentProof(blob) {
       const path = `${uid()}.jpg`;
@@ -1949,7 +1979,7 @@ const claimError = (r, go) => ({
   emoji_taken:`${r.detail || 'That emoji'} is already taken on this order. Pick another one.`,
   sold_out:`${r.detail || 'That'} is sold out.`,
   drop_limit:'You have already dropped this member from 3 orders this comeback, which is the most allowed for a fixed or soft claim. DM @' + CONFIG.INSTAGRAM + '.',
-  fixed:`A fixed claim stays unless you switch to ${go ? fullCode(go) : 'OT8'} (claim one first) or the host drops it. DM @${CONFIG.INSTAGRAM}.`,
+  no_spots:'You have no fixed or soft claims on this order to switch.', already_switched:`You already switched to ${go ? fullCode(go) : 'OT8'} on this order.`,
 }[r.error] || 'Something went wrong. Try again.');
 
 // What the signed-in joiner would get if they claimed right now: used for the "Next: set 3" hints and the live total
@@ -2015,7 +2045,7 @@ function claimPanel(g, an) {
   const chips = R.map(r => qty(r, rowLabel(r), claimPrice(g, r), `${money(claimPrice(g, r))}. ${heldOf(r) ? `You have ${heldOf(r)}. ` : ''}${next(r)}`, capOf(r))).join('');
   const fullChip = full ? qty(full, full, claimPrice(g, full), `${heldOf(full) ? `You have ${heldOf(full)}. ` : ''}${money(claimPrice(g, full))}, always ordered`) : '';
   const fixedHere = [...new Set(mineLive.filter(c => c.source === 'fixed').map(c => c.member_code))];
-  const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim' : 'claims'} (${esc(fixedHere.join(', '))}) stay on this order${full ? (heldOf(full) ? `. You have a ${esc(full)}, so you can drop them below.` : ` unless you switch to ${esc(full)}: claim a ${esc(full)} and you can drop them. You can add and drop other ${w1}s any time.`) : ` unless I drop them. You can add and drop other ${w1}s any time.`}</p>` : '';
+  const fixedNote = fixedHere.length ? `<p class="small muted" style="margin:0">Your fixed ${fixedHere.length === 1 ? 'claim is' : 'claims are'} on this order (${esc(fixedHere.join(', '))}). You can drop each fixed ${w1} from up to ${DROP_MAX} orders this comeback${full ? `, or switch to ${esc(full)} under Your claims` : ''}. You can add and drop other ${w1}s any time.</p>` : '';
   const emojiPick = ctx.needPick ? `<div class="field"><label for="ce-${g.id}">Your emoji for this order</label>
       <input id="ce-${g.id}" name="emoji" class="emoji-in" required maxlength="16" autocomplete="off" spellcheck="false" placeholder="Pick an emoji">
       <small>${ctx.usual ? `Your usual ${esc(ctx.usual)} is already taken on this order, so pick another one.` : 'Pick an emoji to be on this order.'}
@@ -2053,22 +2083,39 @@ function myBonusRows(g) {
     return `<div class="mine-row bonus-row"><span><span class="chip" style="background:var(--gold-bg);color:var(--gold)">\u{1F381} Bonus</span> <span class="small">${esc(name)}</span></span><span>${right}</span></div>`;
   }).join('') + winRows;
 }
+// "fixed", "soft" or "fixed/soft": which kinds of claims the signed-in joiner switched to OT8/OT4 on an order
+function switchedWord(g) {
+  const src = new Set(((S.me && S.me.claims) || []).filter(c => c.group_order_id === g.id && c.switched && c.status === 'dropped').map(c => c.source));
+  return src.has('fixed') && src.has('soft') ? 'fixed/soft' : src.has('soft') ? 'soft' : src.has('fixed') ? 'fixed' : 'fixed/soft';
+}
+// How many drops the signed-in joiner has left for a member (fixed or soft) in an order's comeback, not counting
+// that order itself (dropping again on an order already counted doesn't use another)
+function myDropsLeft(g, source, mem) {
+  const cb = cbOf(g); if (!cb || !S.me) return null;
+  const ids = new Set(S.pub.gos.filter(x => x.id !== g.id && x.drop && x.drop.comeback_id === cb.id).map(x => x.id));
+  return Math.max(0, DROP_MAX - memberDrops(S.me.claims, ids, source, mem));
+}
 function myClaimsList(g, an, mineLive) {
   if (!mineLive.length) return '';
-  const canDrop = claimsOpen(g), full = fullCode(g), hasOt8 = mineLive.some(c => c.member_code === full), R = rowsOf(g);
+  const canDrop = claimsOpen(g), full = fullCode(g), R = rowsOf(g);
   const ord = c => { const i = R.indexOf(c.member_code); return i < 0 ? 99 : i; };
   const label = c => isMerch(g) && c.member_code.includes('::') ? `${(merchItem(g, c.member_code) || {}).name}: ${c.member_code.split('::')[1]}` : c.member_code;
   const rows = mineLive.slice().sort((a, b) => ord(a) - ord(b) || claimCmp(a, b)).map(c => {
     const info = claimInfo(g, c, an), place = placeText(info, an);
     const tag = info.state === 'wait' ? 'wait' : info.state === 'dropped' ? 'risk' : '';
-    const pill = c.source === 'gom' ? ' <span class="pill">GOM</span>' : c.source === 'fixed' ? ' <span class="pill">Fixed claim</span>' : c.source === 'soft' ? ' <span class="pill">Soft claim</span>' : '';
-    const locked = c.source === 'fixed' && !hasOt8;
+    const pill = c.source === 'gom' ? ' <span class="pill">GOM</span>' : c.source === 'fixed' ? ' <span class="pill">Fixed claim</span>' : c.source === 'soft' ? ' <span class="pill">Soft claim</span>'
+      : c.switched ? ` <span class="pill">Switched from ${esc(switchedWord(g))} claims</span>` : '';
     return `<div class="mine-row"><span><span class="chip ${tag}">${esc(label(c))}</span> <span class="small">${esc(place)}</span>${pill}</span>
       <span><b>${info.state === 'wait' ? 'Not charged yet' : info.state === 'dropped' ? '$0.00' : money(info.amount)}</b>${info.extra ? ` <span class="small muted">includes +${money(info.extra)} split</span>` : ''}
-      ${canDrop && !locked ? `<button type="button" class="btn ghost small" style="margin-left:8px" data-action="unclaim" data-id="${c.id}" data-src="${c.source}">Drop</button>` : ''}${canDrop && locked ? `<span class="small muted" style="margin-left:8px">Stays unless you go ${esc(full)}</span>` : ''}</span></div>`;
+      ${canDrop ? `<button type="button" class="btn ghost small" style="margin-left:8px" data-action="unclaim" data-id="${c.id}" data-src="${c.source}">Drop</button>` : ''}</span></div>`;
   }).join('');
   const total = r2(mineLive.reduce((a, c) => a + claimInfo(g, c, an).amount, 0));
-  return `<div><h4 class="sh">Your claims on this order</h4>${rows}${myBonusRows(g)}<p class="small muted" style="margin:8px 0 0">Going through so far: <b>${money(total)}</b>. Waitlisted claims are not charged unless their set fills up enough to go through.</p></div>`;
+  // Fixed/soft claimers can swap their fixed/soft claims here for one OT8/OT4, and back
+  const switched = mineLive.find(c => c.switched && c.member_code === full), spots = mineLive.filter(c => c.source === 'fixed' || c.source === 'soft');
+  const switchBtn = !canDrop || !full ? '' : switched
+    ? `<button type="button" class="btn ghost small" data-action="switchBack" data-id="${switched.id}">Switch back to ${esc(switchedWord(g))} claims</button>`
+    : spots.length ? `<button type="button" class="btn ghost small" data-action="switchFull" data-id="${g.id}">Switch to ${esc(full)}</button>` : '';
+  return `<div><h4 class="sh">Your claims on this order</h4>${rows}${myBonusRows(g)}${switchBtn ? `<div class="formacts" style="margin:8px 0 0">${switchBtn}</div>` : ''}<p class="small muted" style="margin:8px 0 0">Going through so far: <b>${money(total)}</b>. Waitlisted claims are not charged unless their set fills up enough to go through.</p></div>`;
 }
 // A joiner's yes/no for each raffle on an order they're in, changeable until payment is due or the raffle is drawn.
 // With `answeredOnly`, raffles they haven't answered are left out (the claim form asks about those instead).
@@ -2519,7 +2566,7 @@ function computeMe(d) {
   const anC = new Map(), anFor = g => { if (!anC.has(g.id)) anC.set(g.id, anOf(g)); return anC.get(g.id); };
   const live = d.claims.filter(c => { const g = goById(c.group_order_id); return g && g.status !== 'Cancelled'; });
   // "Dropped" here means a guaranteed (fixed/soft) spot was taken away, not just an ordinary claim being removed
-  const filled = live.filter(c => c.status === 'filled'), dropped = live.filter(c => c.status === 'dropped');
+  const filled = live.filter(c => c.status === 'filled'), dropped = live.filter(c => c.status === 'dropped' && !c.switched);
   const infoOf = new Map(filled.map(c => { const g = goById(c.group_order_id); return [c.id, claimInfo(g, c, anFor(g))]; }));
   const share = (c, k) => { const i = infoOf.get(c.id); return i.seats.length ? c.items * i.seats.filter(s => s.state === k).length / i.total : (k === 'in' ? c.items : 0); };
   const liveCharges = d.charges.filter(c => { const g = c.group_order_id && goById(c.group_order_id); return !g || g.status !== 'Cancelled'; });
@@ -2625,7 +2672,7 @@ function shipCell(g, p) {
 }
 // One order's payment breakdown for this joiner, shared by the order card and the "Your orders" filter.
 function myOrderStat(d, m, g) {
-  const cs = d.claims.filter(c => c.group_order_id === g.id);
+  const cs = d.claims.filter(c => c.group_order_id === g.id && !(c.switched && c.status === 'dropped'));   // claims switched to OT8/OT4 aren't shown
   const chargesHere = d.charges.filter(c => c.group_order_id === g.id);
   const initials = r2(sum(cs.filter(c => c.status === 'filled' && m.infoOf.has(c.id)), c => m.infoOf.get(c.id).amount));
   const dueAmt = kind => r2(sum(chargesHere.filter(c => c.kind === kind && c.due), c => c.amount));
@@ -3545,8 +3592,8 @@ async function claimsTab() {
   const claimBtn = c => {
     const i = c.status === 'filled' ? info(c) : null;
     const cls = c.status === 'dropped' ? 'x' : !i ? '' : i.state === 'wait' ? 'wait' : i.state === 'pending' || i.state === 'dropped' ? 'risk' : '';
-    const note = !i ? 'dropped' : i.state === 'wait' ? 'waitlist' : i.state === 'pending' ? 'needs more' : i.state === 'dropped' ? 'set dropped' : '';
-    const detail = [c.member_code, i ? placeText(i, an) : 'dropped', i ? (i.state === 'in' ? money(i.amount) : i.state === 'mixed' ? money(i.amount) + ' so far' : 'not charged') : '', SRC[c.source] || ''].filter(Boolean).join(', ');
+    const note = !i ? (c.switched ? `switched to ${fullCode(go) || 'OT8'}` : 'dropped') : i.state === 'wait' ? 'waitlist' : i.state === 'pending' ? 'needs more' : i.state === 'dropped' ? 'set dropped' : '';
+    const detail = [c.member_code, i ? placeText(i, an) : c.switched ? `switched to ${fullCode(go) || 'OT8'}` : 'dropped', i ? (i.state === 'in' ? money(i.amount) : i.state === 'mixed' ? money(i.amount) + ' so far' : 'not charged') : '', SRC[c.source] || ''].filter(Boolean).join(', ');
     return `<button type="button" class="chip claimbtn ${cls}" data-action="claimMenu" data-id="${c.id}" data-status="${c.status}" data-keep="${rosterIds.has(c.joiner_id) ? 'list' : payDue ? 'paid' : ''}" data-code="${esc(c.member_code)}" data-who="${esc(nameOf(c.joiner_id))}" data-detail="${esc(detail)}" title="${esc(detail)}">${esc(c.member_code)}${note ? `<small>${esc(note)}</small>` : ''}</button>`;
   };
   const totals = {base:0, extra:0, total:0};
@@ -3909,7 +3956,7 @@ const actions = {
     const r = await pending; if (!r) return;
     const del = mode === 'delete' || !!r.alt;
     if (del) await api.remove('claims', b.dataset.id);
-    else await api.save('claims', {id:b.dataset.id, status:mode === 'dropped' ? 'filled' : 'dropped'});
+    else await api.save('claims', {id:b.dataset.id, status:mode === 'dropped' ? 'filled' : 'dropped', switched:false});
     await refreshPublic(); await keepScroll(render);
     toast(del ? `Deleted @${who}'s ${code} claim` : mode === 'dropped' ? `${code} restored` : `${code} marked dropped`);
   },
@@ -3969,11 +4016,38 @@ const actions = {
     const c = cred(), claim = S.me && S.me.claims.find(x => x.id === b.dataset.id); if (!c || !claim) return;
     const g = goById(claim.group_order_id), cb = cbOf(g);
     const back = claim.source === 'fixed' || claim.source === 'soft' ? `If you add ${esc(claim.member_code)} back you go to the end of the ${claim.source} claimers, still ahead of everyone else.` : 'If you add it back you join the end of the line for that member.';
-    const ok = await ask({title:`Drop ${claim.member_code}?`, html:`<p>You won't be charged for it. ${back}</p>${claim.source === 'fixed' ? `<p><b>Heads up:</b> this is a fixed claim. You are dropping it because you have a ${esc(fullCode(g))}.</p>` : ''}${claim.source === 'soft' && cb ? `<p><b>Heads up:</b> soft claimers need to join at least ${cb.soft_min_orders} drops of ${esc(cb.name)}.</p>` : ''}`, ok:'Drop claim', danger:true});
+    if (claim.switched && claim.member_code === fullCode(g)) return actions.switchBack(b);
+    const tier = (claim.source === 'fixed' || claim.source === 'soft') && cb ? claim.source : null;
+    const left = tier ? myDropsLeft(g, tier, claim.member_code) : null;
+    if (tier && left === 0) { toast(claimError({error:'drop_limit'}, g), true); return; }
+    const limit = tier ? `<p><b>Are you sure?</b> This is a ${tier} claim. You have <b>${left} of ${DROP_MAX}</b> ${esc(claim.member_code)} ${left === 1 ? 'drop' : 'drops'} left for ${esc(cb.name)}. Dropping it here leaves ${left - 1}.</p>` : '';
+    const ok = await ask({title:`Drop ${claim.member_code}?`, html:`${limit}<p>You won't be charged for it. ${back}</p>${claim.source === 'soft' && cb ? `<p><b>Heads up:</b> soft claimers need to join at least ${cb.soft_min_orders} drops of ${esc(cb.name)}.</p>` : ''}`, ok:'Drop claim', danger:true});
     if (!ok) return;
     const res = await api.joinerUnclaim(c.h, c.p, b.dataset.id);
     if (res.error) { toast(claimError(res, g), true); return; }
     await refreshPublic(); await doLogin(c.h, c.p, true); await keepScroll(render); toast('Claim dropped');
+  },
+  // Swap a fixed/soft claimer's fixed and soft claims on an order for one OT8/OT4
+  async switchFull(b) {
+    const c = cred(), g = goById(b.dataset.id); if (!c || !g) return;
+    const full = fullCode(g), spots = S.me.claims.filter(x => x.group_order_id === g.id && x.status === 'filled' && (x.source === 'fixed' || x.source === 'soft'));
+    const ord = x => rowsOf(g).indexOf(x.member_code), list = spots.sort((x, y) => ord(x) - ord(y)).map(x => `${x.member_code} (${x.source})`).join(', ');
+    const ok = await ask({title:`Switch to ${full}?`, html:`<p>Your ${esc(list)} ${spots.length === 1 ? 'claim' : 'claims'} on this order will be replaced with one ${esc(full)} for <b>${money(claimPrice(g, full))}</b>. ${esc(full)} is always ordered.</p><p>This isn't a drop, so it doesn't use any of your drops. You can switch back while claims are open, and your claims go back to their places in line.</p>`, ok:`Switch to ${full}`});
+    if (!ok) return;
+    const res = await api.joinerSwitchFull(c.h, c.p, g.id);
+    if (res.error) { toast(claimError(res, g), true); return; }
+    await refreshPublic(); await doLogin(c.h, c.p, true); await keepScroll(render); toast(`Switched to ${full}`);
+  },
+  // Undo a switch: drop the OT8/OT4 and put the fixed/soft claims back
+  async switchBack(b) {
+    const c = cred(), claim = S.me && S.me.claims.find(x => x.id === b.dataset.id); if (!c || !claim) return;
+    const g = goById(claim.group_order_id), word = switchedWord(g);
+    const back = S.me.claims.filter(x => x.group_order_id === g.id && x.switched && x.status === 'dropped').map(x => x.member_code).sort((x, y) => rowsOf(g).indexOf(x) - rowsOf(g).indexOf(y)).join(', ');
+    const ok = await ask({title:`Switch back to ${word} claims?`, html:`<p>Your ${esc(claim.member_code)} will be dropped and your ${esc(word)} ${back ? `claims (${esc(back)})` : 'claims'} put back in their places in line. This doesn't use any of your drops.</p>`, ok:'Switch back'});
+    if (!ok) return;
+    const res = await api.joinerUnclaim(c.h, c.p, claim.id);
+    if (res.error) { toast(claimError(res, g), true); return; }
+    await refreshPublic(); await doLogin(c.h, c.p, true); await keepScroll(render); toast(`Switched back to ${word} claims`);
   },
   previewRoster() { A.rosterText = $('#rosterText').value; A.rosterPv = parseRoster(A.rosterText, CONFIG.INSTAGRAM); render(); },
   async saveRoster() {
