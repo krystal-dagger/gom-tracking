@@ -508,7 +508,9 @@ table.cbgrid td.wl{opacity:.75}
 table.cbtable td{vertical-align:middle}
 table.cbtable .stack{display:flex;flex-direction:column;gap:4px}
 table.cbtable .stack>span{height:26px;display:flex;align-items:center}
+table.cbtable td.r .stack>span{justify-content:flex-end}
 table.cbtable .stack .pill{align-self:flex-start;padding-top:0;padding-bottom:0}
+table.cbtable .stack>span>.pill{align-self:center}
 table.av tr.setrow td{font-size:12px;font-weight:600;color:var(--muted);height:auto;padding:6px 2px;border-top:1px solid var(--line)}
 table.av tr.setrow th{height:auto;font-size:12px;color:var(--muted);padding:6px 4px 6px 10px;text-align:left;font-weight:600;background:var(--panel-2);border-top:1px solid var(--line)}
 table.av tr.setrow .k-in{color:var(--sea)} table.av tr.setrow .k-risk{color:var(--coral)}
@@ -1008,10 +1010,15 @@ function joinState(go, an, mine) {
 }
 // A comeback's limit on spots per member, fixed and soft together (older data: its fixed + soft spots)
 const cbMaxSets = cb => cb ? (cb.max_sets != null ? num(cb.max_sets) : num(cb.fixed_slots) + num(cb.soft_slots)) : 0;
-// A fixed claimer can drop up to this many of a comeback's orders
-const FIXED_DROP_MAX = 3;
-// How many of a comeback's orders a joiner has dropped a fixed claim on (claims: theirs, orders: the comeback's)
-const fixedDropOrders = (claims, orderIds) => new Set(claims.filter(c => c.status === 'dropped' && c.source === 'fixed' && orderIds.has(c.group_order_id)).map(c => c.group_order_id)).size;
+// A fixed or soft claimer can drop each of their members from up to this many of a comeback's orders
+const DROP_MAX = 3;
+// Whether two member codes share a member ('HJ' and 'HJ/SH' do)
+const membersOverlap = (a, b) => { const bs = b.split('/'); return a.split('/').some(m => bs.includes(m)); };
+// How many of a comeback's orders a joiner has dropped one member from, counted for one claim type (fixed or soft)
+// (claims: theirs, orders: the comeback's)
+const memberDrops = (claims, orderIds, source, mem) => new Set(claims.filter(c => c.status === 'dropped' && c.source === source && orderIds.has(c.group_order_id) && membersOverlap(c.member_code, mem)).map(c => c.group_order_id)).size;
+// Whether a claim covers a member: the member itself, a pair or unit with them in it, or the full set
+const claimCovers = (c, mem) => membersOverlap(c.member_code, mem) || c.member_code === 'OT8' || c.member_code === 'OT4';
 // Turns saved comeback claimers back into your Instagram list format
 function rosterToText(cb, roster, emojis, joiners, hostHandle) {
   const emo = new Map(emojis.map(e => [e.joiner_id, e.emoji])), jn = new Map(joiners.map(j => [j.id, j]));
@@ -1437,9 +1444,10 @@ function demoApi() {
       if (c.source === 'fixed' && !db.claims.some(x => x.group_order_id === c.group_order_id && x.joiner_id === jid && x.member_code === fullCode(g) && x.status === 'filled')) return {error:'fixed'};
       // same rules as joiner_unclaim: keep a record only for comeback-list claimers or after payment is due
       const cbId = g.drop && g.drop.comeback_id;
-      if (c.source === 'fixed') {
+      // each fixed or soft member can be dropped from up to 3 of the comeback's orders
+      if ((c.source === 'fixed' || c.source === 'soft') && cbId) {
         const cbOrders = new Set(db.group_orders.filter(y => y.id !== c.group_order_id && (withDrop(y).drop || {}).comeback_id === cbId).map(y => y.id));
-        if (fixedDropOrders(db.claims.filter(x => x.joiner_id === jid), cbOrders) >= FIXED_DROP_MAX) return {error:'fixed_limit'};
+        if (memberDrops(db.claims.filter(x => x.joiner_id === jid), cbOrders, c.source, c.member_code) >= DROP_MAX) return {error:'drop_limit'};
       }
       const keep = (cbId && db.comeback_roster.some(r => r.comeback_id === cbId && r.joiner_id === jid)) || (g.payment_deadline && isPastDue(g.payment_deadline, g.payment_deadline_time));
       if (keep) c.status = 'dropped'; else db.claims = db.claims.filter(x => x.id !== c.id);
@@ -1940,7 +1948,7 @@ const claimError = (r, go) => ({
   emoji_needed:'Pick an emoji to use on this order.', raffle_answers:`Say whether you want to be entered in the ${r.detail || 'raffle'} first.`, bad_emoji:'Your emoji for this order should be a single emoji, with no letters or numbers.',
   emoji_taken:`${r.detail || 'That emoji'} is already taken on this order. Pick another one.`,
   sold_out:`${r.detail || 'That'} is sold out.`,
-  fixed_limit:'You have already dropped 3 orders this comeback, which is the most allowed for a fixed claim. DM @' + CONFIG.INSTAGRAM + '.',
+  drop_limit:'You have already dropped this member from 3 orders this comeback, which is the most allowed for a fixed or soft claim. DM @' + CONFIG.INSTAGRAM + '.',
   fixed:`A fixed claim stays unless you switch to ${go ? fullCode(go) : 'OT8'} (claim one first) or the host drops it. DM @${CONFIG.INSTAGRAM}.`,
 }[r.error] || 'Something went wrong. Try again.');
 
@@ -2577,8 +2585,8 @@ function meStatsPanel(d, m) {
     ${cb ? comebackSpots(d, cb) : ''}
     <div class="two">${summary}${albums}</div></section>`;
 }
-// A joiner's fixed and soft spots in one comeback: fixed members with how many times each was dropped (out of 3),
-// soft members with how many of the comeback's orders they're in, and the comeback's orders.
+// A joiner's fixed and soft spots in one comeback: each member with how many drops it has left (out of 3, counted
+// per member), soft members with how many of the comeback's orders they're in, and the comeback's orders.
 function comebackSpots(d, cb) {
   const rows = (d.roster || []).filter(r => r.comeback_id === cb.id);
   if (!rows.length) return '';
@@ -2594,12 +2602,13 @@ function comebackSpots(d, cb) {
     return `<div class="mine-row"><span>${esc(g.emoji || '📦')} ${esc(goDisplayName(g))}</span><span>${pill}${s !== 'joined' && s !== 'wait' && open ? ` <button type="button" class="small linklike" data-action="openGo" data-id="${esc(g.id)}">Claim</button>` : ''}</span></div>`;
   }).join('');
   const min = num(cb.soft_min_orders), cbClaims = d.claims.filter(c => orders.some(g => g.id === c.group_order_id));
-  const covers = (c, mem) => c.member_code.split('/').includes(mem) || c.member_code === 'OT8' || c.member_code === 'OT4';
-  const nDropped = fixedDropOrders(cbClaims, new Set(orders.map(g => g.id))), dropsLeft = Math.max(0, FIXED_DROP_MAX - nDropped);
-  const fixedRows = fixed.length ? `<div class="spot">${[...new Set(fixed.map(r => r.member_code))].map(mem => `<span class="chip">${esc(mem)}</span>`).join('')}<span class="pill">Fixed</span><span class="${dropsLeft ? 'muted' : 'err'} small">${dropsLeft} of ${FIXED_DROP_MAX} ${dropsLeft === 1 ? 'drop' : 'drops'} left</span></div>` : '';
+  const orderIds = new Set(orders.map(g => g.id));
+  const dropsLeftText = (source, mem) => { const n = Math.max(0, DROP_MAX - memberDrops(cbClaims, orderIds, source, mem));
+    return `<span class="${n ? 'muted' : 'err'} small">${n} of ${DROP_MAX} ${n === 1 ? 'drop' : 'drops'} left</span>`; };
+  const fixedRows = [...new Set(fixed.map(r => r.member_code))].map(mem => `<div class="spot"><span class="chip">${esc(mem)}</span><span class="pill">Fixed</span>${dropsLeftText('fixed', mem)}</div>`).join('');
   const softRows = [...new Set(soft.map(r => r.member_code))].map(mem => {
-    const inOrders = orders.filter(g => cbClaims.some(c => c.group_order_id === g.id && c.status === 'filled' && covers(c, mem))).length;
-    return `<div class="spot"><span class="chip">${esc(mem)}</span><span class="pill">Soft</span><span class="small ${inOrders >= min ? '' : 'muted'}">In ${inOrders} ${inOrders === 1 ? 'order' : 'orders'} of this comeback${min ? ` (${min} needed)` : ''}</span></div>`;
+    const inOrders = orders.filter(g => cbClaims.some(c => c.group_order_id === g.id && c.status === 'filled' && claimCovers(c, mem))).length;
+    return `<div class="spot"><span class="chip">${esc(mem)}</span><span class="pill">Soft</span><span class="small ${inOrders >= min ? '' : 'muted'}">In ${inOrders} ${inOrders === 1 ? 'order' : 'orders'} of this comeback${min ? ` (${min} needed)` : ''}</span>${dropsLeftText('soft', mem)}</div>`;
   }).join('');
   const wlRows = wl.length ? `<div class="spot"><span class="chip">${esc(list(wl))}</span><span class="pill">Soft waitlist</span><span class="small muted">Moves into a spot when a soft claimer drops</span></div>` : '';
   return `<section class="panel cbpanel"><h2>Your spots${emoji ? ` <span class="em2" aria-hidden="true">${esc(emoji)}</span>` : ''}</h2>
@@ -3652,17 +3661,20 @@ async function comebackTab() {
     const cs = claimsAll.filter(c => c.group_order_id === g.id).map(c => ({...c, emoji:emo(c.joiner_id)}));
     return [g.id, {an:anOf2(g, cs, cb), cs}]; }));
   const stateFor = (g, jid) => { const x = per.get(g.id); return joinState(g, x.an, x.cs.filter(c => c.joiner_id === jid)); };
-  // Everyone on the list, fixed and soft: their spots (one line per member), orders joined, and status. Fixed
-  // claimers show how many of the comeback's orders they've joined and how many drops they have left.
+  // Everyone on the list, fixed and soft, with one line per member spot: orders joined with that member, drops
+  // left for that member (3 each, counted separately per member), and for soft spots whether they've met the minimum.
   const ids = [...new Set(roster.map(r => r.joiner_id))].filter(id => jById.has(id));
   const min = num(cb.soft_min_orders), orderIds = new Set(orders.map(g => g.id));
   const claimers = ids.map(id => {
-    const joined = orders.filter(g => stateFor(g, id) === 'joined').length, left = orders.filter(g => claimsOpen(g) && !['joined', 'wait'].includes(stateFor(g, id))).length;
-    const spots = roster.filter(r => r.joiner_id === id).sort((a, b) => (a.tier === b.tier ? 0 : a.tier === 'fixed' ? -1 : 1) || MEMBERS.indexOf(a.member_code) - MEMBERS.indexOf(b.member_code) || a.position - b.position);
-    const fixed = spots.some(r => r.tier === 'fixed');
-    const dropsLeft = Math.max(0, FIXED_DROP_MAX - fixedDropOrders(claimsAll.filter(c => c.joiner_id === id), orderIds));
-    return {id, joined, left, spots, fixed, dropsLeft, status: joined >= min ? 'met' : joined + left >= min ? 'behind' : 'risk'};
-  }).sort((a, b) => (b.fixed - a.fixed) || (a.fixed ? 0 : a.joined - b.joined) || (jById.get(a.id).name || '').localeCompare(jById.get(b.id).name || ''));
+    const mine = claimsAll.filter(c => c.joiner_id === id && orderIds.has(c.group_order_id));
+    const inOrder = (g, mem) => mine.some(c => c.group_order_id === g.id && c.status === 'filled' && claimCovers(c, mem));
+    const spots = roster.filter(r => r.joiner_id === id).sort((a, b) => (a.tier === b.tier ? 0 : a.tier === 'fixed' ? -1 : 1) || MEMBERS.indexOf(a.member_code) - MEMBERS.indexOf(b.member_code) || a.position - b.position)
+      .map(r => { const joined = orders.filter(g => inOrder(g, r.member_code)).length, left = orders.filter(g => claimsOpen(g) && !inOrder(g, r.member_code)).length;
+        return {...r, joined, left, dropsLeft: Math.max(0, DROP_MAX - memberDrops(mine, orderIds, r.tier, r.member_code)),
+          status: joined >= min ? 'met' : joined + left >= min ? 'behind' : 'risk'}; });
+    const fixed = spots.some(r => r.tier === 'fixed'), soft = spots.filter(r => r.tier === 'soft' && !r.waitlist);
+    return {id, spots, fixed, least: soft.length ? Math.min(...soft.map(r => r.joined)) : Infinity};
+  }).sort((a, b) => (b.fixed - a.fixed) || (a.fixed ? 0 : a.least - b.least) || (jById.get(a.id).name || '').localeCompare(jById.get(b.id).name || ''));
   const maxSets = cbMaxSets(cb);
   const over = pv ? MEMBERS.map(m => ({m, n:pv.entries.filter(e => e.member_code === m && !e.waitlist).length})).filter(o => o.n > maxSets) : [];
   const accounts = new Map(A.data.joiner_accounts.map(a => [a.handle, a.joiner_id]));
@@ -3696,14 +3708,14 @@ async function comebackTab() {
       ${roster.length && openOrders.length ? '<div class="formacts"><button class="btn ghost" data-action="syncCb">Add claimers to open orders again</button></div><p class="small muted" style="margin:8px 0 0">Adds anyone missing. Existing claims are kept.</p>' : ''}</section>` : ''}
 
     ${claimers.length ? `<section class="panel"><h2>Claimers</h2>
-      <p class="small muted" style="margin-top:0">Fixed claimers are on every order and can drop up to ${FIXED_DROP_MAX} of them. Soft claimers need to join at least ${min} orders of this comeback; an order counts when a claim is going through or waiting on more members.</p>
-      <div style="overflow-x:auto"><table class="pv cbtable"><thead><tr><th>Joiner</th><th>Spots</th><th>Type</th><th class="r">Joined</th><th>Status</th></tr></thead><tbody>
+      <p class="small muted" style="margin-top:0">Fixed claimers are on every order. Each fixed or soft member can be dropped from up to ${DROP_MAX} orders, counted separately per member. Each soft member needs to be in at least ${min} orders of this comeback; an order counts when the claim is going through or waiting on more members.</p>
+      <div style="overflow-x:auto"><table class="pv cbtable"><thead><tr><th>Joiner</th><th>Spots</th><th>Type</th><th class="r">Joined</th><th>Drops left</th><th>Status</th></tr></thead><tbody>
       ${claimers.map(s => `<tr><td>${esc(`${emoOf.get(s.id) || ''} ${jById.get(s.id).name}`.trim())}</td>
         <td><div class="stack">${s.spots.map(r => `<span>${esc(r.member_code)}</span>`).join('')}</div></td>
         <td><div class="stack">${s.spots.map(r => r.tier === 'fixed' ? '<span class="pill">Fixed</span>' : r.waitlist ? '<span class="pill gold">Soft waitlist</span>' : '<span class="pill sea">Soft</span>').join('')}</div></td>
-        <td class="r">${s.fixed ? `${s.joined} ${s.joined === 1 ? 'order' : 'orders'}` : `${s.joined} of ${min}`}</td>
-        <td>${s.fixed ? `<span class="pill ${s.dropsLeft ? '' : 'coral'}">${s.dropsLeft} ${s.dropsLeft === 1 ? 'drop' : 'drops'} left</span>`
-          : s.status === 'met' ? '<span class="pill sea">Met</span>' : s.status === 'behind' ? `<span class="pill gold">${min - s.joined} to go</span>` : `<span class="pill coral">At risk, ${s.left} open</span>`}</td></tr>`).join('')}</tbody></table></div></section>` : ''}`;
+        <td class="r"><div class="stack">${s.spots.map(r => `<span>${r.waitlist ? '' : r.tier === 'fixed' ? `${r.joined} ${r.joined === 1 ? 'order' : 'orders'}` : `${r.joined} of ${min}`}</span>`).join('')}</div></td>
+        <td><div class="stack">${s.spots.map(r => `<span>${r.waitlist ? '' : `<span class="pill ${r.dropsLeft ? '' : 'coral'}">${r.dropsLeft} left</span>`}</span>`).join('')}</div></td>
+        <td><div class="stack">${s.spots.map(r => `<span>${r.waitlist || r.tier === 'fixed' ? '' : r.status === 'met' ? '<span class="pill sea">Met</span>' : r.status === 'behind' ? `<span class="pill gold">${min - r.joined} to go</span>` : `<span class="pill coral">At risk, ${r.left} open</span>`}</span>`).join('')}</div></td></tr>`).join('')}</tbody></table></div></section>` : ''}`;
 }
 function anOf2(g, cs, cb) { return analyze(g, cs, cb); }
 // The comeback list as a grid, like an order's availability: a row per member, a column per set up to the comeback's
