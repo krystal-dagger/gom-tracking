@@ -70,14 +70,26 @@ nav{display:flex;gap:4px;margin-left:auto}
 nav a{padding:8px 14px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:600;font-size:15px;white-space:nowrap}
 nav a:hover{color:var(--text)}
 nav a[aria-current="page"]{color:var(--text);background:var(--panel-2)}
+@media(max-width:420px){.nav-long{display:none}}
+.rules-toc{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.rules-sec{scroll-margin-top:84px}
+.rules-sec h2{margin-bottom:6px}
+.rules-intro{margin:0 0 12px;color:var(--muted)}
+.rules-group+.rules-group{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.rules-group h3{font-size:16px;margin:0 0 6px}
+.faq{border-top:1px solid var(--line);padding:10px 0}
+.faq:last-of-type{border-bottom:1px solid var(--line);margin-bottom:4px}
+.faq summary{font-weight:600;cursor:pointer;font-size:15.5px}
+.faq p,.faq ul{margin:8px 0 0}
 .icon-btn{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:16px}
 @media(max-width:640px){
   .bar-in{flex-wrap:wrap;gap:8px 12px}
   .brand small{display:none}
   .icon-btn{margin-left:auto}
   nav{order:3;width:100%;margin:0;overflow-x:auto}
-  nav a{padding:8px 10px;font-size:14.5px}
+  nav a{padding:8px 6px;font-size:14px;flex:1 1 auto;text-align:center}
 }
+@media(max-width:350px){nav a{padding:8px 3px;font-size:13px}}
 .demo{background:var(--gold-bg);color:var(--gold);padding:9px 20px;font-size:14px;text-align:center}
 .page{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
 .head{margin:6px 0 24px}
@@ -548,6 +560,7 @@ table.pv td.r,table.pv th.r{text-align:right;font-variant-numeric:tabular-nums}
     <nav aria-label="Main">
       <a href="#/drops" data-r="drops">Drops</a>
       <a href="#/calendar" data-r="calendar">Calendar</a>
+      <a href="#/rules" data-r="rules">Rules<span class="nav-long"> &amp; FAQ</span></a>
       <a href="#/me" data-r="me">My account</a>
     </nav>
     <button class="icon-btn" id="theme" type="button" aria-label="Switch light or dark theme"><span aria-hidden="true">🌗</span></button>
@@ -2262,6 +2275,105 @@ async function pageCalendar() {
 }
 
 /* =====================================================================
+   9c. PAGE: Rules & FAQ
+   ===================================================================== */
+// The same info as the Carrd (Sale/Trade/GO Info and How GOs Work) and the fixed/soft claim rules from the
+// comeback post. Edit the text here: each section has groups, and a group is a list of points or a question.
+const RULES_PAGE = [
+  {id:'how-gos-work', title:'How GOs work',
+    intro:'GOs, or group orders, have a big learning curve if you\'ve never seen or participated in them before. I was very confused when I first saw them, so here are some things I wish I knew when I started!',
+    faq:[
+      {q:'What are GOs?', a:['An individual makes a large purchase of merch/albums/PCs/etc, and they act as a middleman to distribute the desired items to their joiners. They handle collecting payments, placing the order, and packing and shipping the items out to each joiner.']},
+      {q:'Why are GOs a thing?', a:[
+        'To reduce shipping costs when purchasing from international stores, since overseas shipping can be pricey, and with a GO the shipping costs can be distributed between members',
+        'A seller might only be willing to sell items in a set, but a buyer could host a GO to secure the items they want from the set and sell the rest of the items to others without having to pay for the whole set completely out of their own pocket']},
+    ]},
+  {id:'go-rules', title:'Group order rules',
+    groups:[
+      {h:'Group orders', items:[
+        'While I have done many trades and sales already, I am a newer GOM. Please do not join if that makes you uncomfortable',
+        'Payments will be due as soon as the group chat is made. Do not claim if you are unable to pay immediately',
+        'No back outs! If you need to back out for whatever reason, you must find a replacement first',
+        'I will send a picture of packing proof and do an address check before mailing, as well as send video proof of the package being dropped off in a mail bin or at the post office',
+        'If you miss a payment deadline (for initials, EMS, or DOMs) and you have not communicated with me about it beforehand, a $1 late fee will be added per day you are late. If you do not pay after 7 days, your claims will be forfeited and you will not be refunded for any payments you have already made.',
+        'Please post proof to your Instagram story or send me a DM once you receive your items']},
+      {h:'General info', items:[
+        'I will host for all fan calls, most POBs & LDs, & potentially Higher Timepieces',
+        'I will be sending most things to my kaddy first & shipping in batches as items arrive. Do not join if you are not patient',
+        'With the exception of any US preorders, all orders will be POB only (& inclusions if you want) b/c EMS for albums is $$$',
+        'US based, WW friendly, but note that tracked shipping out of the US is expensive',
+        'No backouts without a replacement',
+        'Paypal F&F, Venmo F&F, or Wise only',
+        'If there are open members in sets, I may split costs between joiners and raffle off the unclaimed members if it\'s not too expensive. Otherwise, I will order the exact amount of claims and do sorting']},
+      {h:'Fan calls', items:[
+        'I will most likely host a fan call round for myself and potentially friends, but the vast majority of calls will be raffled. It will be made clear in the post if I am hosting for myself or a friend, and in those cases, PCs might be discounted',
+        'Any personalized fan call winner items will go to the winner, but any other potential winner benefits will be kept by the GOM',
+        'I reserve the right to remove fixed/soft claimers for DWAYORs, rude/mean behavior, or consistently missing payment deadlines']},
+    ]},
+  {id:'fixed-soft', title:'Fixed & soft claims',
+    groups:[
+      {h:'Fixed claims', items:[
+        'You get first priority after the GOM',
+        'You will be automatically put down for the member(s) of your fixed claim every post. Keep in mind this will be expensive (expect $500 per member <u>at minimum</u>, but depending on how many drops there are, it can be $1000+), so DO NOT join if you can\'t make that financial commitment',
+        'You can drop up to 3 orders for the comeback',
+        'You will get 2 extra fan call entries per fixed claim member for every raffle',
+        'If you win a raffle but lose the call, you are allowed to enter another raffle',
+        'If you win a fan call, you will not be entered into another raffle for the rest of the comeback']},
+      {h:'Soft claims', items:[
+        'You get priority after the GOM and fixed claimers',
+        'You will be automatically put down for the member(s) of your soft claim every post',
+        'You have 6 hours from the time of the post to let me know if you\'d like to drop',
+        'You must join at least 6 orders for the comeback',
+        'You will get 1 extra fan call entry per soft claim member for every raffle',
+        'If you win a raffle but lose the call, you are allowed to enter another raffle',
+        'If you win a fan call, you will not be entered into another raffle for the rest of the comeback']},
+    ]},
+  {id:'sales-trades', title:'Sales, trades & shipping',
+    groups:[
+      {h:'Sale/Trade/GO info', items:[
+        '18+ interactions only',
+        'US based, WW friendly!',
+        'PayPal F&F (no G&S), Venmo, or Wise',
+        'Smoke free, cat friendly household',
+        'Please do not purchase if you are sensitive to potential minor imperfections due to original printing/packaging. I will disclose any visible damage that I can see',
+        'I am not responsible for lost, stolen, or damaged items. Items are non-refundable']},
+      {h:'Packaging', items:[
+        'I reuse packaging if it is still in good condition',
+        'PCs will always be shipped in a sleeve and toploader (or shipping shield) and secured to a card with washi tape',
+        'For PC stamped shipping, I will send in a square envelope with non-machineable stamps',
+        'For PC tracked shipping, I will ship in a bubble mailer',
+        'I write usernames on back of envelopes/mailers. If you are uncomfortable with this, please let me know at the beginning of our conversation and I will use an assigned sticker, letter, or number for you instead']},
+      {h:'Shipping', items:[
+        'US stamped shipping starts at $2',
+        'US tracked shipping starts at $6',
+        'WW stamped shipping starts at $3',
+        'WW tracked shipping is TBD based on location',
+        'I am not responsible for any customs or extra fees that your package may incur when shipping WW']},
+      {h:'Sales', items:[
+        'I can send additional photos/videos of items upon request',
+        'I will send a picture of packing proof and do an address check before mailing, as well as send video proof of the package being dropped off in a mail bin or at the post office',
+        'Please post proof to your Instagram story or send me a DM once you receive your items']},
+      {h:'Trades', items:[
+        'Please send a video with flash showing both the front and back of the PC with your username in the background. I will do the same',
+        'I will send a picture of packing proof with the PC and envelope in the picture, do an address check before mailing, and send video proof of the package being dropped off in a mail bin or at the post office. I expect you to do the same',
+        'Once we agree on a mailing day, if the day passes and you have not mailed it or communicated with me, the trade is off',
+        'Please post proof to your Instagram story or send me a DM once you receive your items']},
+    ],
+    outro:'If you have any other questions, don\'t hesitate to ask!'},
+];
+// Rule text is written here by the host (not user input); the only markup used is <u> for underlining.
+const ruleText = t => esc(t).replace(/&lt;(\/?)u&gt;/g, '<$1u>');
+function pageRules() {
+  const toc = `<nav class="rules-toc" aria-label="On this page">${RULES_PAGE.map(sec => `<button type="button" class="kchip" data-action="rulesJump" data-to="${sec.id}">${esc(sec.title)}</button>`).join('')}</nav>`;
+  const body = RULES_PAGE.map(sec => `<section class="panel rules-sec" id="rules-${sec.id}"><h2>${esc(sec.title)}</h2>
+    ${sec.intro ? `<p class="rules-intro">${ruleText(sec.intro)}</p>` : ''}
+    ${(sec.faq || []).map(f => `<details class="faq" open><summary>${esc(f.q)}</summary>${f.a.length > 1 ? `<ul class="rules">${f.a.map(x => `<li>${ruleText(x)}</li>`).join('')}</ul>` : `<p>${ruleText(f.a[0])}</p>`}</details>`).join('')}
+    ${(sec.groups || []).map(gr => `<div class="rules-group"><h3>${esc(gr.h)}</h3><ul class="rules">${gr.items.map(x => `<li>${ruleText(x)}</li>`).join('')}</ul></div>`).join('')}
+    ${sec.outro ? `<p class="rules-intro" style="margin-bottom:0">${ruleText(sec.outro)}</p>` : ''}</section>`).join('');
+  return head('Rules & FAQ', `How group orders work here, the rules for joining, and how fixed and soft claims work. Questions? DM @${esc(CONFIG.INSTAGRAM)}.`) + toc + body;
+}
+
+/* =====================================================================
    10. PAGE: My account (joiner dashboard)
    ===================================================================== */
 async function doLogin(handle, pin, silent) {
@@ -3503,8 +3615,8 @@ async function pageAdmin() {
    12. Router + events
    ===================================================================== */
 const app = $('#app');
-const PAGES = {drops:pageDrops, calendar:pageCalendar, me:pageMe, admin:pageAdmin};
-const TITLES = {drops:'Drops', calendar:'Calendar', me:'My account', admin:'Host tools'};
+const PAGES = {drops:pageDrops, calendar:pageCalendar, rules:pageRules, me:pageMe, admin:pageAdmin};
+const TITLES = {drops:'Drops', calendar:'Calendar', rules:'Rules & FAQ', me:'My account', admin:'Host tools'};
 let renderId = 0;
 const routeName = () => { const r = location.hash.replace(/^#\/?/, '').split('/')[0]; return PAGES[r] ? r : 'drops'; };
 
@@ -3530,6 +3642,7 @@ async function render() {
 }
 
 const actions = {
+  rulesJump(b) { const el = document.getElementById('rules-' + b.dataset.to); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); },
   signout() { S.me = null; session.del('jo'); render(); },
   clearFilters() { S.filters = {q:'', store:'', type:'', status:'', comeback:''}; render(); },
   clearMeFilters() { S.meFilters = {q:'', store:'', status:''}; render(); },
