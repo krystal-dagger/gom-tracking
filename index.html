@@ -92,6 +92,13 @@ nav a[aria-current="page"]{color:var(--text);background:var(--panel-2)}
 .rules-side h4{margin:0 0 4px;font-size:15px}
 .rules-side p{margin:0}
 @media(max-width:560px){.rules-side{grid-template-columns:1fr}.rules-side .rules-fig img{max-width:200px}}
+.gloss{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr);margin:6px 0 0}
+.gloss dt,.gloss dd{margin:0;padding:10px 0;border-top:1px solid var(--line)}
+.gloss dt{font-weight:700;padding-right:14px}
+.gloss dt:first-of-type,.gloss dt:first-of-type+dd{border-top:0}
+@media(max-width:560px){.gloss{grid-template-columns:1fr}.gloss dd{border-top:0;padding-top:0}}
+.faq img[src*="claim-post"]{max-width:min(100%,420px)}
+.faq img[src*="fancall-raffles"]{max-width:min(100%,520px);max-height:none}
 .faq img[src*="caption-example"]{max-height:none;max-width:min(100%,560px)}
 .icon-btn{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:16px}
 @media(max-width:640px){
@@ -2311,6 +2318,11 @@ const RULES_PAGE = [
       {q:'What does a GO post look like?', a:[
         'Here\'s an example of one of my GO post captions w/ some more detailed explanations:',
         {img:'img/rules/caption-example.webp', alt:'An example GO caption for a Higher NASA Selfie GO, annotated: SECURED means the order has been placed; $8 initials is the PC cost; shipping policy; accepted payment methods; 2 payments, initials (PC cost plus shipping to the GOM) and DOMs (shipping to joiners plus any customs); an availability grid showing what is claimed vs still available; and a key of which emoji is which joiner.'}]},
+      {q:'What are claim posts?', a:[
+        'Typically, GOM\'s claim posts will include emoji grids or lists to show updated availability for items. For example:',
+        {img:'img/rules/claim-post-photos.webp', alt:'A grid of 15 photocards in rows A to C and columns 1 to 5, each labelled with a price.'},
+        {img:'img/rules/claim-post-emojis.webp', alt:'The matching emoji grid: A ✅💫💎✨✨, B 💎🧣💎💎📖, C 📖✨💎🧣✨, with the key 💎 GOM, 📖 joe_smith, ✨ jane_doe, 💫 atinyforever, 🧣 matzluver432.'},
+        'Items that are still available are usually denoted by a ✅. Here, the GOM has chosen 💎 as their claim emoji, and they have claimed A3, B1, B3, B4, and C3. joe_smith then let the GOM know that they were interested in B5 and C1 and picked 📖 as their emoji, so the GOM updated the description of the claim post to make others aware that those items have now been claimed.']},
       {q:'How do payments work?', a:[
         'When the payment deadline approaches, the GOM will typically make a group chat and add all the joiners to begin collecting payments. They will have some sort of spreadsheet (Google sheet, Notion, etc) to keep track of claims and payment status that they will share. Joiners are responsible for checking that their claims are marked down correctly before paying.',
         '<b>PAYMENT NOTES ARE IMPORTANT!</b> Follow your GOM\'s instructions for payment notes! Not only do proper payment notes help your GOM keep track of who paid for what when they are handling multiple GOs, it also helps prevent their payment accounts from being frozen! Certain words in payment notes used repeatedly can cause Paypal, Venmo, etc. to flag accounts, and if the accounts are frozen, it delays the GOM receiving payments or being able to purchase items, and then they might miss order deadlines and no one will get their items. <b>THIS IS WHY GOMS CAN BE STRICT ABOUT THEM!</b>',
@@ -2328,6 +2340,14 @@ const RULES_PAGE = [
           text:'Let\'s say the claims look like this instead. The GOM might have a rule where if enough members are claimed in a set, they won\'t drop the set, but instead opt to split the cost of the unclaimed members between the joiners of the set and then raffle them off to said joiners. So in this case, if the cost of a claim is $8, the 7 claims of set 2 would get an additional $8/7 = $1.15 tacked on to the initials, and the 6 claims in set 3 would get $8/6 = $1.33 added to the initials.'},
         {side:{img:'img/rules/sets-sorting.webp', alt:'The example availability grid, labelled 23 total claims.'}, h:'#3 – Sorting',
           text:'The last option is where the GOM orders the exact amount of claims (23 here) instead of ordering in full sets. Sorting can also occur if stores don\'t send POBs in full sets and instead send random amounts of each member. In this case, the GOM will have some way to prioritize their list of joiners (I\'ve heard of ordering by the timestamp of a member preference form submission, or by OT8 claimers before others, etc) and go through the list assigning POBs to joiners. In this case, you are not guaranteed the member you claimed.'}]},
+      {q:'How do GO fancall raffles work?', a:[
+        {list:[
+          'A store hosts a fancall event where each album purchased equals one entry into their raffle to win a fancall (1 album purchased = 1 fancall entry)',
+          'Each album will come with an exclusive Preorder Benefit (POB). Some people opt out of raffles and just want the POB.',
+          'Once the GO is closed, the GOM will hold a raffle for who will be entered into the store\'s raffle',
+          'The GOM will then ask for the winner\'s info, for example: full name as written on passport (or ID, if they allow it), email, phone number, birthday, Line or Kakao ID (or similar apps), and which member you want to talk to',
+          'This info must be entered at the time the GOM places the order. The GOM orders all of the GO\'s albums under the winner\'s name, so the winner gets every one of those entries into the store\'s fancall raffle!']},
+        {img:'img/rules/fancall-raffles.webp', alt:'Illustrated example: four joiners want 8, 1, 6 and 5 albums, 20 albums in total. The GOM raffles the entry and the orange joiner wins, gives the GOM their info, and the GOM orders all 20 albums under their name, so they have 20 entries into the store\'s fancall raffle.'}]},
       {q:'DOMs time!', a:[
         'Your GOM should keep you updated when items arrive to the kaddy, ship out to them, and when they have them on hand. The GOM will ask for your address and DOMs payment, either through a form or DMs. They should do an address check and a claim check w/ you before packing and shipping your claims. When they drop orders off, they should send proof of the envelopes/packages being put in the mail collection bins. Once you receive your items, <b>PLEASE SEND PROOF OF RECEIVING YOUR ITEMS</b>, either through posting to your Instagram story and tagging your GOM or by sending them a DM. GOMs add this proof to their Instagram highlights to build trust in the B/S/T community and show that they are reliable.',
         {cheer:'Congrats! You\'ve now successfully participated in a group order!'}]},
@@ -2335,6 +2355,19 @@ const RULES_PAGE = [
         'Remember that GOMs are just regular people with families and jobs that are doing a <u>ton</u> of work for free!',
         'Be mindful that GOs take time! If you are not patient, GOs may not be for you! Items can take months to ship and GOMs have no control over that. You either get cheaper items that take a while to get through GOs, or you pay more and get your items faster on your own.',
         'Pay on time! If you know you can\'t pay right away, don\'t join. If you don\'t pay by the deadlines, GOMs are forced to choose between fronting the costs themselves or waiting and potentially not securing orders, and that\'s not fair to the GOM or other joiners.']}]},
+    ]},
+  {id:'glossary', title:'Glossary',
+    terms:[
+      ['GOM', 'Group order manager. Person in charge of collecting payments, placing the order, and shipping items to joiners'],
+      ['Joiner', 'Anyone who participates in the group order'],
+      ['Claim(s)', 'The item(s) that you commit to buying in the GO'],
+      ['Initials', 'The initial cost of your claims. GOMs typically require you to pay your initials before they will secure your items for the GO'],
+      ['EMS', 'The cost of shipping the order from the store/seller to the GOM. This cost gets split between all members of the GO'],
+      ['DOMs', 'Domestic shipping. The cost of shipping your items from the GOM to you'],
+      ['Claim emoji', 'An emoji you choose that is assigned to you for the duration of the GO. Used to show what has already been claimed and by who (typically in the captions of Instagram posts). Some GOMs also like you to include it in your payment note to help keep track of everyone\'s payments. You can pick whatever emoji you want as long as it has not already been used by someone else in that post'],
+      ['Stamped vs tracked shipping', 'Stamped mail is sent in an envelope w/ stamps, is unable to be tracked, and typically takes anywhere from a few days to a month to be delivered. It\'s much cheaper than tracked shipping, but there is a maximum thickness for envelopes w/ stamped shipping, so it\'s usually only available for 1-4 PCs.'],
+      ['Address check (addy check)', 'Before purchasing a shipping label or packing your claims in an envelope, the GOM will reach out w/ a picture of the typed address of the label or the written address on the envelope to make sure it\'s correct.'],
+      ['Claim check', 'The GOM will send a picture of your claims before packing them to make sure they\'re correct.'],
     ]},
   {id:'go-rules', title:'Group order rules',
     groups:[
@@ -2430,6 +2463,7 @@ function pageRules() {
     ${sec.intro ? `<p class="rules-intro">${ruleText(sec.intro)}</p>` : ''}
     ${(sec.faq || []).map(f => `<details class="faq" ${f.open ? 'open' : ''}><summary>${esc(f.q)}</summary>${f.a.map(ruleBlock).join('')}</details>`).join('')}
     ${sec.faq ? '<p class="small muted" style="margin:10px 0 0">Tap a question to open it.</p>' : ''}
+    ${sec.terms ? `<dl class="gloss">${sec.terms.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${ruleText(d)}</dd>`).join('')}</dl>` : ''}
     ${(sec.groups || []).map(gr => `<div class="rules-group"><h3>${esc(gr.h)}</h3><ul class="rules">${gr.items.map(x => `<li>${ruleText(x)}</li>`).join('')}</ul></div>`).join('')}
     ${sec.outro ? `<p class="rules-intro" style="margin-bottom:0">${ruleText(sec.outro)}</p>` : ''}</section>`).join('');
   return head('Rules & FAQ', `How group orders work here, the rules for joining, and how fixed and soft claims work. Questions? DM @${esc(CONFIG.INSTAGRAM)}.`) + toc + body;
